@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-TW">      
+<head>      
+<meta charset="UTF-8" />      
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />      
+<title>煦願民宿｜智慧工作站</title>      
+<meta name="mobile-web-app-capable" content="yes">      
+<style>      
+  /* --- 樣式保持不變 --- */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }      
+  body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: #f0f2f5; padding: 0; color: #333; margin: 0; }      
+  .container { max-width: 500px; margin: auto; background: #fff; min-height: 100vh; display: flex; flex-direction: column; }      
+  .nav-tabs { display: flex; padding: 10px; background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 1000; }
+  .tab-btn { flex: 1; padding: 12px; border: none; background: #f8f9fa; cursor: pointer; font-size: 1rem; font-weight: bold; color: #7f8c8d; transition: all 0.2s; }
+  .tab-btn.active { background: #27ae60; color: white; border-radius: 8px; }
+  .content { padding: 15px; flex-grow: 1; overflow-y: auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .category-nav { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 15px; padding: 5px 0; }
+  .cat-tag { background: #eee; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; white-space: nowrap; cursor: pointer; border: none; color: #666; }
+  .cat-tag.active { background: #3498db; color: white; }
+  .card { background: #fff; border: 1px solid #eef0f2; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  h3 { font-size: 1rem; margin: 0 0 10px 0; color: #2c3e50; border-left: 4px solid #27ae60; padding-left: 10px; }
+  input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; margin-bottom: 10px; }
+  label { font-weight: bold; color: #2c3e50; margin-bottom: 8px; display: block; }
+  .accordion-header { background: #fff9e6; border: 1px solid #ffeaa7; padding: 12px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+  .accordion-content { display: none; background: #fff; border: 1px solid #ffeaa7; border-top: none; padding: 15px; border-radius: 0 0 12px 12px; margin-top: -20px; margin-bottom: 15px; }
+  .accordion-content.active { display: block; }
+  .checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .check-item { background: #f8f9fa; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; border: 1px solid #eee; }
+  .check-item input { width: auto; margin-bottom: 0; }
+  .preview-area { background: #f9fafb; padding: 12px; border-radius: 8px; font-size: 0.9rem; white-space: pre-wrap; border: 1px solid #eee; line-height: 1.6; height: auto; }
+  .copy-btn { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 8px; cursor: pointer; }
+  .mode-switch { display: flex; gap: 5px; margin-bottom: 15px; background: #eee; padding: 4px; border-radius: 8px; }
+  .mode-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: bold; background: transparent; color: #666; cursor: pointer; }
+  .mode-btn.active { background: #fff; color: #27ae60; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .plan { border: 2px solid #27ae60; border-radius: 12px; padding: 15px; background: #f9fffb; margin-top: 15px; }
+  .highlight { color: #e74c3c; font-size: 1.3rem; font-weight: 800; }
+  .private-price { color: #27ae60; font-size: 1.5rem; font-weight: 800; border-top: 1px dashed #ddd; padding-top: 10px; margin-top: 10px; }
+  .scheme-btn { width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; }
+</style>
+</head>      
+<body>      
+<div class="container">      
+  <div class="nav-tabs">      
+    <button class="tab-btn active" onclick="switchPage('tpl-page', event)">回覆模板</button>      
+    <button class="tab-btn" onclick="switchPage('calc-page', event)">房價神器</button>      
+  </div>        
+
+  <div class="content">      
+    <div id="tpl-page" class="page active">      
+      <div class="card" style="background: #eef7ff;">      
+        <label>💡 基礎資訊（填寫後自動帶入模板）</label>      
+        <div style="display: flex; gap: 5px;">      
+          <input type="text" id="v-date" placeholder="日期" oninput="updateAll()">      
+          <input type="text" id="v-pwd" placeholder="大門密碼" oninput="updateAll()">      
+        </div>      
+        <div style="display: flex; gap: 5px;">      
+          <input type="text" id="v-dep" placeholder="訂金" oninput="updateAll()">      
+          <input type="text" id="v-bal" placeholder="尾款" oninput="updateAll()">      
+        </div>      
+      </div>
+
+      <div class="accordion-header" onclick="toggleAccordion()">
+        <span style="font-weight:bold; color:#f39c12;">📦 展開「入住通知打包」神器</span>
+        <span id="acc-icon">▼</span>
+      </div>
+      <div class="accordion-content" id="acc-content">
+        <div class="checkbox-group">
+          <label class="check-item"><input type="checkbox" id="c-basic" checked onchange="buildPackage()"> 入住與密碼</label>
+          <label class="check-item"><input type="checkbox" id="c-amenity" onchange="buildPackage()"> 備品設備詳情</label>
+          <label class="check-item"><input type="checkbox" id="c-sing" onchange="buildPackage()"> 唱歌/音響說明</label>
+          <label class="check-item"><input type="checkbox" id="c-nearby" onchange="buildPackage()"> 超商/快炒折扣</label>
+          <label class="check-item"><input type="checkbox" id="c-spot" onchange="buildPackage()"> 景點步道推薦</label>
+          <label class="check-item"><input type="checkbox" id="c-form" onchange="buildPackage()"> 住宿資料表</label>
+        </div>
+        <div class="preview-area" id="pkg-preview" style="font-size: 0.8rem;">勾選上方選項以生成打包文字...</div>
+        <button class="copy-btn" style="background: #f39c12;" onclick="copyText('pkg-preview', event)">複製打包訊息 (傳給客人)</button>
+      </div>
+
+      <div class="category-nav">      
+        <button class="cat-tag active" onclick="filterCat('all', event)">全部</button>      
+        <button class="cat-tag" onclick="filterCat('訂房', event)">訂房報價</button>      
+        <button class="cat-tag" onclick="filterCat('入住', event)">入住導引</button>      
+        <button class="cat-tag" onclick="filterCat('設施', event)">設施說明</button>      
+        <button class="cat-tag" onclick="filterCat('烤肉', event)">代訂烤肉</button>      
+        <button class="cat-tag" onclick="filterCat('周邊', event)">周邊景點</button>      
+        <button class="cat-tag" onclick="filterCat('退房', event)">退房手續</button>      
+      </div>      
+      <div id="tpl-list"></div>      
+    </div>      
+    
+    <div id="calc-page" class="page">
+      <div class="mode-switch">      
+        <button id="btn-smart" class="mode-btn active" onclick="setCalcMode('smart')">智慧日期報價</button>      
+        <button id="btn-manual" class="mode-btn" onclick="setCalcMode('manual')">手動開房床數</button>      
+      </div>      
+      <div id="smart-calc-box">      
+        <div class="card">      
+          <label>1. 輸入日期與人數</label>      
+          <div style="display: flex; gap: 8px;">      
+            <input type="date" id="dateInput" onchange="runSmartCalc()" style="flex:2">      
+            <input type="number" id="guestInput" placeholder="人數" min="1" oninput="runSmartCalc()" style="flex:1">      
+          </div>      
+        </div>      
+        <div id="smart-schemes" style="display:none">      
+          <label>2. 推薦方案</label>
+          <div id="schemeList"></div>      
+        </div>      
+      </div>      
+      <div id="manual-calc-box" style="display:none">
+        <div class="card">
+           <label>1. 選擇時段</label>
+           <select id="m-season" onchange="runManualCalc()"><option value="weekday">平日</option><option value="weekend">假日</option><option value="cny">過年</option></select>
+           </div>
+      </div>
+      <div id="calc-result"></div>      
+    </div>
+  </div>      
+</div>      
+<script src="script.js"></script>
+</body>      
+</html>
