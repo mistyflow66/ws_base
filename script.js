@@ -147,9 +147,13 @@ function updateAll() {
 function updateTpl(filter = 'all') {
     const d = document.getElementById('v-date').value || "____";
     const p = document.getElementById('v-pwd').value || "____";
-    const dep = document.getElementById('v-dep').value || "____";
-    const bal = document.getElementById('v-bal').value || "____"; // 修正：獲取正確的尾款
+    const dep = document.getElementById('v-dep').value || "0";
+    const bal = document.getElementById('v-bal').value || "0"; 
     
+    // 關鍵修正：抓取「晚數」與「總價」
+    const nights = document.getElementById('o-nights') ? document.getElementById('o-nights').value : "1";
+    const total = document.getElementById('v-total') ? document.getElementById('v-total').value : "0";
+
     const list = document.getElementById('tpl-list');
     if (!list) return; 
     list.innerHTML = '';
@@ -157,8 +161,8 @@ function updateTpl(filter = 'all') {
     TPL_DATA.forEach((item, i) => {
         if (filter !== 'all' && item.cat !== filter) return;
 
-        // 這裡確保傳入 4 個參數：日期, 密碼, 訂金, 尾款
-        const content = item.content(d, p, dep, bal); 
+        // 這裡對齊 TPL_DATA 的參數順序：(d, p, dep, bal, note, nights, total)
+        const content = item.content(d, p, dep, bal, "", nights, total); 
         const isPacked = packageList.includes(content);
         
         const box = document.createElement('div');
@@ -292,7 +296,7 @@ function renderOrderList() {
     const listDiv = document.getElementById('order-list');
     listDiv.innerHTML = mData.map(r => {
         const dateObj = new Date(r[3]);
-        const displayDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`; // 修正日期格式
+        const displayDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
         return `
             <div class="order-list-item" onclick="openEdit('${r[0]}')">
                 <div>
@@ -300,12 +304,12 @@ function renderOrderList() {
                     <b style="font-size:1rem;">${displayDate} | ${r[2]}</b>
                 </div>
                 <div style="text-align:right;">
-                    <div style="font-size:0.85rem; color:#af6a58; font-weight:bold;">尾款: $${r[9]}</div>
-                    <div style="font-size:0.75rem; color:#6a7181;">${r[6]}房 / ${r[10]}晚</div>
+                    <div style="font-size:0.85rem; color:#af6a58; font-weight:bold;">總金額: $${r[7]}</div> <div style="font-size:0.75rem; color:#6a7181;">${r[6]}房 / ${r[10]}晚</div>
                 </div>
             </div>
         `;
     }).join('');
+
     
     switchOrderView(currentView);
     updateStatistics(mData);

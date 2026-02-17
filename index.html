@@ -56,14 +56,13 @@
       </div>
 
       <div class="card" id="pkg-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <h3 style="margin:0;">🛒 已打包訊息內容</h3>
-          <button class="cat-tag" style="background:#95a5a6; color:white; border:none; padding:4px 10px;" onclick="clearPackage()">清空重選</button>
-        </div>
-        <div class="preview-area" id="p-res" contenteditable="true" style="border: 1px solid #ddd; padding: 10px; border-radius: 8px;"></div>
-        <div class="preview-area" id="pkg-preview" contenteditable="true" style="min-height: 50px; color:#3a4553; border: 1px dashed #af6a58;">尚未選擇任何訊息...</div>
-        <button class="copy-btn btn-pack" onclick="copyText('pkg-preview', event)">複製打包訊息</button>
-      </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin:0;"><i class="fa-solid fa-box-archive"></i> 已打包訊息</h3>
+        <button class="cat-tag" style="background:#95a5a6; color:white; border:none; padding:4px 10px;" onclick="clearPackage()">清空</button>
+    </div>
+    <div class="preview-area" id="pkg-preview" contenteditable="true" style="min-height: 50px; color:#3a4553; border: 1px dashed #af6a58;">尚未選擇任何訊息...</div>
+    <button class="copy-btn btn-pack" onclick="copyText('pkg-preview', event)">複製打包訊息</button>
+</div>
 
       <div class="category-nav" id="cat-nav">
         <button class="cat-tag active" onclick="filterCat('all', event)">全部</button>
@@ -171,14 +170,15 @@
     
 
           <div class="view-switcher">
-            <button class="view-btn active" id="btn-cal" onclick="switchOrderView('cal')">📅 月曆視圖</button>
-            <button class="view-btn" id="btn-list" onclick="switchOrderView('list')">📋 條列卡片</button>
-          </div>
+    <button class="view-btn active" id="btn-cal" onclick="switchOrderView('cal')"><i class="fa-solid fa-calendar-days"></i> 月曆視圖</button>
+    <button class="view-btn" id="btn-list" onclick="switchOrderView('list')"><i class="fa-solid fa-list-ul"></i> 條列卡片</button>
+</div>
           
           <div id="calendar-grid" class="calendar-container"></div>
           <div id="order-list" class="mt-15" style="display:none;"></div>
 
-          <button class="copy-btn btn-stat" onclick="toggleStats()">📊 經營統計</button>
+          <button class="copy-btn btn-stat" onclick="toggleStats()" style="background: #6a7181; margin-top: 15px;">
+    <i class="fa-solid fa-chart-line"></i> 經營數據統計分析</button>
           <div id="stats-area" class="stats-hidden">
             <div class="stat-grid">
               <div class="stat-item"><div class="stat-label">總來客</div><div id="stat-total-guests" class="stat-value">0</div></div>

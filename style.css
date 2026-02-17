@@ -195,7 +195,11 @@ input:focus, select:focus {
 .info-value { font-weight: 500; color: var(--text-dark); }
 
 /* --- 分類標籤 --- */
-.category-nav { display: flex; overflow-x: auto; gap: 8px; padding: 10px 0; }
+.category-nav { display: flex; 
+    justify-content: center; /* 置中 */
+    flex-wrap: wrap; 
+    gap: 8px; 
+    padding: 15px 0; }
 .cat-tag { 
   background: #edf2f7; 
   padding: 8px 16px; 
@@ -227,4 +231,42 @@ input:focus, select:focus {
 
 /* 修正快速登錄的紅色框框範圍（改為莫蘭迪紅） */
 .accordion-header { background: #fcf8f7; border: 1px solid #eadedb; color: var(--primary-color); }
-.accordion-content { border: 1px solid #eadedb; border-top: none; }
+.accordion-content { padding: 20px; /* 增加內縮 */
+    background: #ffffff;
+    border: 1px solid #eadedb;
+    border-top: none;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    margin-bottom: 15px;}
+
+/* 1. 核心修正：隱藏非活動分頁，解決全部擠在同一面的問題 */
+.page { 
+    display: none; 
+}
+.page.active { 
+    display: block; 
+}
+/* 4. 視圖切換按鈕質感提升 */
+.view-switcher {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: #f1f3f5;
+    padding: 4px;
+    border-radius: 10px;
+}
+.view-btn {
+    flex: 1;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.view-btn.active {
+    background: white;
+    color: var(--primary-color);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
