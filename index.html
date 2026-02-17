@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>煦願民宿｜智慧工作站</title>
   <style>
-    /* --- 全域樣式 --- */
+    /* --- CSS 樣式區 --- */
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }      
     body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: #f0f2f5; margin: 0; color: #333; }      
     .container { max-width: 500px; margin: auto; background: #fff; min-height: 100vh; display: flex; flex-direction: column; }      
 
-    /* --- 導覽列 --- */
     .nav-tabs { display: flex; padding: 10px; background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 1000; }
     .tab-btn { flex: 1; padding: 12px; border: none; background: #f8f9fa; cursor: pointer; font-size: 0.95rem; font-weight: bold; color: #7f8c8d; }
     .tab-btn.active { background: #27ae60; color: white; border-radius: 8px; }
@@ -19,7 +18,6 @@
     .page { display: none; }
     .page.active { display: block; }
 
-    /* --- 卡片與輸入框 --- */
     .card { background: #fff; border: 1px solid #eef0f2; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; }
     h3 { font-size: 1rem; margin: 0 0 10px 0; color: #2c3e50; border-left: 4px solid #27ae60; padding-left: 10px; }
     input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; margin-bottom: 10px; }
@@ -27,33 +25,27 @@
     .copy-btn { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 8px; cursor: pointer; font-size: 1rem; }
     .preview-area { background: #f9fafb; padding: 12px; border-radius: 8px; font-size: 0.85rem; white-space: pre-wrap; border: 1px solid #eee; line-height: 1.6; }
     
-    /* --- 打包通知專用 --- */
-    .pkg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; background: #fcfcfc; padding: 10px; border-radius: 8px; border: 1px dashed #ccc; }
-    .pkg-grid label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: bold; color: #444; cursor: pointer; }
+    .pkg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .pkg-grid label { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
 
-    /* --- 報價神器格線 --- */
-    .price-grid { display: grid; grid-template-columns: 1.2fr 1fr 1.5fr; gap: 8px; align-items: center; margin-bottom: 10px; font-size: 0.85rem; }
+    .price-grid { display: grid; grid-template-columns: 1fr 0.8fr 1.2fr; gap: 8px; align-items: center; margin-bottom: 10px; }
     .highlight { color: #e74c3c; font-size: 1.1rem; font-weight: bold; }
     .private-price { color: #27ae60; font-size: 1.4rem; font-weight: 800; border-top: 1px dashed #ddd; padding-top: 10px; margin-top: 10px; }
 
-    /* --- 摺疊選單 --- */
     .accordion-header { background: #fff9e6; border: 1px solid #ffeaa7; padding: 12px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .accordion-content { display: none; background: #fff; border: 1px solid #ffeaa7; padding: 15px; border-radius: 0 0 12px 12px; margin-top: -15px; margin-bottom: 15px; }
     .accordion-content.active { display: block; }
 
-    /* --- 月曆 --- */
     .calendar-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 15px; }
     .cal-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; border-radius: 6px; background: #f8f9fa; color: #aaa; }
     .cal-header { font-weight: bold; color: #2c3e50; background: #eee; }
     .cal-day.has-order { background: #27ae60; color: white; font-weight: bold; cursor: pointer; }
 
-    /* --- 數據顯示 --- */
-    .stats-hidden { display: none; }
-    .stats-active { display: block; background: #f0f7ff; padding: 15px; border-radius: 12px; margin-top: 10px; }
+    .stats-area { display: none; background: #f0f7ff; padding: 15px; border-radius: 12px; margin-top: 10px; }
+    .stat-item { background: #fff; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 8px; border: 1px solid #d0e8ff; }
 
-    /* --- 彈出層 --- */
     .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 2000; }
-    .modal-content { background: white; margin: 15% auto; padding: 25px; width: 85%; border-radius: 16px; position: relative; }
+    .modal-content { background: white; margin: 20% auto; padding: 25px; width: 85%; border-radius: 16px; position: relative; }
     
     .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; }
@@ -80,7 +72,7 @@
       </div>
 
       <div class="accordion-header" onclick="toggleAccordion('pkg-content', 'pkg-icon')">
-        <span class="acc-title">🎁 入住打包通知 (勾選自動組合)</span>
+        <span class="acc-title">🎁 入住打包通知 (勾選組合)</span>
         <span id="pkg-icon">▼</span>
       </div>
       <div id="pkg-content" class="accordion-content">
@@ -102,78 +94,54 @@
         <div class="card">
           <h3>身分驗證</h3>
           <input type="password" id="admin-key" placeholder="請輸入管理金鑰">
-          <button class="copy-btn" onclick="fetchOrders()">登入同步訂單</button>
+          <button class="copy-btn" onclick="fetchOrders()">登入並同步訂單</button>
         </div>
       </div>
 
       <div id="order-content" style="display:none;">
         <div class="card">
-            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:10px;">
+            <div style="display:flex; justify-content: space-between; align-items:center;">
                 <button onclick="changeMonth(-1)">◀</button>
-                <b id="cal-month-title"></b>
+                <h2 id="cal-month-title" style="margin:0; font-size:1.2rem;"></h2>
                 <button onclick="changeMonth(1)">▶</button>
             </div>
             <div id="calendar-grid" class="calendar-container"></div>
         </div>
         
         <button class="copy-btn" style="background:#8e44ad" onclick="toggleStats()">📊 查看經營數據</button>
-        <div id="stats-area" class="stats-hidden">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                <div class="card" style="text-align:center; padding:10px; margin:0;">
-                    <small>本月總人數</small><br><b id="stat-total-guests" style="font-size:1.2rem; color:#27ae60;">0</b>
-                </div>
-                <div class="card" style="text-align:center; padding:10px; margin:0;">
-                    <small>Booking 佔比</small><br><b id="stat-b-rate" style="font-size:1.2rem; color:#e67e22;">0%</b>
-                </div>
-            </div>
+        <div id="stats-area" class="stats-area">
+            <div class="stat-item">本月人數：<b id="stat-total-guests">0</b> 人</div>
+            <div class="stat-item">Booking 佔比：<b id="stat-b-rate">0%</b></div>
+            <div class="stat-item">本月預收總額：<b id="stat-income" style="color:#27ae60;">$0</b></div>
         </div>
 
-        <div class="accordion-header" style="margin-top:20px; background:#fdf2f2;" onclick="toggleAccordion('add-order-form', 'add-icon')">
-            <span class="acc-title" style="color:#c0392b;">➕ 手動新增訂單</span>
-            <span id="add-icon">▼</span>
+        <div class="accordion-header" style="margin-top:15px;" onclick="toggleAccordion('add-order-form', 'add-icon')">
+            <span style="color:#c0392b;">➕ 手動新增訂單</span><span id="add-icon">▼</span>
         </div>
         <div id="add-order-form" class="accordion-content">
             <input type="text" id="o-name" placeholder="房客姓名">
             <input type="date" id="o-date">
-            <select id="o-source">
-                <option value="LINE">LINE (私訊)</option>
-                <option value="Booking">Booking.com</option>
-            </select>
-            <input type="number" id="o-guests" placeholder="總人數">
+            <select id="o-source"><option value="LINE">LINE (私訊)</option><option value="Booking">Booking.com</option></select>
+            <input type="number" id="o-guests" placeholder="人數">
             <input type="number" id="o-total" placeholder="總房價">
-            <input type="number" id="o-dep" placeholder="訂金">
-            <button class="copy-btn" style="background:#27ae60" onclick="addOrder()">儲存訂單到 Google 試算表</button>
+            <input type="number" id="o-dep" placeholder="收訂金金額">
+            <button class="copy-btn" style="background:#27ae60" onclick="addOrder()">同步至試算表</button>
         </div>
       </div>
     </div>
 
     <div id="calc-page" class="page">
       <div class="card">
-        <h3>私訊優惠報價神器</h3>
+        <h3>私訊優惠報價 (依床數)</h3>
         <select id="m-season" onchange="updateAll()">
           <option value="weekday">平日 (週一至週四)</option>
           <option value="weekend">假日 (五六日 / 暑假)</option>
           <option value="cny">定價 (春節)</option>
         </select>
-        
-        <div class="price-grid" style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:5px;">
-            <span>房間</span><span>人數(床)</span><span>手動改價(選填)</span>
-        </div>
-        <div class="price-grid">
-            <span>201 (2人)</span>
-            <input type="number" id="m-201" value="0" oninput="runManualCalc()" style="margin:0;">
-            <input type="number" id="p-201" placeholder="1900" oninput="runManualCalc()" style="margin:0;">
-        </div>
-        <div class="price-grid">
-            <span>202 (2-4人)</span>
-            <input type="number" id="m-202" value="0" oninput="runManualCalc()" style="margin:0;">
-            <input type="number" id="p-202" placeholder="2400" oninput="runManualCalc()" style="margin:0;">
-        </div>
-        <div class="price-grid">
-            <span>301 (2-6人)</span>
-            <input type="number" id="m-301" value="0" oninput="runManualCalc()" style="margin:0;">
-            <input type="number" id="p-301" placeholder="3500" oninput="runManualCalc()" style="margin:0;">
-        </div>
+        <div class="price-grid"><b>房型</b><b>人數</b><b>手動改價(選填)</b></div>
+        <div class="price-grid"><span>201 (2人)</span><input type="number" id="m-201" value="0" oninput="runManualCalc()"> <input type="number" id="p-201" placeholder="1900" oninput="runManualCalc()"></div>
+        <div class="price-grid"><span>202 (2-4人)</span><input type="number" id="m-202" value="0" oninput="runManualCalc()"> <input type="number" id="p-202" placeholder="2400" oninput="runManualCalc()"></div>
+        <div class="price-grid"><span>301 (2-6人)</span><input type="number" id="m-301" value="0" oninput="runManualCalc()"> <input type="number" id="p-301" placeholder="3500" oninput="runManualCalc()"></div>
         <div id="calc-result"></div>
       </div>
     </div>
@@ -182,19 +150,12 @@
 </div>
 
 <div id="order-modal" class="modal" onclick="closeModal(event)">
-    <div class="modal-content">
-        <span onclick="closeModal()" style="position:absolute; right:15px; top:10px; cursor:pointer; font-size:24px;">×</span>
-        <div id="modal-body"></div>
-    </div>
+    <div class="modal-content"><div id="modal-body"></div></div>
 </div>
 
-<div id="loading-overlay" class="loading-overlay">
-    <div class="spinner"></div>
-    <p>資料處理中...</p>
-</div>
+<div id="loading-overlay" class="loading-overlay"><div class="spinner"></div><p>連線同步中...</p></div>
 
 <script>
-// --- 基本設定 ---
 const GAS_URL = "https://script.google.com/macros/s/AKfycbySPYLiPf6pUhZqbHMSK2z2eYtrzVWrPUweojAoCG8_15IrxQH0dhTOiXp1gf58dpiEQg/exec"; 
 
 const PRICE_MAP = {      
@@ -203,17 +164,16 @@ const PRICE_MAP = {
   '301': { weekday: { 1: 3500, 2: 4500, 3: 5000, 4: 5500 }, weekend: { 1: 3800, 2: 4800, 3: 5300, 4: 5800 }, cny: { 1: 6000, 2: 7000, 3: 8000, 4: 9000 } }      
 };
 
-const PKG_TEXT = {
-  basic: (p) => `🌟今日大門密碼：${p}\n🔓開門方法：\n（1）從外開門：手掌觸碰螢幕亮起後輸入密碼按*字鍵\n（2）從裡面出去：按下安全鈕、手把同時下壓即可開門\n🔑房間鑰匙配備在電視櫃旁鑰匙架，歡迎使用。隔天11點退房時，鑰匙放回架上即完成手續。\n🚭民宿室內全面禁菸，若有需要吸菸的朋友，我們每個陽台和車庫都備有煙灰缸，謝謝您🙏`,
-  sing: () => `🎤藍牙麥克風音響使用說明：\nhttps://m.youtube.com/shorts/8LMhA15R870\n(請於22:00前結束唱歌，後續可改玩電動麻將同樂喔！)\n(請於 22:00 前結束唱歌，後續可改玩電動麻將喔！)`,
-  spot: () => `🍱美食推薦：阿信快炒（報「煦願民宿」享 9.5 折優惠）\n🚗生活機能：\n7-11(步行5分)：https://maps.app.goo.gl/uskg6orv7dVas2eb7\n美聯社：https://maps.app.goo.gl/LNYRJGaVaj8GNxAy7\n\n分享很不錯的步道給您參考：\n仁山步道：https://maps.app.goo.gl/C9XisDS8qaQax11q6\n三清宮步道：https://maps.app.goo.gl/rmyyNfcdFHc8YdbX6\n推薦步道(仁山步道)：https://maps.app.goo.gl/C9XisDS8qaQax11q6\n三清宮步道：https://maps.app.goo.gl/rmyyNfcdFHc8YdbX6\n🌳周邊：附近有落羽松步道與美廉社，歡迎散步探索。`,
-  warn: () => `🍢溫馨提醒：\n1. 戶外烤肉活動請於 21:00 前結束，維護鄰里安寧。\n2. 民宿拖鞋皆經過清洗，請放心使用。為響應環保，我們不主動提供一次性牙刷牙膏，若忘記攜帶請告知。`
-};
+const TPL_DATA = [      
+  { cat: '訂房', title: '有空房回覆(含介紹)', content: (d) => `👋您好～煦願民宿 ${d} 有空房，每間房都有陽台\n寬敞客廳備有：\n✅電動麻將桌✅藍芽麥克風音響✅桌遊✅廚房可煮火鍋，大長桌同樂自在輕鬆\n車庫最多可停放3輛車\n私訊訂房可享優惠～\n民宿設施可參考官網：wishstaybnb.com` },      
+  { cat: '訂房', title: '匯款帳號資訊', content: (d,p,dep) => `中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷\n需麻煩您於 24 小時內匯入訂金 $${dep}，核對後即完成預定。` },      
+  { cat: '設施', title: '備品與飲品說明', content: () => `🌟吧台上面的飲品和零食是免費為您們準備，請自行取用。\n🌟民宿備有大、小毛巾、洗沐乳和吹風機，並備有旋轉式按摩蓮蓬頭。\n🌟為環保不主動提供牙刷牙膏，沒帶請告知。` },
+  { cat: '設施', title: '唱歌與麻將規則', content: () => `🎤唱歌教學：http://googleusercontent.com/youtube.com/18\n⚠️請於 22:00 前結束唱歌活動，後續可使用電動麻將喔！` },
+  { cat: '周邊', title: '阿信快炒與7-11', content: () => `🍱阿信快炒：報「煦願」享 9.5 折。\n7-11(步行5分)：https://maps.app.goo.gl/uskg6orv7dVas2eb7\n美聯社：https://maps.app.goo.gl/LNYRJGaVaj8GNxAy7\n\n分享很不錯的步道給您參考：\n仁山步道：https://maps.app.goo.gl/C9XisDS8qaQax11q6\n三清宮步道：https://maps.app.goo.gl/rmyyNfcdFHc8YdbX69` }
+];      
 
 let globalOrderData = [];
 let currentViewDate = new Date();
-
-// --- 邏輯功能 ---
 
 function switchPage(id, e) {
     document.querySelectorAll('.page, .tab-btn').forEach(el => el.classList.remove('active'));
@@ -221,36 +181,35 @@ function switchPage(id, e) {
     if(e) e.currentTarget.classList.add('active');
 }
 
-function updateAll() { 
-    updatePlaceholders();
-    buildPackage(); 
-    runManualCalc(); 
+function updateAll() { updateTpl(); buildPackage(); runManualCalc(); }
+
+function updateTpl() {
+    const d = document.getElementById('v-date').value || "____";
+    const p = document.getElementById('v-pwd').value || "____";
+    const dep = document.getElementById('v-dep').value || "____";
+    const list = document.getElementById('tpl-list');
+    list.innerHTML = '';
+    TPL_DATA.forEach((item, i) => {
+        const box = document.createElement('div'); box.className = 'card';
+        box.innerHTML = `<h3>[${item.cat}] ${item.title}</h3><div class="preview-area" id="t-${i}">${item.content(d,p,dep)}</div><button class="copy-btn" onclick="copyText('t-${i}', event)">複製</button>`;
+        list.appendChild(box);
+    });
 }
 
-function updatePlaceholders() {
-    const s = document.getElementById('m-season').value;
-    document.getElementById('p-201').placeholder = PRICE_MAP['201'][s][1];
-    document.getElementById('p-202').placeholder = PRICE_MAP['202'][s][1];
-    document.getElementById('p-301').placeholder = PRICE_MAP['301'][s][1];
-}
-
-function toggleAccordion(contentId, iconId) {
-    const c = document.getElementById(contentId);
+function toggleAccordion(cId, iId) {
+    const c = document.getElementById(cId);
     c.classList.toggle('active');
-    document.getElementById(iconId).innerText = c.classList.contains('active') ? '▲' : '▼';
+    document.getElementById(iId).innerText = c.classList.contains('active') ? '▲' : '▼';
 }
 
 function buildPackage() {
-    const d = document.getElementById('v-date').value || "今天";
+    const d = document.getElementById('v-date').value || "今日";
     const p = document.getElementById('v-pwd').value || "____";
-    let pkg = `👋 您好！煦願小幫手彙整您的入住資訊 (${d})：\n\n`;
-    
-    if(document.getElementById('c-basic').checked) pkg += PKG_TEXT.basic(p) + `\n----------------\n`;
-    if(document.getElementById('c-sing').checked) pkg += PKG_TEXT.sing() + `\n----------------\n`;
-    if(document.getElementById('c-spot').checked) pkg += PKG_TEXT.spot() + `\n----------------\n`;
-    if(document.getElementById('c-warn').checked) pkg += PKG_TEXT.warn() + `\n----------------\n`;
-    
-    pkg += `祝您入住愉快！☺️`;
+    let pkg = `👋 您好！煦願小幫手先彙整入住資訊 (${d})：\n\n`;
+    if(document.getElementById('c-basic').checked) pkg += `🌟今日大門密碼：${p}\n🔓開門：手掌觸碰螢幕亮起後輸入密碼按*\n🔑房間鑰匙在電視櫃旁鑰匙架，退房放回即可。\n🚭室內禁菸，陽台/車庫備有煙灰缸。\n----------------\n`;
+    if(document.getElementById('c-sing').checked) pkg += `🎤唱歌教學：http://googleusercontent.com/youtube.com/20\n(請於 22:00 前結束，後續可改玩電動麻將)\n----------------\n`;
+    if(document.getElementById('c-spot').checked) pkg += `🍱美食：阿信快炒(報煦願9.5折)\n🚗地圖：https://maps.app.goo.gl/vcoPQQuMRaME1rpY61\n----------------\n`;
+    if(document.getElementById('c-warn').checked) pkg += `🍢提醒：戶外烤肉請於 21:00 前結束。垃圾請協助分類。祝您入住愉快！☺️`;
     document.getElementById('pkg-preview').innerText = pkg;
 }
 
@@ -268,10 +227,10 @@ function runManualCalc() {
     const priv = Math.ceil((totalBT * 0.88 * 1.03) / 10) * 10;
     document.getElementById('calc-result').innerHTML = `
         <div class="card">
-            <div class="highlight">Booking 總價參考：$${totalBT.toLocaleString()}</div>
-            <div class="private-price">私訊優惠報價：$${priv.toLocaleString()}</div>
-            <div class="preview-area" id="p-res">👋您好～煦願民宿該日期有空房，私訊訂房優惠價：$${priv.toLocaleString()}</div>
-            <button class="copy-btn" onclick="copyText('p-res', event)">複製報價訊息</button>
+            <div class="highlight">Booking 總價：$${totalBT.toLocaleString()}</div>
+            <div class="private-price">私訊優惠價：$${priv.toLocaleString()}</div>
+            <div class="preview-area" id="p-res">私訊報價：私訊優惠價 $${priv.toLocaleString()}</div>
+            <button class="copy-btn" onclick="copyText('p-res', event)">複製報價</button>
         </div>`;
 }
 
@@ -284,7 +243,7 @@ async function fetchOrders() {
         document.getElementById('lock-screen').style.display = 'none';
         document.getElementById('order-content').style.display = 'block';
         renderOrderList();
-    } catch(e) { alert("驗證金鑰失敗，請重新輸入"); }
+    } catch(e) { alert("連線失敗"); }
     finally { document.getElementById('loading-overlay').style.display = 'none'; }
 }
 
@@ -297,90 +256,62 @@ async function addOrder() {
         total: document.getElementById('o-total').value, dep: document.getElementById('o-dep').value,
         bal: document.getElementById('o-total').value - document.getElementById('o-dep').value
     };
-    if(!data.name || !data.date) return alert("請至少填寫房客姓名與日期");
     document.getElementById('loading-overlay').style.display = 'flex';
-    try {
-        await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
-        alert("訂單已成功寫入試算表！"); fetchOrders();
-    } catch(e) { alert("儲存失敗"); }
-    finally { document.getElementById('loading-overlay').style.display = 'none'; }
+    await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
+    alert("儲存成功"); fetchOrders();
+    document.getElementById('loading-overlay').style.display = 'none';
 }
 
 function renderOrderList() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
     document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
-    const mData = globalOrderData.filter(r => r[3] && r[3].includes(`${year}-${String(month+1).padStart(2,'0')}`));
-    renderCalendar(year, month, mData);
-    updateStatistics(mData);
-}
-
-function renderCalendar(year, month, mData) {
+    const monthStr = `${year}-${String(month+1).padStart(2,'0')}`;
+    const mData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
+    
+    // 月曆繪製
     const grid = document.getElementById('calendar-grid');
     grid.innerHTML = '';
-    const weeks = ['日', '一', '二', '三', '四', '五', '六'];
-    weeks.forEach(w => grid.innerHTML += `<div class="cal-day cal-header">${w}</div>`);
+    ['日','一','二','三','四','五','六'].forEach(w=>grid.innerHTML+=`<div class="cal-day cal-header">${w}</div>`);
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
-    for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="cal-day"></div>`;
-    for (let day = 1; day <= lastDate; day++) {
+    for(let i=0; i<firstDay; i++) grid.innerHTML+=`<div class="cal-day"></div>`;
+    for(let day=1; day<=lastDate; day++){
         const fullDate = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
         const dayOrders = mData.filter(r => r[3] === fullDate);
         const cell = document.createElement('div');
         cell.className = `cal-day ${dayOrders.length > 0 ? 'has-order' : ''}`;
         cell.innerText = day;
-        if (dayOrders.length > 0) cell.onclick = () => showOrderDetail(dayOrders[0]);
+        if(dayOrders.length > 0) cell.onclick = () => showOrderDetail(dayOrders[0]);
         grid.appendChild(cell);
     }
+    
+    // 統計計算
+    const totalG = mData.reduce((s, r) => s + (parseInt(r[5])||0), 0);
+    const bCount = mData.filter(r => r[1] === 'Booking').length;
+    const income = mData.reduce((s, r) => s + (parseFloat(r[7])||0), 0);
+    document.getElementById('stat-total-guests').innerText = totalG;
+    document.getElementById('stat-b-rate').innerText = (mData.length ? Math.round((bCount/mData.length)*100) : 0) + '%';
+    document.getElementById('stat-income').innerText = '$' + income.toLocaleString();
 }
 
-function showOrderDetail(order) {
-    const [id, source, name, date, type, guests, rooms, total, dep, bal] = order;
-    document.getElementById('modal-body').innerHTML = `
-        <h3 style="border:none; padding:0;">${name} (${source})</h3>
-        <hr>
-        <p><b>入住日期：</b>${date}</p>
-        <p><b>入住人數：</b>${guests}人</p>
-        <p><b>總房價：</b>$${total}</p>
-        <p><b>已收訂金：</b>$${dep}</p>
-        <p style="color:red; font-size:1.2rem;"><b>現場收尾款：$${bal}</b></p>
-        <button class="copy-btn" onclick="location.href='${source==='Booking'?'bookingpulse://':'line://'}'">開啟聯繫 App</button>
-    `;
+function showOrderDetail(o) {
+    document.getElementById('modal-body').innerHTML = `<h3>${o[2]} (${o[1]})</h3><p>入住：${o[3]}<br>人數：${o[5]}人<br>總價：$${o[7]}<br>尾款：$${o[9]}</p><button class="copy-btn" onclick="closeModal()">關閉</button>`;
     document.getElementById('order-modal').style.display = 'block';
 }
 
-function closeModal(e) { 
-    if(!e || e.target === document.getElementById('order-modal') || e.target.tagName === 'SPAN') {
-        document.getElementById('order-modal').style.display = 'none'; 
-    }
-}
-
-function updateStatistics(mData) {
-    const totalG = mData.reduce((s, r) => s + (parseInt(r[5]) || 0), 0);
-    const bCount = mData.filter(r => r[1] === 'Booking').length;
-    document.getElementById('stat-total-guests').innerText = totalG;
-    document.getElementById('stat-b-rate').innerText = (mData.length ? Math.round((bCount/mData.length)*100) : 0) + '%';
-}
-
-function toggleStats() {
-    const s = document.getElementById('stats-area');
-    s.classList.toggle('stats-hidden');
-    s.classList.toggle('stats-active');
-}
-
+function closeModal() { document.getElementById('order-modal').style.display = 'none'; }
+function toggleStats() { const s = document.getElementById('stats-area'); s.style.display = (s.style.display === 'block' ? 'none' : 'block'); }
 function changeMonth(n) { currentViewDate.setMonth(currentViewDate.getMonth() + n); renderOrderList(); }
-
 function copyText(id, e) {
     const t = document.getElementById(id).innerText;
     navigator.clipboard.writeText(t);
     const btn = e.currentTarget;
-    const old = btn.innerText;
-    btn.innerText = "✅ 已複製成功";
-    setTimeout(() => btn.innerText = old, 1000);
+    const oldText = btn.innerText;
+    btn.innerText = "✅ 已複製";
+    setTimeout(() => btn.innerText = oldText, 1000);
 }
-
 window.onload = () => { updateAll(); };
 </script>
-
 </body>
 </html>
