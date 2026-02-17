@@ -1,68 +1,36 @@
 <!DOCTYPE html>
 <html lang="zh-TW">      
 <head>      
-<meta charset="UTF-8" />      
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />      
-<title>煦願民宿｜智慧工作站</title>      
-<meta name="mobile-web-app-capable" content="yes">      
-<style>      
-  /* --- 樣式保持不變 --- */
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }      
-  body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: #f0f2f5; padding: 0; color: #333; margin: 0; }      
-  .container { max-width: 500px; margin: auto; background: #fff; min-height: 100vh; display: flex; flex-direction: column; }      
-  .nav-tabs { display: flex; padding: 10px; background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 1000; }
-  .tab-btn { flex: 1; padding: 12px; border: none; background: #f8f9fa; cursor: pointer; font-size: 1rem; font-weight: bold; color: #7f8c8d; transition: all 0.2s; }
-  .tab-btn.active { background: #27ae60; color: white; border-radius: 8px; }
-  .content { padding: 15px; flex-grow: 1; overflow-y: auto; }
-  .page { display: none; }
-  .page.active { display: block; }
-  .category-nav { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 15px; padding: 5px 0; }
-  .cat-tag { background: #eee; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; white-space: nowrap; cursor: pointer; border: none; color: #666; }
-  .cat-tag.active { background: #3498db; color: white; }
-  .card { background: #fff; border: 1px solid #eef0f2; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-  h3 { font-size: 1rem; margin: 0 0 10px 0; color: #2c3e50; border-left: 4px solid #27ae60; padding-left: 10px; }
-  input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; margin-bottom: 10px; }
-  label { font-weight: bold; color: #2c3e50; margin-bottom: 8px; display: block; }
-  .accordion-header { background: #fff9e6; border: 1px solid #ffeaa7; padding: 12px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-  .accordion-content { display: none; background: #fff; border: 1px solid #ffeaa7; border-top: none; padding: 15px; border-radius: 0 0 12px 12px; margin-top: -20px; margin-bottom: 15px; }
-  .accordion-content.active { display: block; }
-  .checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-  .check-item { background: #f8f9fa; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; border: 1px solid #eee; }
-  .check-item input { width: auto; margin-bottom: 0; }
-  .preview-area { background: #f9fafb; padding: 12px; border-radius: 8px; font-size: 0.9rem; white-space: pre-wrap; border: 1px solid #eee; line-height: 1.6; height: auto; }
-  .copy-btn { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 8px; cursor: pointer; }
-  .mode-switch { display: flex; gap: 5px; margin-bottom: 15px; background: #eee; padding: 4px; border-radius: 8px; }
-  .mode-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: bold; background: transparent; color: #666; cursor: pointer; }
-  .mode-btn.active { background: #fff; color: #27ae60; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-  .plan { border: 2px solid #27ae60; border-radius: 12px; padding: 15px; background: #f9fffb; margin-top: 15px; }
-  .highlight { color: #e74c3c; font-size: 1.3rem; font-weight: 800; }
-  .private-price { color: #27ae60; font-size: 1.5rem; font-weight: 800; border-top: 1px dashed #ddd; padding-top: 10px; margin-top: 10px; }
-  .scheme-btn { width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; }
-</style>
+  <meta charset="UTF-8" />      
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />      
+  <title>煦願民宿｜智慧工作站</title>      
+  <meta name="mobile-web-app-capable" content="yes">      
+  <link rel="stylesheet" href="style.css">
 </head>      
 <body>      
 <div class="container">      
   <div class="nav-tabs">      
     <button class="tab-btn active" onclick="switchPage('tpl-page', event)">回覆模板</button>      
     <button class="tab-btn" onclick="switchPage('calc-page', event)">房價神器</button>      
+    <button class="tab-btn" onclick="switchPage('order-page', event)">所有訂單</button>      
   </div>        
 
   <div class="content">      
     <div id="tpl-page" class="page active">      
-      <div class="card" style="background: #eef7ff;">      
+      <div class="card info-base">      
         <label>💡 基礎資訊（填寫後自動帶入模板）</label>      
-        <div style="display: flex; gap: 5px;">      
-          <input type="text" id="v-date" placeholder="日期" oninput="updateAll()">      
-          <input type="text" id="v-pwd" placeholder="大門密碼" oninput="updateAll()">      
+        <div class="input-row">      
+          <input type="text" id="v-date" placeholder="入住日期(如3/12)" oninput="updateAll()">      
+          <input type="text" id="v-pwd" placeholder="今日大門密碼" oninput="updateAll()">      
         </div>      
-        <div style="display: flex; gap: 5px;">      
-          <input type="text" id="v-dep" placeholder="訂金" oninput="updateAll()">      
-          <input type="text" id="v-bal" placeholder="尾款" oninput="updateAll()">      
+        <div class="input-row">      
+          <input type="text" id="v-dep" placeholder="訂金金額" oninput="updateAll()">      
+          <input type="text" id="v-bal" placeholder="尾款金額" oninput="updateAll()">      
         </div>      
       </div>
 
       <div class="accordion-header" onclick="toggleAccordion()">
-        <span style="font-weight:bold; color:#f39c12;">📦 展開「入住通知打包」神器</span>
+        <span class="acc-title">📦 展開「入住通知打包」神器</span>
         <span id="acc-icon">▼</span>
       </div>
       <div class="accordion-content" id="acc-content">
@@ -70,15 +38,15 @@
           <label class="check-item"><input type="checkbox" id="c-basic" checked onchange="buildPackage()"> 入住與密碼</label>
           <label class="check-item"><input type="checkbox" id="c-amenity" onchange="buildPackage()"> 備品設備詳情</label>
           <label class="check-item"><input type="checkbox" id="c-sing" onchange="buildPackage()"> 唱歌/音響說明</label>
-          <label class="check-item"><input type="checkbox" id="c-nearby" onchange="buildPackage()"> 超商/快炒折扣</label>
+          <label class="check-item"><input type="checkbox" id="c-nearby" onchange="buildPackage()"> 周邊與折扣</label>
           <label class="check-item"><input type="checkbox" id="c-spot" onchange="buildPackage()"> 景點步道推薦</label>
           <label class="check-item"><input type="checkbox" id="c-form" onchange="buildPackage()"> 住宿資料表</label>
         </div>
-        <div class="preview-area" id="pkg-preview" style="font-size: 0.8rem;">勾選上方選項以生成打包文字...</div>
-        <button class="copy-btn" style="background: #f39c12;" onclick="copyText('pkg-preview', event)">複製打包訊息 (傳給客人)</button>
+        <div class="preview-area" id="pkg-preview">勾選上方選項以生成打包文字...</div>
+        <button class="copy-btn btn-pack" onclick="copyText('pkg-preview', event)">複製打包訊息</button>
       </div>
 
-      <div class="category-nav">      
+      <div class="category-nav" id="cat-nav">      
         <button class="cat-tag active" onclick="filterCat('all', event)">全部</button>      
         <button class="cat-tag" onclick="filterCat('訂房', event)">訂房報價</button>      
         <button class="cat-tag" onclick="filterCat('入住', event)">入住導引</button>      
@@ -91,30 +59,91 @@
     </div>      
     
     <div id="calc-page" class="page">
-      <div class="mode-switch">      
-        <button id="btn-smart" class="mode-btn active" onclick="setCalcMode('smart')">智慧日期報價</button>      
-        <button id="btn-manual" class="mode-btn" onclick="setCalcMode('manual')">手動開房床數</button>      
-      </div>      
-      <div id="smart-calc-box">      
-        <div class="card">      
-          <label>1. 輸入日期與人數</label>      
-          <div style="display: flex; gap: 8px;">      
-            <input type="date" id="dateInput" onchange="runSmartCalc()" style="flex:2">      
-            <input type="number" id="guestInput" placeholder="人數" min="1" oninput="runSmartCalc()" style="flex:1">      
-          </div>      
-        </div>      
-        <div id="smart-schemes" style="display:none">      
-          <label>2. 推薦方案</label>
-          <div id="schemeList"></div>      
-        </div>      
-      </div>      
-      <div id="manual-calc-box" style="display:none">
-        <div class="card">
-           <label>1. 選擇時段</label>
-           <select id="m-season" onchange="runManualCalc()"><option value="weekday">平日</option><option value="weekend">假日</option><option value="cny">過年</option></select>
-           </div>
+      <div class="card">
+        <h3>1. 選擇時段與手動調整 (選填)</h3>
+        <select id="m-season" onchange="runManualCalc()">
+          <option value="weekday">一般平日</option>
+          <option value="weekend">週六假日</option>
+          <option value="cny">農曆過年</option>
+        </select>
+        <div class="input-row-3">
+          <input type="number" id="p-201" placeholder="201房價(預設)" oninput="runManualCalc()">
+          <input type="number" id="p-202" placeholder="202房價(預設)" oninput="runManualCalc()">
+          <input type="number" id="p-301" placeholder="301房價(預設)" oninput="runManualCalc()">
+        </div>
+        
+        <h3 class="mt-15">2. 選擇本次開房床數</h3>
+        <div class="room-select-grid">
+          <div><label>201</label><select id="m-201" onchange="runManualCalc()"><option value="0">不開</option><option value="1">1 床</option></select></div>
+          <div><label>202</label><select id="m-202" onchange="runManualCalc()"><option value="0">不開</option><option value="1">1 床</option><option value="2">2 床</option></select></div>
+          <div><label>301</label><select id="m-301" onchange="runManualCalc()"><option value="0">不開</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+        </div>
       </div>
-      <div id="calc-result"></div>      
+      <div id="calc-result"></div>
+    </div>
+
+    <div id="order-page" class="page">
+      <div id="lock-screen" class="card">
+        <h3>🔒 雲端資料庫連線</h3>
+        <input type="password" id="admin-key" placeholder="輸入管理金鑰">
+        <button class="copy-btn" onclick="fetchOrders()">讀取訂單資料</button>
+      </div>
+
+      <div id="order-content" style="display:none;">
+        <div class="card order-add-card">
+          <h3>➕ 快速登錄新訂單</h3>
+          <input type="text" id="o-name" placeholder="訂房人姓名">
+          <div class="input-row">
+            <input type="date" id="o-date">
+            <select id="o-source"><option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option></select>
+          </div>
+          <div class="input-row">
+            <input type="number" id="o-guests" placeholder="總來客人數">
+            <input type="number" id="o-rooms" placeholder="總開房數量">
+          </div>
+          <div class="input-row">
+            <input type="number" id="o-total" placeholder="總房價">
+            <input type="number" id="o-dep" placeholder="訂金金額">
+          </div>
+          <button class="copy-btn btn-save" onclick="addOrder()">儲存並同步至雲端</button>
+        </div>
+
+        <div class="card">
+          <div class="month-nav">
+            <button class="cat-tag" onclick="changeMonth(-1)">上個月</button>
+            <h3 id="cal-month-title"></h3>
+            <button class="cat-tag" onclick="changeMonth(1)">下個月</button>
+          </div>
+          
+          <button class="copy-btn btn-stat" onclick="toggleStats()">📊 點此查看本月詳細經營統計</button>
+          
+          <div id="stats-area" class="stats-hidden">
+            <div class="stat-grid">
+              <div class="stat-item"><div class="stat-label">總來客人數</div><div id="stat-total-guests" class="stat-value">0</div></div>
+              <div class="stat-item"><div class="stat-label">總開房次數</div><div id="stat-total-rooms" class="stat-value">0</div></div>
+              <div class="stat-item"><div class="stat-label">Booking 比例</div><div id="stat-b-rate" class="stat-value">0%</div></div>
+              <div class="stat-item"><div class="stat-label">私訊訂房比例</div><div id="stat-o-rate" class="stat-value">0%</div></div>
+            </div>
+          </div>
+          <div id="order-list" class="mt-15"></div>
+        </div>
+
+        <div class="card finance-card">
+          <h3>💰 財務月結試算</h3>
+          <div class="fin-row"><span>總房費收入</span><b id="fin-income">$0</b></div>
+          <div class="fin-row color-red"><span>Booking 手續費</span><b id="fin-fee">-$0</b></div>
+          <div class="fin-row">
+            <span>日大洗衣費</span>
+            <input type="number" id="laundry-cost" placeholder="輸入金額" class="fin-input" oninput="calculateFinance()">
+          </div>
+          <div class="fin-row">
+            <span>水電網平均攤提</span>
+            <input type="number" id="utility-cost" value="5000" class="fin-input" oninput="calculateFinance()">
+          </div>
+          <hr class="fin-hr">
+          <div class="fin-row fin-total"><span>預估實際淨利</span><b id="fin-net">$0</b></div>
+        </div>
+      </div>
     </div>
   </div>      
 </div>      
