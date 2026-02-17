@@ -35,13 +35,17 @@
       <div class="card info-base">
         <label>💡 基礎資訊（填寫後自動帶入）</label>
         <div class="input-row">
-          <input type="text" id="v-date" placeholder="入住日期(如3/12)" oninput="updateAll()">
-          <input type="text" id="v-pwd" placeholder="今日大門密碼" oninput="updateAll()">
-        </div>
-        <div class="input-row">
-          <input type="text" id="v-dep" placeholder="訂金金額" oninput="updateAll()">
-          <input type="text" id="v-bal" placeholder="尾款金額" oninput="updateAll()">
-        </div>
+  <input type="text" id="v-date" placeholder="入住日期(如3/12)" oninput="updateAll()">
+  <input type="text" id="v-pwd" placeholder="今日大門密碼" oninput="updateAll()">
+</div>
+<div class="input-row">
+  <input type="number" id="v-total" placeholder="總價" oninput="calculateBalance()">
+  <input type="number" id="v-dep" placeholder="訂金" oninput="calculateBalance()">
+</div>
+<input type="hidden" id="v-bal">
+<div id="v-bal-display" style="font-size: 0.85rem; color: #ff85a2; margin-top: 5px; padding-left: 5px;">
+  自動計算尾款：$0
+</div>
       </div>
 
       <div class="card" id="pkg-card">
@@ -112,22 +116,34 @@
           <span class="acc-title">➕ 快速登錄新訂單</span>
           <span id="order-acc-icon">▼</span>
         </div>
-        <div class="accordion-content" id="order-add-content">
-          <input type="text" id="o-name" placeholder="訂房人姓名">
-          <div class="input-row">
-            <input type="date" id="o-date">
-            <select id="o-source"><option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option></select>
-          </div>
-          <div class="input-row">
-            <input type="number" id="o-guests" placeholder="總來客人數">
-            <input type="number" id="o-rooms" placeholder="總開房數量">
-          </div>
-          <div class="input-row">
-            <input type="number" id="o-total" placeholder="總房價">
-            <input type="number" id="o-dep" placeholder="訂金金額">
-          </div>
-          <button class="copy-btn btn-save" onclick="addOrder()">儲存並同步至雲端</button>
-        </div>
+       <div class="accordion-content" id="order-add-content">
+  <input type="text" id="o-name" placeholder="訂房人姓名">
+  <div class="input-row">
+    <input type="date" id="o-date">
+    <select id="o-source"><option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option></select>
+  </div>
+  <div class="input-row">
+    <input type="number" id="o-guests" placeholder="總來客人數">
+    <div style="flex:1; display:flex; align-items:center; gap:5px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding-right:10px;">
+        <input type="number" id="o-nights" value="1" min="1" style="border:none; margin-bottom:0;">
+        <span style="color:#666; font-size:0.9rem;">晚</span>
+    </div>
+</div>
+  <div class="input-row">
+    <select id="o-rooms">
+      <option value="0">0 房</option>
+      <option value="1">1 房</option>
+      <option value="2">2 房</option>
+      <option value="3" selected>3 房 (包棟)</option>
+    </select>
+    <input type="number" id="o-total" placeholder="總房價">
+  </div>
+  <div class="input-row">
+    <input type="number" id="o-dep" placeholder="訂金金額">
+    <div style="flex:1"></div> 
+  </div>
+  <button class="copy-btn btn-save" onclick="addOrder()">儲存並同步至雲端</button>
+</div>
 
         <div class="card">
           <div class="month-nav">
@@ -159,7 +175,7 @@
           <h3>💰 財務月結試算</h3>
           <div class="fin-row"><span>總房費收入</span><b id="fin-income">$0</b></div>
           <div class="fin-row color-red"><span>Booking 手續費</span><b id="fin-fee">-$0</b></div>
-          <div class="fin-row"><span>洗衣費</span><input type="number" id="laundry-cost" class="fin-input" oninput="calculateFinance()"></div>
+          <div class="fin-row"><span>洗衣費</span><input type="number" id="laundry-cost" value="0" class="fin-input" oninput="calculateFinance()"></div>
           <div class="fin-row"><span>水電攤提</span><input type="number" id="utility-cost" value="5000" class="fin-input" oninput="calculateFinance()"></div>
           <hr class="fin-hr">
           <div class="fin-row fin-total"><span>實際淨利</span><b id="fin-net">$0</b></div>
@@ -175,13 +191,29 @@
     <h3>📝 訂單詳細資訊</h3>
     <input type="hidden" id="e-oid">
     <input type="text" id="e-name" placeholder="姓名">
-    <div class="input-row">
-      <input type="date" id="e-date">
-      <select id="e-source"><option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option></select>
+<div class="input-row">
+    <input type="date" id="e-date">
+    <div style="flex:1; display:flex; align-items:center; gap:5px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding-right:10px;">
+        <input type="number" id="e-nights" min="1" style="border:none; margin-bottom:0;">
+        <span style="color:#666; font-size:0.9rem;">晚</span>
     </div>
+</div>
+<div class="input-row">
+    <select id="e-source">
+        <option>私LINE</option>
+        <option>Booking</option>
+        <option>官方LINE</option>
+        <option>FB</option>
+    </select>
+</div>
     <div class="input-row">
       <input type="number" id="e-guests" placeholder="人數">
-      <input type="number" id="e-rooms" placeholder="房數">
+      <select id="e-rooms">
+        <option value="0">0 房</option>
+        <option value="1">1 房</option>
+        <option value="2">2 房</option>
+        <option value="3">3 房</option>
+      </select>
     </div>
     <div class="input-row">
       <input type="number" id="e-total" placeholder="總價">
