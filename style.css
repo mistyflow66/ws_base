@@ -75,4 +75,15 @@ input:focus { border-color: #27ae60; }
 /* --- 載入遮罩 --- */
 .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; }
 .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; }
+
+/* --- 模板換行 --- */
+.preview-area {
+    white-space: pre-wrap;    /* 核心：保留換行與空白 */
+    word-break: break-all;    /* 防止長網址撐破框框 */
+    background: #f8f9fa;      /* 稍微加點背景色方便區分 */
+    padding: 10px;
+    border-radius: 6px;
+    line-height: 1.5;         /* 增加行高，閱讀更舒服 */
+    margin: 8px 0;
+}
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
