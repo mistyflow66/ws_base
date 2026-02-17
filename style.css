@@ -95,4 +95,49 @@ input:focus { border-color: #27ae60; }
 .fin-total { font-size: 1.2rem; color: #27ae60; font-weight: 800; }
 .color-red { color: #e74c3c; }
 .mt-15 { margin-top: 15px; }
+
 .month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; }
+
+/* --- 打包神器選項排版優化 (直接覆蓋原本的 checkbox 樣式) --- */
+.checkbox-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 兩兩一組 */
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+.check-item {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid #eee;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    color: #666;
+}
+
+/* 勾選後的狀態：外框變橘色、背景變淺黃 */
+.check-item:has(input:checked) {
+    border-color: #f39c12;
+    background: #fff9e6;
+    color: #d35400;
+    font-weight: bold;
+}
+
+.check-item input {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    margin-bottom: 0 !important; /* 強制取消原本 input 的邊距 */
+    accent-color: #f39c12; /* 勾選框變橘色 */
+}
+
+/* 最後一個選項（住宿表單）佔滿整列 */
+.check-item:last-child {
+    grid-column: span 2;
+}
