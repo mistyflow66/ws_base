@@ -129,26 +129,48 @@ function toggleAccordion(contentId, iconId) {
 
 function copyText(id, e) {
     const el = document.getElementById(id);
-    // 使用 innerText 配合 CSS 的 white-space: pre-wrap 能精準抓取換行
     const t = el.innerText || el.textContent; 
-    
-    navigator.clipboard.writeText(t).then(() => {
-        const btn = e.currentTarget;
-        const oldTxt = btn.innerText;
-        const oldBg = btn.style.background; // 記住原本的顏色（藍色或橘色）
-        
-        // 視覺回饋：文字變更 + 背景變綠
-        btn.innerText = "✅ 已複製內容";
+    const btn = e.currentTarget;
+    const oldTxt = btn.innerText;
+    const oldBg = btn.style.background;
+
+    // 定義成功後的視覺回饋
+    const showSuccess = () => {
+        btn.innerText = "✅ 已複製";
         btn.style.background = "#2ecc71"; 
-        
         setTimeout(() => {
             btn.innerText = oldTxt;
-            btn.style.background = oldBg; // 1.2秒後恢復原狀
+            btn.style.background = oldBg;
         }, 1200);
-    }).catch(err => {
-        console.error('複製失敗:', err);
-        alert('複製失敗，請手動選取文字');
-    });
+    };
+
+    // 方法 A: 現代瀏覽器方法
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(t).then(showSuccess).catch(() => fallbackCopy(t));
+    } else {
+        // 方法 B: 傳統方法 (針對 Line 內建瀏覽器或非 HTTPS 環境)
+        fallbackCopy(t);
+    }
+
+    function fallbackCopy(text) {
+        try {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            // 確保 textArea 不會出現在畫面上影響佈局
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            if (successful) showSuccess();
+            else alert('複製失敗，請手動選取文字');
+        } catch (err) {
+            alert('瀏覽器不支援自動複製，請手動選取');
+        }
+    }
 }
 
 function toggleLoading(show) {
@@ -331,4 +353,5 @@ function openPulse() {
     window.location.href = "pulse://";
     setTimeout(() => { window.open("https://admin.booking.com/", "_blank"); }, 800);
 }
+
 
