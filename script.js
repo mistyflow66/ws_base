@@ -115,12 +115,53 @@ async function addOrder() {
 }
 
 function renderOrderList() {
-    const monthStr = currentViewDate.toISOString().slice(0, 7);
-    document.getElementById('cal-month-title').innerText = `${currentViewDate.getFullYear()}年 ${currentViewDate.getMonth()+1}月`;
+    const year = currentViewDate.getFullYear();
+    const month = currentViewDate.getMonth();
+    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+    
+    document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
+    
+    // 1. 篩選當月訂單
     const mData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
-    document.getElementById('order-list').innerHTML = mData.map(r => `<div class="card" style="font-size:0.9rem;"><b>${r[3].slice(5)} | ${r[2]}</b> (${r[1]}) - 尾款:$${r[9]}</div>`).join('');
+    
+    // 2. 渲染月曆
+    renderCalendar(year, month, mData);
+    
+    // 3. 渲染下方的文字清單
+    document.getElementById('order-list').innerHTML = mData.map(r => 
+        `<div class="card" style="font-size:0.9rem;">
+            <b>${r[3].slice(8)}日 | ${r[2]}</b> (${r[1]}) - 尾款:$${r[9]}
+        </div>`
+    ).join('');
+    
     updateStatistics(mData);
     calculateFinance(mData);
+}
+
+function renderCalendar(year, month, mData) {
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+    
+    // 取得當月有訂單的「日期」集合 (例如: [12, 15, 16])
+    const bookedDays = mData.map(r => parseInt(r[3].split('-')[2]));
+    
+    const weeks = ['日', '一', '二', '三', '四', '五', '六'];
+    weeks.forEach(w => grid.innerHTML += `<div class="cal-day cal-header">${w}</div>`);
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    
+    // 填充空白格子（上個月的末尾）
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="cal-day"></div>`;
+    }
+    
+    // 填充日期格子
+    for (let day = 1; day <= lastDate; day++) {
+        const isBooked = bookedDays.includes(day);
+        const activeClass = isBooked ? 'has-order' : '';
+        grid.innerHTML += `<div class="cal-day ${activeClass}">${day}</div>`;
+    }
 }
 
 function updateStatistics(mData) {
