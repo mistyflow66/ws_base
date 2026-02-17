@@ -13,11 +13,20 @@ const TPL_DATA = [
     content: (d) => `👋您好～煦願民宿 ${d} 有空房，每間房都有陽台\n寬敞客廳備有：\n✅電動麻將桌✅藍芽麥克風音響✅桌遊✅廚房可煮火鍋，大長桌同樂自在輕鬆\n車庫最多可停放3輛車\n私訊訂房可享優惠～\n民宿設施可參考官網：\nwishstaybnb.com`
   },
   { 
-  cat: '訂房', 
-  title: '訂房確認(含尾款)', 
-  // 這裡接收 (日期, 密碼, 訂金, 尾款)
-  content: (d, p, dep, bal) => `確認訂房成功！\n入住日期：${d}\n總訂金：${dep}\n當日入住尾款：${bal}`
-},
+    cat: '訂房', 
+    title: '預留確認 (含匯款帳號)', 
+    content: (d, p, dep, bal, note, nights, total) => {
+        // 自動計算退房日期的簡易邏輯（以 3/12 格式為例）
+        let checkoutText = "退房日期";
+        if (d && d.includes('/')) {
+            let parts = d.split('/');
+            let dateObj = new Date(2026, parseInt(parts[0]) - 1, parseInt(parts[1]));
+            dateObj.setDate(dateObj.getDate() + (parseInt(nights) || 1));
+            checkoutText = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+        }
+        return `好的，請您確認以下訊息是否正確：\n1. ${d}入住-${checkoutText}退房\n包棟 3 房 ${nights} 晚，私訊優惠價 ${total} 元\n若以下訊息無誤，再麻煩您先匯訂金 ${dep} 元到以下帳號，煦願民宿先幫您預留日期，謝謝您的預訂\n\n中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`;
+    } // 這是函數的 }
+  }, // <--- 這是物件的 }，這行一定要有逗號
   { 
     cat: '詢問', 
     title: '詢問設備需求', 
@@ -36,7 +45,7 @@ const TPL_DATA = [
   { 
     cat: '入住', 
     title: '今日指南(密碼/鑰匙/規範)', 
-    content: (d,p) => `煦願小幫手先介紹：\n🌟這邊先給您今日大門密碼：${p}\n🔓開門方法：\n（1）從外開門：手掌觸碰螢幕，按鍵亮起後輸入\n（2）從裡面出去：按下安全鈕、手把同時下壓即可開門\n\n🌟房間鑰匙配備在-電視櫃旁鑰匙架，歡迎使用\n隔天11點退房時，鑰匙放回架上，回傳照片即做好退房手續喔～\n\n🌟民宿拖鞋每一組客人離開後都清洗過，每一組客人都是專屬的室內拖鞋，請您放心使用～\n\n🌟民宿室內全面禁菸，若有需要吸菸的朋友，我們每個陽台和車庫都備有煙灰缸，謝謝您🙏\n\n🌟民宿備有大、小毛巾、漱口杯、沐浴乳和洗髮精是用-沙威隆系列，並備有旋轉式按摩蓮蓬頭和吹風機，舒緩您旅途的疲憊\n\n🌟吧台上面的飲品和零食、礦泉水是為您們做準備，請自行取用\n\n🌟溫馨提醒，現在民宿不能主動提供牙刷牙膏一次性用具，若真的沒有帶，請告知\n\n煦願民宿祝您入住愉快☺️`
+    content: (d,p) => `煦願小幫手先介紹：\n🌟這邊先給您今日大門密碼：${p}\n\n🔓開門方法：\n（1）從外開門：手掌觸碰螢幕，按鍵亮起後輸入${p.replace('*','')}和*字鍵\n（2）從裡面出去：按下安全鈕、手把同時下壓即可開門\n\n🌟房間鑰匙配備在-電視櫃旁鑰匙架，歡迎使用\n隔天11點退房時，鑰匙放回架上，回傳照片即做好退房手續喔～\n\n🌟民宿拖鞋每一組客人離開後都清洗過，每一組客人都是專屬的室內拖鞋，請您放心使用～\n\n🌟民宿室內全面禁菸，若有需要吸菸的朋友，我們每個陽台和車庫都備有煙灰缸，謝謝您🙏\n\n🌟民宿備有大、小毛巾、漱口杯、沐浴乳和洗髮精是用-沙威隆系列，並備有旋轉式按摩蓮蓬頭和吹風機，舒緩您旅途的疲憊\n\n🌟吧台上面的飲品和零食、礦泉水是為您們做準備，請自行取用\n\n🌟溫馨提醒，現在民宿不能主動提供牙刷牙膏一次性用具，若真的沒有帶，請告知\n\n煦願民宿祝您入住愉快☺️`
   },
   { 
     cat: '入住', 
@@ -233,6 +242,7 @@ async function fetchOrders() {
     toggleLoading(false);
 }
 
+// --- 5. 新增訂單 (加入備註欄位) ---
 async function addOrder() {
     toggleLoading(true);
     const total = document.getElementById('o-total').value;
@@ -248,7 +258,8 @@ async function addOrder() {
         total: total,
         dep: dep, 
         bal: total - dep,
-        nights: document.getElementById('o-nights').value // <-- 加入這一行
+        nights: document.getElementById('o-nights').value,
+        note: document.getElementById('o-note').value // 加入備註
     };
     await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
     alert("儲存成功"); 
@@ -267,26 +278,34 @@ function switchOrderView(type) {
     document.getElementById('order-list').style.display = type === 'list' ? 'block' : 'none';
 }
 
+// --- 3. 修正卡片日期亂碼 (MM/DD) ---
 function renderOrderList() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
-    
+
     const mData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
-    
-    // 渲染月曆
+
     renderCalendar(year, month, mData);
-    
-    // 渲染條列卡片
+
     const listDiv = document.getElementById('order-list');
-    listDiv.innerHTML = mData.map(r => `
-        <div class="card" onclick="openEdit('${r[0]}')">
-            <span class="source-tag ${r[1] === 'Booking' ? 'tag-booking' : 'tag-line'}">${r[1]}</span>
-            <b>${r[3].slice(8)}日 | ${r[2]}</b>
-            <div style="font-size:0.8rem; color:#666; margin-top:5px;">餘額: $${r[9]} / ${r[4]}</div>
-        </div>
-    `).join('');
+    listDiv.innerHTML = mData.map(r => {
+        const dateObj = new Date(r[3]);
+        const displayDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`; // 修正日期格式
+        return `
+            <div class="order-list-item" onclick="openEdit('${r[0]}')">
+                <div>
+                    <span class="source-tag ${r[1] === 'Booking' ? 'tag-booking' : 'tag-line'}">${r[1]}</span>
+                    <b style="font-size:1rem;">${displayDate} | ${r[2]}</b>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:0.85rem; color:#af6a58; font-weight:bold;">尾款: $${r[9]}</div>
+                    <div style="font-size:0.75rem; color:#6a7181;">${r[6]}房 / ${r[10]}晚</div>
+                </div>
+            </div>
+        `;
+    }).join('');
     
     switchOrderView(currentView);
     updateStatistics(mData);
@@ -353,15 +372,42 @@ function renderCalendar(year, month, mData) {
 function openEdit(oid) {
     const r = globalOrderData.find(o => o[0] === oid);
     if(!r) return;
+
+    // 填入隱藏欄位與編輯框
     document.getElementById('e-oid').value = r[0];
-    document.getElementById('e-source').value = r[1]; // 這裡現在有對應的 HTML 了
-    // ...其餘不變
+    document.getElementById('e-source').value = r[1];
     document.getElementById('e-name').value = r[2];
     document.getElementById('e-date').value = r[3];
     document.getElementById('e-guests').value = r[5];
     document.getElementById('e-rooms').value = r[6];
     document.getElementById('e-total').value = r[7];
     document.getElementById('e-dep').value = r[8];
+    document.getElementById('e-note').value = r[11] || ""; // 備註在 index 11
+    document.getElementById('e-nights').value = r[10] || 1;
+
+    // 渲染「檢視模式」的條列資訊
+    const displayList = document.getElementById('detail-info-list');
+    displayList.innerHTML = `
+        <div class="info-item"><span class="info-label">訂房人</span><span class="info-value">${r[2]}</span></div>
+        <div class="info-item"><span class="info-label">入住日期</span><span class="info-value">${r[3]} (${r[10]}晚)</span></div>
+        <div class="info-item"><span class="info-label">來源</span><span class="info-value">${r[1]}</span></div>
+        <div class="info-item"><span class="info-label">總價/訂金</span><span class="info-value">$${r[7]} / $${r[8]}</span></div>
+        <div class="info-item"><span class="info-label">尾款</span><span class="info-value" style="color:#af6a58; font-weight:bold;">$${r[9]}</span></div>
+        <div class="info-item"><span class="info-label">備註</span><span class="info-value">${r[11] || '無'}</span></div>
+    `;
+
+    toggleEditMode(false); // 預設為檢視模式
+    document.getElementById('btn-pulse').style.display = r[1] === 'Booking' ? 'block' : 'none';
+    document.getElementById('edit-modal').classList.add('active'); // 觸發 CSS 置中
+}
+
+function toggleEditMode(isEdit) {
+    document.getElementById('info-display-view').style.display = isEdit ? 'none' : 'block';
+    document.getElementById('info-edit-view').style.display = isEdit ? 'block' : 'none';
+    document.getElementById('modal-title').innerHTML = isEdit ? 
+        '<i class="fa-solid fa-pen-to-square"></i> 編輯訂單' : 
+        '<i class="fa-solid fa-circle-info"></i> 訂單詳細資訊';
+
     
     // 填入晚數資料 (index 10)
     if(document.getElementById('e-nights')) {
@@ -444,12 +490,18 @@ function changeMonth(n) {
     renderOrderList();
 }
 
+// --- 4. 強化複製功能 (支援編輯後的文字) ---
 function copyText(id, e) {
-    const t = document.getElementById(id).innerText;
-    navigator.clipboard.writeText(t);
-    const btn = e.currentTarget;
-    btn.innerText = "✅ 已複製";
-    setTimeout(() => btn.innerText = "複製", 1000);
+    const el = document.getElementById(id);
+    // 優先抓取 contenteditable 的 innerText，確保編輯後的內容被複製
+    const t = el.innerText || el.value;
+    
+    navigator.clipboard.writeText(t).then(() => {
+        const btn = e.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> 已複製';
+        setTimeout(() => btn.innerHTML = originalText, 1000);
+    });
 }
 
 function updatePackagePreview() {

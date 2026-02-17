@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>煦願民宿｜智慧工作站</title>
+  <title>煦願民宿｜專業管理系統</title>
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/619/619153.png" type="image/png">
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="煦願管家">
@@ -24,10 +25,16 @@
 
 <div class="container">
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchPage('tpl-page', event)">回覆模板</button>
-    <button class="tab-btn" onclick="switchPage('calc-page', event)">房價神器</button>
-    <button class="tab-btn" onclick="switchPage('order-page', event)">所有訂單</button>
-  </div>
+  <button class="tab-btn active" onclick="switchPage('tpl-page', event)">
+    <i class="fa-solid fa-message"></i> 回覆模板
+  </button>
+  <button class="tab-btn" onclick="switchPage('calc-page', event)">
+    <i class="fa-solid fa-calculator"></i> 房價神器
+  </button>
+  <button class="tab-btn" onclick="switchPage('order-page', event)">
+    <i class="fa-solid fa-calendar-days"></i> 所有訂單
+  </button>
+</div>
 
   <div class="content">
     
@@ -53,7 +60,8 @@
           <h3 style="margin:0;">🛒 已打包訊息內容</h3>
           <button class="cat-tag" style="background:#95a5a6; color:white; border:none; padding:4px 10px;" onclick="clearPackage()">清空重選</button>
         </div>
-        <div class="preview-area" id="pkg-preview" style="min-height: 50px; color:#95a5a6;">尚未選擇任何訊息...</div>
+        <div class="preview-area" id="p-res" contenteditable="true" style="border: 1px solid #ddd; padding: 10px; border-radius: 8px;"></div>
+        <div class="preview-area" id="pkg-preview" contenteditable="true" style="min-height: 50px; color:#3a4553; border: 1px dashed #af6a58;">尚未選擇任何訊息...</div>
         <button class="copy-btn btn-pack" onclick="copyText('pkg-preview', event)">複製打包訊息</button>
       </div>
 
@@ -105,58 +113,62 @@
     </div>
 
     <div id="order-page" class="page">
-      <div id="lock-screen" class="card">
-        <h3>🔒 雲端資料庫連線</h3>
-        <input type="password" id="admin-key" placeholder="輸入管理金鑰">
-        <button class="copy-btn" onclick="fetchOrders()">讀取訂單資料</button>
-      </div>
-
-      <div id="order-content" style="display:none;">
-        <div class="accordion-header order-add-header" onclick="toggleAccordion('order-add-content', 'order-acc-icon')">
-          <span class="acc-title">➕ 快速登錄新訂單</span>
-          <span id="order-acc-icon">▼</span>
-        </div>
-       <div class="accordion-content" id="order-add-content">
-  <input type="text" id="o-name" placeholder="訂房人姓名">
-  <div class="input-row">
-    <input type="date" id="o-date">
-    <select id="o-source"><option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option></select>
+  <div id="lock-screen" class="card">
+    <h3><i class="fa-solid fa-lock"></i> 雲端資料庫連線</h3>
+    <input type="password" id="admin-key" placeholder="輸入管理金鑰">
+    <button class="copy-btn" onclick="fetchOrders()">讀取訂單資料</button>
   </div>
-  <div class="input-row">
-    <input type="number" id="o-guests" placeholder="人數">
-    <div style="flex:1; display:flex; align-items:center; gap:5px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding-right:10px;">
-        <select id="o-nights" style="border:none; margin-bottom:0; background:transparent;">
-            <option value="1">1 晚</option>
-            <option value="2">2 晚</option>
-            <option value="3">3 晚</option>
-            <option value="4">4 晚</option>
-            <option value="5">5 晚</option>
-        </select>
+
+  <div id="order-content" style="display:none;">
+    <div class="accordion-header order-add-header" onclick="toggleAccordion('order-add-content', 'order-acc-icon')">
+      <span class="acc-title"><i class="fa-solid fa-plus"></i> 快速登錄新訂單</span>
+      <span id="order-acc-icon"><i class="fa-solid fa-chevron-down"></i></span>
     </div>
-</div>
-</div>
-  <div class="input-row">
-    <select id="o-rooms">
-      <option value="0">0 房</option>
-      <option value="1">1 房</option>
-      <option value="2">2 房</option>
-      <option value="3" selected>3 房 (包棟)</option>
-    </select>
-    <input type="number" id="o-total" placeholder="總房價">
-  </div>
-  <div class="input-row">
-    <input type="number" id="o-dep" placeholder="訂金金額">
-    <div style="flex:1"></div> 
-  </div>
-  <button class="copy-btn btn-save" onclick="addOrder()">儲存並同步至雲端</button>
-</div>
+    
+    <div class="accordion-content" id="order-add-content">
+      <input type="text" id="o-name" placeholder="訂房人姓名">
+      <div class="input-row">
+        <input type="date" id="o-date">
+        <select id="o-source">
+          <option>私LINE</option>
+          <option>Booking</option>
+          <option>官方LINE</option>
+          <option>FB</option>
+        </select>
+      </div>
+      <div class="input-row">
+        <input type="number" id="o-guests" placeholder="人數">
+        <select id="o-nights" class="wide-select">
+          <option value="1">1 晚</option>
+          <option value="2">2 晚</option>
+          <option value="3">3 晚</option>
+          <option value="4">4 晚</option>
+          <option value="5">5 晚</option>
+        </select>
+      </div>
+      <div class="input-row">
+        <select id="o-rooms">
+          <option value="0">0 房</option>
+          <option value="1">1 房</option>
+          <option value="2">2 房</option>
+          <option value="3" selected>3 房 (包棟)</option>
+        </select>
+        <input type="number" id="o-total" placeholder="總房價">
+      </div>
+      <div class="input-row">
+        <input type="number" id="o-dep" placeholder="訂金金額">
+        <input type="text" id="o-note" placeholder="備註（床數、熟客等）">
+      </div>
+      <button class="copy-btn btn-save" onclick="addOrder()">儲存並同步至雲端</button>
+    </div>
 
-        <div class="card">
-          <div class="month-nav">
-            <button class="cat-tag" onclick="changeMonth(-1)">上個月</button>
-            <h3 id="cal-month-title"></h3>
-            <button class="cat-tag" onclick="changeMonth(1)">下個月</button>
-          </div>
+    <div class="card">
+      <div class="month-nav">
+        <button class="cat-tag" onclick="changeMonth(-1)"><i class="fa-solid fa-angle-left"></i></button>
+        <h3 id="cal-month-title"></h3>
+        <button class="cat-tag" onclick="changeMonth(1)"><i class="fa-solid fa-angle-right"></i></button>
+      </div>
+    
 
           <div class="view-switcher">
             <button class="view-btn active" id="btn-cal" onclick="switchOrderView('cal')">📅 月曆視圖</button>
@@ -194,51 +206,54 @@
 <div id="edit-modal" class="modal">
   <div class="modal-content">
     <span class="close-btn" onclick="closeEditModal()">&times;</span>
-    <h3>📝 訂單詳細資訊</h3>
-    <input type="hidden" id="e-oid">
-    <input type="text" id="e-name" placeholder="姓名">
-<div class="input-row">
-    <input type="date" id="e-date">
-    <div style="flex:1; display:flex; align-items:center; gap:5px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding-right:10px;">
-        <select id="e-nights" style="border:none; margin-bottom:0; background:transparent;">
-            <option value="1">1 晚</option>
-            <option value="2">2 晚</option>
-            <option value="3">3 晚</option>
-            <option value="4">4 晚</option>
-            <option value="5">5 晚</option>
-        </select>
+    <h3 id="modal-title"><i class="fa-solid fa-circle-info"></i> 訂單詳細資訊</h3>
+    
+    <div id="info-display-view">
+      <div class="info-list" id="detail-info-list">
+        </div>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="copy-btn" style="flex:1;" onclick="toggleEditMode(true)">編輯資料</button>
+        <button class="copy-btn btn-pulse" id="btn-pulse" onclick="openPulse()">Booking Pulse</button>
+      </div>
     </div>
-</div>
 
-<div class="input-row">
-    <select id="e-source">
-        <option>私LINE</option>
-        <option>Booking</option>
-        <option>官方LINE</option>
-        <option>FB</option>
-    </select>
-</div>
-    <div class="input-row">
-      <input type="number" id="e-guests" placeholder="人數">
-      <select id="e-rooms">
-        <option value="0">0 房</option>
-        <option value="1">1 房</option>
-        <option value="2">2 房</option>
-        <option value="3">3 房</option>
-      </select>
+    <div id="info-edit-view" style="display:none;">
+      <input type="hidden" id="e-oid">
+      <input type="text" id="e-name" placeholder="姓名">
+      <div class="input-row">
+        <input type="date" id="e-date">
+        <select id="e-nights" class="wide-select">
+          <option value="1">1 晚</option>
+          <option value="2">2 晚</option>
+          <option value="3">3 晚</option>
+          <option value="4">4 晚</option>
+          <option value="5">5 晚</option>
+        </select>
+      </div>
+      <div class="input-row">
+        <select id="e-source">
+          <option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option>
+        </select>
+        <input type="number" id="e-guests" placeholder="人數">
+      </div>
+      <div class="input-row">
+        <select id="e-rooms">
+          <option value="0">0 房</option><option value="1">1 房</option><option value="2">2 房</option><option value="3">3 房</option>
+        </select>
+        <input type="number" id="e-total" placeholder="總價">
+      </div>
+      <div class="input-row">
+        <input type="number" id="e-dep" placeholder="訂金">
+        <input type="text" id="e-note" placeholder="備註">
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="copy-btn" style="flex:2;" onclick="submitUpdate()">儲存更新</button>
+        <button class="copy-btn btn-cancel" style="flex:1; background:#95a5a6;" onclick="toggleEditMode(false)">取消</button>
+      </div>
+      <button class="copy-btn btn-delete" style="background:#e74c3c; margin-top:10px;" onclick="submitDelete()">刪除訂單</button>
     </div>
-    <div class="input-row">
-      <input type="number" id="e-total" placeholder="總價">
-      <input type="number" id="e-dep" placeholder="訂金">
-    </div>
-    <div style="display: flex; gap: 10px; margin-top: 15px;">
-      <button class="copy-btn" style="flex:2;" onclick="submitUpdate()">更新儲存</button>
-      <button class="copy-btn btn-save" style="flex:1; background:#95a5a6;" onclick="submitDelete()">刪除</button>
-    </div>
-    <button class="copy-btn" id="btn-pulse" style="background:#003580; display:none; margin-top:10px;" onclick="openPulse()">開啟 Booking Pulse</button>
   </div>
 </div>
-
 <script src="script.js"></script>
 </body>
 
