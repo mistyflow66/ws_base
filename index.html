@@ -123,11 +123,17 @@
     <select id="o-source"><option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option></select>
   </div>
   <div class="input-row">
-    <input type="number" id="o-guests" placeholder="總來客人數">
+    <input type="number" id="o-guests" placeholder="人數">
     <div style="flex:1; display:flex; align-items:center; gap:5px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding-right:10px;">
-        <input type="number" id="o-nights" value="1" min="1" style="border:none; margin-bottom:0;">
-        <span style="color:#666; font-size:0.9rem;">晚</span>
+        <select id="o-nights" style="border:none; margin-bottom:0; background:transparent;">
+            <option value="1">1 晚</option>
+            <option value="2">2 晚</option>
+            <option value="3">3 晚</option>
+            <option value="4">4 晚</option>
+            <option value="5">5 晚</option>
+        </select>
     </div>
+</div>
 </div>
   <div class="input-row">
     <select id="o-rooms">
@@ -194,10 +200,16 @@
 <div class="input-row">
     <input type="date" id="e-date">
     <div style="flex:1; display:flex; align-items:center; gap:5px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding-right:10px;">
-        <input type="number" id="e-nights" min="1" style="border:none; margin-bottom:0;">
-        <span style="color:#666; font-size:0.9rem;">晚</span>
+        <select id="e-nights" style="border:none; margin-bottom:0; background:transparent;">
+            <option value="1">1 晚</option>
+            <option value="2">2 晚</option>
+            <option value="3">3 晚</option>
+            <option value="4">4 晚</option>
+            <option value="5">5 晚</option>
+        </select>
     </div>
 </div>
+
 <div class="input-row">
     <select id="e-source">
         <option>私LINE</option>

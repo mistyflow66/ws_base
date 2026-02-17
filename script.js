@@ -494,37 +494,84 @@ function toggleAccordion(contentId, iconId) {
     }
 }
 
-// 自動計算模板頁面的尾款
+// 1. 確保這個函數名稱叫 calculateBalance (對應 HTML 的 oninput)
 function calculateBalance() {
-    const totalInput = document.getElementById('v-total');
-    const depInput = document.getElementById('v-dep');
+    const total = parseFloat(document.getElementById('v-total').value) || 0;
+    const dep = parseFloat(document.getElementById('v-dep').value) || 0;
+    const bal = total - dep;
+    
+    // 更新隱藏的尾款欄位
     const balInput = document.getElementById('v-bal');
+    if (balInput) balInput.value = bal;
+    
+    // 更新文字顯示
     const display = document.getElementById('v-bal-display');
-
-    if (totalInput && depInput && balInput) {
-        const total = parseFloat(totalInput.value) || 0;
-        const dep = parseFloat(depInput.value) || 0;
-        const bal = total - dep;
-        
-        // 更新隱藏欄位數值（供模板抓取）
-        balInput.value = bal > 0 ? bal : 0;
-        
-        // 更新顯示文字
-        if (display) {
-            display.innerText = `自動計算尾款：$${(bal > 0 ? bal : 0).toLocaleString()}`;
-        }
+    if (display) {
+        display.innerText = `自動計算尾款：$${(bal > 0 ? bal : 0).toLocaleString()}`;
     }
-    // 計算完後，立即更新模板預覽內容
+    
+    // 觸發模板更新
     updateAll();
 }
 
-// 修改 updateAll 函數加入計算
+// 2. 修正 updateAll
 function updateAll() {
-    // 執行自動計算尾款
-    autoCalcTplBalance(); 
-
+    // 房價神器計算
     if (typeof runManualCalc === "function") {
         runManualCalc(); 
     }
-    // ...其餘不變
+
+    // 渲染模板列表
+    const tplList = document.getElementById('tpl-list');
+    if (tplList) {
+        // 抓取目前選中的分類標籤
+        const activeCatBtn = document.querySelector('.category-nav .cat-tag.active');
+        let filter = 'all';
+        if (activeCatBtn) {
+            const btnText = activeCatBtn.innerText;
+            filter = (btnText === '全部') ? 'all' : btnText;
+        }
+
+        // 執行渲染
+        updateTpl(filter);
+        updatePackagePreview();
+    }
+}
+
+// 3. 確保 updateTpl 抓得到數值
+function updateTpl(filter = 'all') {
+    const d = document.getElementById('v-date').value || "____";
+    const p = document.getElementById('v-pwd').value || "____";
+    const dep = document.getElementById('v-dep').value || "0";
+    // 如果 v-bal 沒值，就顯示 0
+    const bal = document.getElementById('v-bal').value || "0"; 
+    
+    const list = document.getElementById('tpl-list');
+    if (!list) return; 
+    list.innerHTML = '';
+
+    TPL_DATA.forEach((item, i) => {
+        if (filter !== 'all' && item.cat !== filter) return;
+
+        // 這裡會呼叫 TPL_DATA 裡的內容函數
+        const content = item.content(d, p, dep, bal); 
+        const isPacked = packageList.includes(content);
+        
+        const box = document.createElement('div');
+        box.className = `card ${isPacked ? 'card-packed' : ''}`;
+        box.innerHTML = `
+            <div onclick="togglePackage(${i})" style="cursor:pointer;">
+                <h3 style="display:inline-block;">[${item.cat}] ${item.title}</h3>
+                ${isPacked ? '<span style="color:#e67e22; font-weight:bold; margin-left:10px;">(已打包)</span>' : ''}
+            </div>
+            <div class="preview-area" id="t-${i}">${content}</div>
+            <div class="input-row" style="margin-top:10px; gap:8px;">
+                <button class="copy-btn" style="flex:1; margin-top:0;" onclick="copyText('t-${i}', event)">單獨複製</button>
+                <button class="copy-btn" style="flex:1; margin-top:0; background:${isPacked ? '#e67e22' : '#3498db'};" onclick="togglePackage(${i})">
+                    ${isPacked ? '取消打包' : '加入打包'}
+                </button>
+            </div>
+        `;
+        list.appendChild(box);
+    });
 }
