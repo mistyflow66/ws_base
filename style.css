@@ -78,3 +78,65 @@ input:focus { border-color: #27ae60; }
 
 /* 讓分類標籤更易捲動 */
 .category-nav::-webkit-scrollbar { display: none; }
+
+/* --- 彈窗與摺疊功能隱藏設定 --- */
+
+/* 1. 修正彈窗 (Edit Modal) 的定位，確保它平常是隱藏的且浮在最上層 */
+.modal {
+    display: none;        /* 預設隱藏 */
+    position: fixed;     /* 固定定位，不隨頁面捲動 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6); /* 背景遮罩 */
+    z-index: 2000;       /* 確保在最前方 */
+    backdrop-filter: blur(2px);
+}
+
+/* 2. 修正新增訂單的摺疊內容 (Accordion) */
+.accordion-content {
+    display: none;       /* 預設隱藏 */
+    background: #fff;
+    border: 1px solid #fab1a0;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+/* 3. 當加上 .active 類別時才顯示 */
+.modal.active, 
+.accordion-content.active {
+    display: block;
+    animation: slideDown 0.3s ease-out;
+}
+
+/* 4. 彈窗內部的白色區塊 */
+.modal-content {
+    background: white;
+    margin: 15% auto;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 16px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* 5. 摺疊標頭的樣式優化 */
+.accordion-header {
+    background: #fff5f5;
+    border: 1px solid #fab1a0;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

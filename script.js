@@ -77,8 +77,9 @@ const TPL_DATA = [
     title: '五星好評邀請', 
     content: () => `有空歡迎幫您我們留言+5星好評，您的肯定是我們前進的動力！煦願民宿感謝您💕\nhttps://maps.app.goo.gl/vcoPQQuMRaME1rpY6`
   }
-];     
+]; 
 
+let packageList = [];
 let globalOrderData = [];
 let currentViewDate = new Date();
 let currentView = 'cal'; // 'cal' 或 'list'
@@ -106,16 +107,25 @@ function switchPage(id, e) {
 }
 
 function updateAll() {
-    // 1. 更新房價計算 (房價神器)
+    // 1. 更新房價計算 (這部分沒問題)
     if (typeof runManualCalc === "function") {
         runManualCalc(); 
     }
 
-    // 2. 更新模板預覽 (只有在模板分頁才執行，避免報錯)
+    // 2. 更新模板預覽
     const tplList = document.getElementById('tpl-list');
     if (tplList) {
-        const activeCatBtn = document.querySelector('.cat-tag.active');
-        const filter = activeCatBtn ? (activeCatBtn.innerText === '全部' ? 'all' : activeCatBtn.innerText) : 'all';
+        // 抓取目前選中的標籤（修正：只抓 category-nav 裡的標籤，避免抓到清空按鈕）
+        const activeCatBtn = document.querySelector('.category-nav .cat-tag.active');
+        
+        // 取得標籤文字並轉換為 filter 參數
+        let filter = 'all';
+        if (activeCatBtn) {
+            const btnText = activeCatBtn.innerText;
+            filter = (btnText === '全部') ? 'all' : btnText;
+        }
+
+        // 執行渲染與打包預覽
         updateTpl(filter);
         updatePackagePreview();
     }
