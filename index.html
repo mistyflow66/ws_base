@@ -1,154 +1,292 @@
-<!DOCTYPE html>
-<html lang="zh-TW">      
-<head>      
-  <meta charset="UTF-8" />      
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />      
-  <title>煦願民宿｜智慧工作站</title>      
-  <meta name="mobile-web-app-capable" content="yes">      
-  <link rel="stylesheet" href="style.css">
-</head>      
-<body>      
-<div class="container">      
-  <div class="nav-tabs">      
-    <button class="tab-btn active" onclick="switchPage('tpl-page', event)">回覆模板</button>      
-    <button class="tab-btn" onclick="switchPage('calc-page', event)">房價神器</button>      
-    <button class="tab-btn" onclick="switchPage('order-page', event)">所有訂單</button>      
-  </div>        
+// --- 關鍵設定區 ---
+const GAS_URL = "https://script.google.com/macros/s/AKfycbySPYLiPf6pUhZqbHMSK2z2eYtrzVWrPUweojAoCG8_15IrxQH0dhTOiXp1gf58dpiEQg/exec"; 
+const ADMIN_KEY_VAL = (123 * 914 + 39).toString();
+const STORAGE_KEY = "wish_stay_admin_pwd";
 
-  <div class="content">      
-    <div id="tpl-page" class="page active">      
-      <div class="card info-base">      
-        <label>💡 基礎資訊（填寫後自動帶入模板）</label>      
-        <div class="input-row">      
-          <input type="text" id="v-date" placeholder="入住日期(如3/12)" oninput="updateAll()">      
-          <input type="text" id="v-pwd" placeholder="今日大門密碼" oninput="updateAll()">      
-        </div>      
-        <div class="input-row">      
-          <input type="text" id="v-dep" placeholder="訂金金額" oninput="updateAll()">      
-          <input type="text" id="v-bal" placeholder="尾款金額" oninput="updateAll()">      
-        </div>      
-      </div>
+const PRICE_MAP = {      
+  '201': { weekday: { 1: 1900 }, weekend: { 1: 2200 }, cny: { 1: 2900 } },      
+  '202': { weekday: { 1: 2400, 2: 2600 }, weekend: { 1: 2600, 2: 2800 }, cny: { 1: 5600, 2: 6000 } },      
+  '301': { weekday: { 1: 3500, 2: 4500, 3: 5000, 4: 5500 }, weekend: { 1: 3800, 2: 4800, 3: 5300, 4: 5800 }, cny: { 1: 6000, 2: 7000, 3: 8000, 4: 9000 } }      
+};
 
-      <div class="accordion-header" onclick="toggleAccordion()">
-        <span class="acc-title">📦 展開「入住通知打包」神器</span>
-        <span id="acc-icon">▼</span>
-      </div>
-      <div class="accordion-content" id="acc-content">
-        <div class="checkbox-group">
-          <label class="check-item"><input type="checkbox" id="c-basic" checked onchange="buildPackage()"> 入住與密碼</label>
-          <label class="check-item"><input type="checkbox" id="c-amenity" onchange="buildPackage()"> 備品設備詳情</label>
-          <label class="check-item"><input type="checkbox" id="c-sing" onchange="buildPackage()"> 唱歌/音響說明</label>
-          <label class="check-item"><input type="checkbox" id="c-nearby" onchange="buildPackage()"> 周邊與折扣</label>
-          <label class="check-item"><input type="checkbox" id="c-spot" onchange="buildPackage()"> 景點步道推薦</label>
-          <label class="check-item"><input type="checkbox" id="c-form" onchange="buildPackage()"> 住宿資料表</label>
-        </div>
-        <div class="preview-area" id="pkg-preview">勾選上方選項以生成打包文字...</div>
-        <button class="copy-btn btn-pack" onclick="copyText('pkg-preview', event)">複製打包訊息</button>
-      </div>
+// --- 模板資料庫 (已更新為最新文案) ---
+const TPL_DATA = [      
+  { cat: '訂房', title: '有空房回覆(含介紹)', content: (d) => `👋您好～煦願民宿 ${d} 有空房，每間房都有陽台\n寬敞客廳備有：\n✅電動麻將桌✅藍芽麥克風音響✅桌遊✅廚房可煮火鍋，大長桌同樂自在輕鬆\n車庫最多可停放3輛車\n私訊訂房可享優惠～\n民宿設施可參考官網：wishstaybnb.com` },      
+  { cat: '訂房', title: '匯款資訊', content: (d,p,dep) => `中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷\n需麻煩您於 24 小時內匯入訂金 $${dep}，核對後即完成預定。` },      
+  { cat: '訂房', title: '詢問設備需求', content: () => `需要幫您準備電動麻將桌、藍芽麥克風音箱、跳跳馬嗎？` },
+  { cat: '入住', title: '入住完整打包(含規則)', content: (d,p) => `煦願小幫手先介紹：\n🌟這邊先給您今日大門密碼：${p}\n🔓開門方法：\n（1）從外開門：手掌觸碰螢幕，按鍵亮起後輸入\n（2）從裡面出去：按下安全鈕、手把同時下壓即可開門\n\n🌟房間鑰匙配備在-電視櫃旁鑰匙架，歡迎使用\n隔天11點退房時，鑰匙放回架上，回傳照片即做好退房手續喔～\n\n🌟民宿拖鞋每一組客人離開後都清洗過，每一組客人都是專屬的室內拖鞋，請您放心使用～\n\n🌟民宿室內全面禁菸，若有需要吸菸的朋友，我們每個陽台和車庫都備有煙灰缸，謝謝您🙏\n\n🌟民宿備有大、小毛巾、漱口杯、沐浴乳和洗髮精是用-沙威隆系列，並備有旋轉式按摩蓮蓬頭和吹風機，舒緩您旅途的疲憊\n\n🌟吧台上面的飲品和零食、礦泉水是為您們做準備，請自行取用\n\n🌟溫馨提醒，現在民宿不能主動提供牙刷牙膏一次性用具，若真的沒有帶，請告知\n\n煦願民宿祝您入住愉快☺️` },
+  { cat: '設施', title: '大門開鎖影片', content: () => `🔒大門密碼開鎖\n手擺上密碼盤感應到就會亮出來，輸入密碼後按*字鍵開門。\n若大門久未關上，電子鎖會發出嗶嗶聲，影片後段有示範如何解除\nhttps://youtu.be/zAHONO_SOAc` },
+  { cat: '設施', title: '麥克風教學', content: () => `🎤藍牙麥克風音響使用說明：\nhttps://m.youtube.com/shorts/8LMhA15R870` },
+  { cat: '設施', title: '小管家溫馨提醒', content: () => `🍢煦願小管家溫馨提醒：\n1. 請於9:00前結束室外烤肉活動，可把烤好食材移至室內並關上大門享用聚會☺️\n2. 麥克風音響-唱到10:00前，後續可進行桌遊和電動麻將同樂喔！\n3. 民宿室內全面禁菸，若需要吸菸我們每間房間外陽台都備有煙灰缸\n～煦願民宿感謝您的配合～` },
+  { cat: '烤肉', title: '代訂食材流程', content: () => `以下向您說明代訂烤肉食材的相關流程：\n1. 確認匯款後，我們將立即為您進行代訂服務。\n2. 烤肉食材將由宅配公司配送。建議中午前送達，並保留足夠退冰時間。\n3. 貨物抵達後，民宿會先協助開箱檢查品項、數量、重量。\n4. 完成檢查後，我們會將現場照片回傳給您確認。\n感謝您的配合與支持！` },
+  { cat: '周邊', title: '超商與生活機能', content: () => `走路5分鐘可到7-11和美廉社，還有早午餐店\n7-11：https://maps.app.goo.gl/uskg6orv7dVas2eb7\n美聯社：https://maps.app.goo.gl/LNYRJGaVaj8GNxAy7` },      
+  { cat: '周邊', title: '美食與阿信快炒', content: () => `🚗民宿附近的景點及交通：\nhttps://wishstaybnb.com/transportation\n#民宿外面走路1分鐘有一個公園可活動\n#隔壁阿信快炒(走路2分鐘)報-煦願民宿，可打9.5折！\nhttps://maps.app.goo.gl/P3wgTe4HAHboXiYy9` },
+  { cat: '周邊', title: '景點與步道推薦', content: () => `🌟分享民宿附近景點參考：\n安農溪、落羽松、清水地熱、太平山、長埤湖精靈村、張美阿嬤農場、梅花湖、羅東夜市。\n\n👣推薦步道：\n仁山步道：https://maps.app.goo.gl/C9XisDS8qaQax11q6\n三清宮步道：https://maps.app.goo.gl/rmyyNfcdFHc8YdbX6` },
+  { cat: '退房', title: '住宿資料表', content: () => `麻煩您✏️住宿資料\n（一人代表填寫即可，謝謝！）\n姓名：\n出生年月：\n身分證號：\n住址：\n電話：` },
+  { cat: '退房', title: '五星好評連結', content: () => `有空歡迎幫您我們留言+5星好評，您的肯定是我們前進的動力！煦願民宿感謝您💕\nhttps://maps.app.goo.gl/vcoPQQuMRaME1rpY6` }
+];      
 
-      <div class="category-nav" id="cat-nav">      
-        <button class="cat-tag active" onclick="filterCat('all', event)">全部</button>      
-        <button class="cat-tag" onclick="filterCat('訂房', event)">訂房報價</button>      
-        <button class="cat-tag" onclick="filterCat('入住', event)">入住導引</button>      
-        <button class="cat-tag" onclick="filterCat('設施', event)">設施說明</button>      
-        <button class="cat-tag" onclick="filterCat('烤肉', event)">代訂烤肉</button>      
-        <button class="cat-tag" onclick="filterCat('周邊', event)">周邊景點</button>      
-        <button class="cat-tag" onclick="filterCat('退房', event)">退房手續</button>      
-      </div>      
-      <div id="tpl-list"></div>      
-    </div>      
-    
-    <div id="calc-page" class="page">
-      <div class="card">
-        <h3>1. 選擇時段與手動調整 (選填)</h3>
-        <select id="m-season" onchange="runManualCalc()">
-          <option value="weekday">一般平日</option>
-          <option value="weekend">週六假日</option>
-          <option value="cny">農曆過年</option>
-        </select>
-        <div class="input-row-3">
-          <input type="number" id="p-201" placeholder="201房價(預設)" oninput="runManualCalc()">
-          <input type="number" id="p-202" placeholder="202房價(預設)" oninput="runManualCalc()">
-          <input type="number" id="p-301" placeholder="301房價(預設)" oninput="runManualCalc()">
-        </div>
-        
-        <h3 class="mt-15">2. 選擇本次開房床數</h3>
-        <div class="room-select-grid">
-          <div><label>201</label><select id="m-201" onchange="runManualCalc()"><option value="0">不開</option><option value="1">1 床</option></select></div>
-          <div><label>202</label><select id="m-202" onchange="runManualCalc()"><option value="0">不開</option><option value="1">1 床</option><option value="2">2 床</option></select></div>
-          <div><label>301</label><select id="m-301" onchange="runManualCalc()"><option value="0">不開</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
-        </div>
-      </div>
-      <div id="calc-result"></div>
-    </div>
+let globalOrderData = [];
+let currentViewDate = new Date();
 
-    <div id="order-page" class="page">
-      <div id="lock-screen" class="card">
-        <h3>🔒 雲端資料庫連線</h3>
-        <input type="password" id="admin-key" placeholder="輸入管理金鑰">
-        <button class="copy-btn" onclick="fetchOrders()">讀取訂單資料</button>
-      </div>
+// --- 初始化與密碼記憶 ---
+window.onload = () => { 
+    updateAll(); 
+    const savedKey = localStorage.getItem(STORAGE_KEY);
+    if(savedKey) {
+        document.getElementById('admin-key').value = savedKey;
+        fetchOrders(); 
+    }
+};
 
-      <div id="order-content" style="display:none;">
-        <div class="card order-add-card">
-          <h3>➕ 快速登錄新訂單</h3>
-          <input type="text" id="o-name" placeholder="訂房人姓名">
-          <div class="input-row">
-            <input type="date" id="o-date">
-            <select id="o-source"><option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option></select>
-          </div>
-          <div class="input-row">
-            <input type="number" id="o-guests" placeholder="總來客人數">
-            <input type="number" id="o-rooms" placeholder="總開房數量">
-          </div>
-          <div class="input-row">
-            <input type="number" id="o-total" placeholder="總房價">
-            <input type="number" id="o-dep" placeholder="訂金金額">
-          </div>
-          <button class="copy-btn btn-save" onclick="addOrder()">儲存並同步至雲端</button>
-        </div>
+// --- 通用功能 ---
+function switchPage(id, e) {
+    document.querySelectorAll('.page, .tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(e) e.currentTarget.classList.add('active');
+}
 
+function showLoading(show) {
+    document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+}
+
+function toggleAccordion(contentId, iconId) {
+    const c = document.getElementById(contentId);
+    c.classList.toggle('active');
+    document.getElementById(iconId).innerText = c.classList.contains('active') ? '▲' : '▼';
+}
+
+function updateAll() { updateTpl(); buildPackage(); }
+
+// --- 模板邏輯 ---
+function updateTpl(filter = 'all') {
+    const d = document.getElementById('v-date').value || "____";
+    const p = document.getElementById('v-pwd').value || "____";
+    const dep = document.getElementById('v-dep').value || "____";
+    const list = document.getElementById('tpl-list');
+    list.innerHTML = '';
+    TPL_DATA.filter(i => filter === 'all' || i.cat === filter).forEach((item, i) => {
+        const box = document.createElement('div'); box.className = 'card';
+        box.innerHTML = `<h3>[${item.cat}] ${item.title}</h3><div class="preview-area" id="t-${i}">${item.content(d,p,dep)}</div><button class="copy-btn" onclick="copyText('t-${i}', event)">複製</button>`;
+        list.appendChild(box);
+    });
+}
+
+function filterCat(cat, e) {
+    document.querySelectorAll('.cat-tag').forEach(el => el.classList.remove('active'));
+    if(e) e.currentTarget.classList.add('active');
+    updateTpl(cat);
+}
+
+function buildPackage() {
+    const d = document.getElementById('v-date').value || "今天";
+    const p = document.getElementById('v-pwd').value || "____";
+    let pkg = `👋 您好！煦願小幫手為您準備入住資訊 (${d})：\n\n`;
+    if(document.getElementById('c-basic').checked) pkg += `🌟 大門密碼：${p}\n🔓 開門：手掌觸碰螢幕亮起後輸入密碼按*\n🔑 鑰匙在電視櫃旁，退房放回即可。\n----------------\n`;
+    if(document.getElementById('c-amenity').checked) pkg += `🛁 備品：大小毛巾、沙威隆洗沐，吧台飲品免費。\n⚠️ 不主動提供牙刷牙膏，請知悉。\n----------------\n`;
+    if(document.getElementById('c-sing').checked) pkg += `🎤 唱歌：請於 10:00 前結束，影片教學：https://m.youtube.com/shorts/8LMhA15R870\n----------------\n`;
+    if(document.getElementById('c-nearby').checked) pkg += `🍱 美食：阿信快炒報「煦願」享 9.5 折。\n----------------\n`;
+    if(document.getElementById('c-spot').checked) pkg += `⛰️ 推薦：仁山步道、清水地熱、張美阿嬤農場。\n----------------\n`;
+    if(document.getElementById('c-form').checked) pkg += `✏️ 住宿資料：姓名、生日、身分證號、住址、電話。\n----------------\n`;
+    pkg += `祝您入住愉快！☺️`;
+    document.getElementById('pkg-preview').innerText = pkg;
+}
+
+// --- 報價神器 ---
+function updatePlaceholders() {
+    const s = document.getElementById('m-season').value;
+    document.getElementById('p-201').placeholder = PRICE_MAP['201'][s][1];
+    document.getElementById('p-202').placeholder = PRICE_MAP['202'][s][1];
+    document.getElementById('p-301').placeholder = PRICE_MAP['301'][s][1];
+    runManualCalc();
+}
+
+function runManualCalc() {
+    const s = document.getElementById('m-season').value;
+    const rooms = ['201','202','301'];
+    let totalBT = 0;
+    rooms.forEach(rid => {
+        const b = parseInt(document.getElementById('m-'+rid).value);
+        if(b > 0) {
+            const inputVal = document.getElementById('p-'+rid).value;
+            const placeholderVal = document.getElementById('p-'+rid).placeholder;
+            const finalPrice = inputVal ? parseFloat(inputVal) : parseFloat(placeholderVal);
+            // 若手動輸入價格，直接加上去；否則依床數查表
+            totalBT += inputVal ? finalPrice : PRICE_MAP[rid][s][b];
+        }
+    });
+    const priv = Math.ceil((totalBT * 0.88 * 1.03) / 10) * 10;
+    document.getElementById('calc-result').innerHTML = `
         <div class="card">
-          <div class="month-nav">
-            <button class="cat-tag" onclick="changeMonth(-1)">上個月</button>
-            <h3 id="cal-month-title"></h3>
-            <button class="cat-tag" onclick="changeMonth(1)">下個月</button>
-          </div>
-          
-        <div id="calendar-grid" class="calendar-container"></div>
+            <div class="highlight">Booking 總價：$${totalBT.toLocaleString()}</div>
+            <div class="private-price">私訊優惠價：$${priv.toLocaleString()}</div>
+            <div class="preview-area" id="p-res" style="margin-top:10px;">👋您好～煦願民宿有空房，私訊訂房優惠價：$${priv.toLocaleString()}</div>
+            <button class="copy-btn" onclick="copyText('p-res', event)">複製報價</button>
+        </div>`;
+}
 
-          <button class="copy-btn btn-stat" onclick="toggleStats()">📊 點此查看本月詳細經營統計</button>
-          
-          <div id="stats-area" class="stats-hidden">
-            <div class="stat-grid">
-              <div class="stat-item"><div class="stat-label">總來客人數</div><div id="stat-total-guests" class="stat-value">0</div></div>
-              <div class="stat-item"><div class="stat-label">總開房次數</div><div id="stat-total-rooms" class="stat-value">0</div></div>
-              <div class="stat-item"><div class="stat-label">Booking 比例</div><div id="stat-b-rate" class="stat-value">0%</div></div>
-              <div class="stat-item"><div class="stat-label">私訊訂房比例</div><div id="stat-o-rate" class="stat-value">0%</div></div>
-            </div>
-          </div>
-          <div id="order-list" class="mt-15"></div>
-        </div>
+// --- 訂單與 GAS 通訊 ---
+async function fetchOrders() {
+    const key = document.getElementById('admin-key').value;
+    if(!key) return;
+    showLoading(true);
+    try {
+        const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "read", key: key }) });
+        const data = await res.json();
+        if(data && Array.isArray(data)) {
+            globalOrderData = data;
+            localStorage.setItem(STORAGE_KEY, key);
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('order-content').style.display = 'block';
+            renderOrderList();
+        }
+    } catch(e) { alert("連線失敗，請檢查金鑰或網路"); }
+    finally { showLoading(false); }
+}
 
-        <div class="card finance-card">
-          <h3>💰 財務月結試算</h3>
-          <div class="fin-row"><span>總房費收入</span><b id="fin-income">$0</b></div>
-          <div class="fin-row color-red"><span>Booking 手續費</span><b id="fin-fee">-$0</b></div>
-          <div class="fin-row">
-            <span>日大洗衣費</span>
-            <input type="number" id="laundry-cost" placeholder="輸入金額" class="fin-input" oninput="calculateFinance()">
-          </div>
-          <div class="fin-row">
-            <span>水電網平均攤提</span>
-            <input type="number" id="utility-cost" value="5000" class="fin-input" oninput="calculateFinance()">
-          </div>
-          <hr class="fin-hr">
-          <div class="fin-row fin-total"><span>預估實際淨利</span><b id="fin-net">$0</b></div>
-        </div>
-      </div>
-    </div>
-  </div>      
-</div>      
-<script src="script.js"></script>
-</body>      
-</html>
+async function addOrder() {
+    const key = document.getElementById('admin-key').value;
+    const total = parseFloat(document.getElementById('o-total').value) || 0;
+    const dep = parseFloat(document.getElementById('o-dep').value) || 0;
+    const data = {
+        action: "add", key: key,
+        name: document.getElementById('o-name').value, date: document.getElementById('o-date').value,
+        source: document.getElementById('o-source').value, guests: document.getElementById('o-guests').value,
+        rooms: document.getElementById('o-rooms').value, total: total, dep: dep, bal: total - dep
+    };
+    showLoading(true);
+    try {
+        await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
+        alert("儲存成功！"); fetchOrders();
+    } catch(e) { alert("儲存失敗"); }
+    finally { showLoading(false); }
+}
+
+// --- 視圖管理 ---
+function switchOrderView(view) {
+    const isCal = view === 'calendar';
+    document.getElementById('calendar-grid').style.display = isCal ? 'grid' : 'none';
+    document.getElementById('order-list').style.display = isCal ? 'none' : 'block';
+    document.getElementById('btn-view-cal').classList.toggle('active', isCal);
+    document.getElementById('btn-view-list').classList.toggle('active', !isCal);
+}
+
+function renderOrderList() {
+    const year = currentViewDate.getFullYear();
+    const month = currentViewDate.getMonth();
+    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+    document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
+    const mData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
+    
+    renderCalendar(year, month, mData);
+    
+    const orderListEl = document.getElementById('order-list');
+    orderListEl.innerHTML = '';
+    mData.forEach((r, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.position = 'relative';
+        card.innerHTML = `<span class="source-tag ${r[1]==='Booking'?'tag-booking':'tag-line'}">${r[1]}</span>
+            <b>${r[3].slice(8)}日 | ${r[2]}</b><br>
+            <small>人數:${r[5]} / 尾款:$${r[9]}</small>`;
+        card.onclick = () => showOrderDetail(r);
+        orderListEl.appendChild(card);
+    });
+    
+    updateStatistics(mData);
+    calculateFinance(mData);
+}
+
+function renderCalendar(year, month, mData) {
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+    const weeks = ['日', '一', '二', '三', '四', '五', '六'];
+    weeks.forEach(w => grid.innerHTML += `<div class="cal-day cal-header">${w}</div>`);
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="cal-day"></div>`;
+    
+    for (let day = 1; day <= lastDate; day++) {
+        const fullDate = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const dayOrders = mData.filter(r => r[3] === fullDate);
+        const hasOrder = dayOrders.length > 0;
+        const cell = document.createElement('div');
+        cell.className = `cal-day ${hasOrder ? 'has-order' : ''}`;
+        cell.innerText = day;
+        if (hasOrder) cell.onclick = () => showOrderDetail(dayOrders[0]);
+        grid.appendChild(cell);
+    }
+}
+
+// --- 詳情彈窗與 App 跳轉 ---
+function showOrderDetail(order) {
+    const [id, source, name, date, type, guests, rooms, total, dep, bal] = order;
+    const isBooking = source === 'Booking';
+    let appLink = '';
+    if(isBooking) {
+        appLink = `<button class="copy-btn" style="background:#003580" onclick="location.href='bookingpulse://'">開啟 Pulse App</button>`;
+    } else {
+        appLink = `<button class="copy-btn" style="background:#00b900" onclick="location.href='line://'">開啟 LINE 聯絡</button>`;
+    }
+
+    document.getElementById('modal-body').innerHTML = `
+        <h3 style="margin-top:0;">${name} 的訂單</h3>
+        <p><b>入住日期：</b>${date}</p>
+        <p><b>來源：</b>${source}</p>
+        <p><b>人數：</b>${guests}人 (${type})</p>
+        <p><b>財務：</b>總價$${total} / 訂金$${dep} / 尾款$${bal}</p>
+        <hr>${appLink}
+    `;
+    document.getElementById('order-modal').style.display = 'block';
+}
+
+function closeModal(e) {
+    if (!e || e.target === document.getElementById('order-modal') || e.target.className === 'close-btn') {
+        document.getElementById('order-modal').style.display = 'none';
+    }
+}
+
+// --- 統計與財務 ---
+function updateStatistics(mData) {
+    const totalG = mData.reduce((s, r) => s + (parseInt(r[5]) || 0), 0);
+    const totalR = mData.reduce((s, r) => s + (parseInt(r[6]) || 0), 0);
+    const bCount = mData.filter(r => r[1] === 'Booking').length;
+    const totalC = mData.length;
+    document.getElementById('stat-total-guests').innerText = totalG;
+    document.getElementById('stat-total-rooms').innerText = totalR;
+    const bRate = totalC ? Math.round((bCount/totalC)*100) : 0;
+    document.getElementById('stat-b-rate').innerText = bRate + '%';
+    document.getElementById('stat-o-rate').innerText = (100 - bRate) + '%';
+}
+
+function calculateFinance(mData) {
+    const mDataLocal = mData || [];
+    const income = mDataLocal.reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
+    const bTotal = mDataLocal.filter(r => r[1] === 'Booking').reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
+    const fee = Math.round(bTotal * 0.12);
+    const laundry = parseFloat(document.getElementById('laundry-cost').value) || 0;
+    const utility = parseFloat(document.getElementById('utility-cost').value) || 0;
+    document.getElementById('fin-income').innerText = '$' + income.toLocaleString();
+    document.getElementById('fin-fee').innerText = '-$' + fee.toLocaleString();
+    document.getElementById('fin-net').innerText = '$' + (income - fee - laundry - utility).toLocaleString();
+}
+
+function toggleStats() {
+    const s = document.getElementById('stats-area');
+    s.classList.toggle('stats-hidden');
+}
+
+function changeMonth(n) {
+    currentViewDate.setMonth(currentViewDate.getMonth() + n);
+    renderOrderList();
+}
+
+function copyText(id, e) {
+    const t = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(t);
+    const btn = e.currentTarget;
+    const oldText = btn.innerText;
+    btn.innerText = "✅ 已複製";
+    setTimeout(() => btn.innerText = oldText, 1000);
+}
