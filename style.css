@@ -19,13 +19,10 @@ input:focus { border-color: #27ae60; }
 .input-row { display: flex; gap: 8px; }
 .input-row-3 { display: flex; gap: 8px; margin-bottom: 10px; }
 
-/* --- 房價輸入區 (Label 優化) --- */
+/* --- 房價輸入區 --- */
 .price-input-group { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .price-input-group label { font-size: 0.8rem; font-weight: bold; color: #27ae60; margin-bottom: 4px; }
 .price-input-group input { text-align: center; padding: 10px 5px; margin-bottom: 0; }
-
-.room-select-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; }
-.room-select-grid label { font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px; }
 
 /* --- 按鈕樣式 --- */
 .copy-btn { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 8px; cursor: pointer; font-size: 1rem; transition: active 0.1s; }
@@ -39,18 +36,6 @@ input:focus { border-color: #27ae60; }
 .highlight { color: #e74c3c; font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
 .private-price { color: #27ae60; font-size: 1.4rem; font-weight: 800; border-top: 1px dashed #ddd; padding-top: 10px; margin-top: 10px; }
 
-/* --- 縮合式組件 --- */
-.accordion-header { background: #fff9e6; border: 1px solid #ffeaa7; padding: 12px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.order-add-header { background: #fff5f5; border-color: #fab1a0; margin-bottom: 10px; }
-.acc-title { font-weight: bold; color: #d35400; }
-.accordion-content { display: none; background: #fff; border: 1px solid #ffeaa7; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-.accordion-content.active { display: block; animation: slideDown 0.3s ease-out; }
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* --- 視圖切換器 --- */
 .view-switcher { display: flex; gap: 8px; margin: 15px 0; background: #eee; padding: 4px; border-radius: 10px; }
 .view-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; background: none; font-size: 0.85rem; cursor: pointer; font-weight: bold; color: #666; }
@@ -62,82 +47,34 @@ input:focus { border-color: #27ae60; }
 .cal-header { font-weight: bold; color: #2c3e50; background: #eee; height: 30px; }
 .cal-day.has-order { background: #27ae60; color: white; font-weight: bold; cursor: pointer; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
 
-/* --- 訂單標籤 --- */
-.source-tag { position: absolute; top: 12px; right: 12px; font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; color: white; font-weight: bold; }
-.tag-booking { background: #003580; }
-.tag-line { background: #00b900; }
-
 /* --- 載入遮罩 --- */
 .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* --- 彈窗 (Modal) --- */
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 2000; backdrop-filter: blur(2px); }
-.modal-content { background: white; margin: 15% auto; padding: 20px; width: 90%; max-width: 400px; border-radius: 16px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-.close-btn { position: absolute; top: 10px; right: 15px; font-size: 28px; color: #999; cursor: pointer; }
-
-/* --- 經營統計與分類 --- */
-.stats-hidden { display: none; background: #f0f7ff; padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid #d0e4ff; }
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat-item { background: #fff; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eef; }
-.stat-label { font-size: 0.75rem; color: #7f8c8d; }
-.stat-value { font-size: 1.1rem; font-weight: bold; color: #2980b9; }
-
+/* --- 分類與標籤 --- */
 .category-nav { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 15px; padding: 5px 0; -webkit-overflow-scrolling: touch; }
 .cat-tag { background: #eee; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; white-space: nowrap; border: none; color: #666; font-weight: bold; }
 .cat-tag.active { background: #3498db; color: white; }
 
-/* --- 財務單元 --- */
-.fin-row { display: flex; justify-content: space-between; padding: 8px 0; align-items: center; }
-.fin-input { width: 90px; margin: 0; padding: 6px; height: 34px; text-align: right; }
-.fin-hr { border: none; border-top: 1px solid #eee; margin: 10px 0; }
-.fin-total { font-size: 1.2rem; color: #27ae60; font-weight: 800; }
-.color-red { color: #e74c3c; }
-.mt-15 { margin-top: 15px; }
-
-.month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; }
-
-/* --- 打包神器選項排版優化 (直接覆蓋原本的 checkbox 樣式) --- */
-.checkbox-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* 兩兩一組 */
-    gap: 10px;
-    margin-top: 10px;
-    margin-bottom: 15px;
+/* --- [新增] 點擊打包專用樣式 --- */
+.card-packed {
+    border: 2px solid #e67e22 !important; /* 橘色外框 */
+    background-color: #fffaf5 !important; /* 淡淡的橘底 */
 }
 
-.check-item {
-    display: flex;
-    align-items: center;
-    background: #fff;
-    border: 1.5px solid #eee;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
-    color: #666;
+#pkg-preview {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px dashed #fab1a0;
+    background-color: #fff;
+    font-size: 0.85rem;
 }
 
-/* 勾選後的狀態：外框變橘色、背景變淺黃 */
-.check-item:has(input:checked) {
-    border-color: #f39c12;
-    background: #fff9e6;
-    color: #d35400;
-    font-weight: bold;
+#pkg-card {
+    border: 1.5px solid #fab1a0;
+    background: #fffefb;
 }
 
-.check-item input {
-    width: 18px;
-    height: 18px;
-    margin-right: 8px;
-    margin-bottom: 0 !important; /* 強制取消原本 input 的邊距 */
-    accent-color: #f39c12; /* 勾選框變橘色 */
-}
-
-/* 最後一個選項（住宿表單）佔滿整列 */
-.check-item:last-child {
-    grid-column: span 2;
-}
+/* 讓分類標籤更易捲動 */
+.category-nav::-webkit-scrollbar { display: none; }

@@ -23,7 +23,7 @@
 
   <div class="content">
     
-    <div id="tpl-page" class="page active">
+   <div id="tpl-page" class="page active">
       <div class="card info-base">
         <label>💡 基礎資訊（填寫後自動帶入）</label>
         <div class="input-row">
@@ -36,29 +36,25 @@
         </div>
       </div>
 
-      <div class="accordion-header" onclick="toggleAccordion('acc-content', 'acc-icon')">
-        <span class="acc-title">📦 入住通知「打包」神器</span>
-        <span id="acc-icon">▼</span>
-      </div>
-      <div class="accordion-content" id="acc-content">
-        <div class="checkbox-group">
-          <label class="check-item"><input type="checkbox" id="c-basic" checked onchange="buildPackage()"> 入住與密碼</label>
-          <label class="check-item"><input type="checkbox" id="c-amenity" onchange="buildPackage()"> 備品設備</label>
-          <label class="check-item"><input type="checkbox" id="c-sing" onchange="buildPackage()"> 唱歌音響</label>
-          <label class="check-item"><input type="checkbox" id="c-nearby" onchange="buildPackage()"> 周邊折扣</label>
-          <label class="check-item"><input type="checkbox" id="c-form" onchange="buildPackage()"> 住宿資料表</label>
+      <div class="card" id="pkg-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="margin:0;">🛒 已打包訊息內容</h3>
+          <button class="cat-tag" style="background:#95a5a6; color:white; border:none; padding:4px 10px;" onclick="clearPackage()">清空重選</button>
         </div>
-        <div class="preview-area" id="pkg-preview">勾選上方選項以生成...</div>
+        <div class="preview-area" id="pkg-preview" style="min-height: 50px; color:#95a5a6;">尚未選擇任何訊息...</div>
         <button class="copy-btn btn-pack" onclick="copyText('pkg-preview', event)">複製打包訊息</button>
       </div>
 
       <div class="category-nav" id="cat-nav">
         <button class="cat-tag active" onclick="filterCat('all', event)">全部</button>
-        <button class="cat-tag" onclick="filterCat('訂房', event)">訂房報價</button>
-        <button class="cat-tag" onclick="filterCat('入住', event)">入住導引</button>
-        <button class="cat-tag" onclick="filterCat('設施', event)">設施說明</button>
-        <button class="cat-tag" onclick="filterCat('退房', event)">退房手續</button>
+        <button class="cat-tag" onclick="filterCat('詢問', event)">詢問</button>
+        <button class="cat-tag" onclick="filterCat('訂房', event)">訂房</button>
+        <button class="cat-tag" onclick="filterCat('入住', event)">入住</button>
+        <button class="cat-tag" onclick="filterCat('設施', event)">設施</button>
+        <button class="cat-tag" onclick="filterCat('交通', event)">交通</button>
+        <button class="cat-tag" onclick="filterCat('退房', event)">退房</button>
       </div>
+      
       <div id="tpl-list"></div>
     </div>
 
@@ -73,15 +69,15 @@
         
         <div class="input-row-3">
           <div class="price-input-group">
-            <label>201房價</label>
+            <label>201</label>
             <input type="number" id="p-201" placeholder="1900" oninput="runManualCalc()">
           </div>
           <div class="price-input-group">
-            <label>202房價</label>
+            <label>202</label>
             <input type="number" id="p-202" placeholder="2400" oninput="runManualCalc()">
           </div>
           <div class="price-input-group">
-            <label>301房價</label>
+            <label>301</label>
             <input type="number" id="p-301" placeholder="3500" oninput="runManualCalc()">
           </div>
         </div>
@@ -193,5 +189,4 @@
 
 <script src="script.js"></script>
 </body>
-
 </html>
