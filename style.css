@@ -44,3 +44,40 @@ input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radiu
 .color-red { color: red; }
 .mt-15 { margin-top: 15px; }
 .month-nav { display:flex; justify-content:space-between; align-items:center; }
+/* 月曆容器：網格佈局 */
+.calendar-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 七天一列 */
+    gap: 5px;
+    margin-top: 15px;
+    border: 1px solid #eee;
+    padding: 5px;
+    border-radius: 8px;
+}
+
+/* 每一格的樣式 */
+.cal-day {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    background: #fdfdfd;
+    color: #999;
+}
+
+/* 有訂單的日子：這就是你說的底色 */
+.cal-day.has-order {
+    background: #27ae60;
+    color: white;
+    font-weight: bold;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+}
+
+/* 標題欄（日一二...） */
+.cal-header {
+    font-weight: bold;
+    color: #2c3e50;
+    background: #f8f9fa;
+}
