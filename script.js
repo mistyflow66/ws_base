@@ -6,50 +6,6 @@ const PRICE_MAP = {
   '301': { weekday: { 1: 3500, 2: 4500, 3: 5000, 4: 5500 }, weekend: { 1: 3800, 2: 4800, 3: 5300, 4: 5800 }, cny: { 1: 6000, 2: 7000, 3: 8000, 4: 9000 } }      
 };
 
-const TPL_DATA = [      
-  { cat: '訂房', title: '有空房回覆', content: (d) => `👋您好～煦願民宿 ${d} 有空房，每間房都有陽台\n✅電動麻將桌✅藍芽麥克風音響✅廚房可煮火鍋\n私訊訂房可享優惠～\n官網：wishstaybnb.com` },      
-  { cat: '訂房', title: '匯款資訊', content: (d,p,dep) => `中華郵政（700）\n帳號：0111334-0036797\n戶名：林奐廷\n需麻煩於 24 小時內匯入訂金 $${dep}，核對後即完成預定。` },      
-  { cat: '入住', title: '今日大門密碼', content: (d,p) => `🌟今日大門密碼：${p}\n🔓開門：手掌觸碰螢幕亮起後輸入密碼按*` },
-  { cat: '設施', title: '麥克風教學', content: () => `🎤藍牙麥克風使用說明：\nhttps://m.youtube.com/shorts/8LMhA15R870\n（唱歌請於 10:00 PM 前結束喔！）` },
-  { cat: '退房', title: '五星好評', content: () => `若您滿意此次入住，歡迎給我們五星好評，感謝您💕\nhttps://maps.app.goo.gl/vcoPQQuMRaME1rpY6` }
-];      
-
-let globalOrderData = [];
-let currentViewDate = new Date();
-let currentView = 'cal'; // 'cal' 或 'list'
-
-// --- 初始化與基礎功能 ---
-
-window.onload = () => {
-    // 2. 若已輸入過密碼就不用再次輸入
-    const savedKey = localStorage.getItem('bnb_admin_key');
-    if (savedKey) {
-        document.getElementById('admin-key').value = savedKey;
-        fetchOrders(); 
-    }
-    updateAll();
-};
-
-function toggleLoading(show) {
-    document.getElementById('loading-mask').style.display = show ? 'flex' : 'none';
-}
-
-function switchPage(id, e) {
-    document.querySelectorAll('.page, .tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    if(e) e.currentTarget.classList.add('active');
-}
-
-function updateAll() { updateTpl(); buildPackage(); }
-
-function toggleAccordion(contentId, iconId) {
-    const c = document.getElementById(contentId);
-    c.classList.toggle('active');
-    document.getElementById(iconId).innerText = c.classList.contains('active') ? '▲' : '▼';
-}
-
-// --- 模板與打包邏輯 ---
-
 const TPL_DATA = [
   { 
     cat: '詢問', 
@@ -121,8 +77,85 @@ const TPL_DATA = [
     title: '五星好評邀請', 
     content: () => `有空歡迎幫您我們留言+5星好評，您的肯定是我們前進的動力！煦願民宿感謝您💕\nhttps://maps.app.goo.gl/vcoPQQuMRaME1rpY6`
   }
-];
+];     
 
+let globalOrderData = [];
+let currentViewDate = new Date();
+let currentView = 'cal'; // 'cal' 或 'list'
+
+// --- 初始化與基礎功能 ---
+
+window.onload = () => {
+    // 2. 若已輸入過密碼就不用再次輸入
+    const savedKey = localStorage.getItem('bnb_admin_key');
+    if (savedKey) {
+        document.getElementById('admin-key').value = savedKey;
+        fetchOrders(); 
+    }
+    updateAll();
+};
+
+function toggleLoading(show) {
+    document.getElementById('loading-mask').style.display = show ? 'flex' : 'none';
+}
+
+function switchPage(id, e) {
+    document.querySelectorAll('.page, .tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(e) e.currentTarget.classList.add('active');
+}
+
+function updateAll() {
+    // 1. 更新房價計算 (房價神器)
+    if (typeof runManualCalc === "function") {
+        runManualCalc(); 
+    }
+
+    // 2. 更新模板預覽 (只有在模板分頁才執行，避免報錯)
+    const tplList = document.getElementById('tpl-list');
+    if (tplList) {
+        const activeCatBtn = document.querySelector('.cat-tag.active');
+        const filter = activeCatBtn ? (activeCatBtn.innerText === '全部' ? 'all' : activeCatBtn.innerText) : 'all';
+        updateTpl(filter);
+        updatePackagePreview();
+    }
+}
+
+// --- 模板與打包邏輯 ---
+function updateTpl(filter = 'all') {
+    const d = document.getElementById('v-date').value || "____";
+    const p = document.getElementById('v-pwd').value || "____";
+    const dep = document.getElementById('v-dep').value || "____"; // 修正變數
+    const list = document.getElementById('tpl-list');
+    
+    if (!list) return; // 安全檢查
+    list.innerHTML = '';
+
+    TPL_DATA.forEach((item, i) => {
+        if (filter !== 'all' && item.cat !== filter) return;
+
+        const content = item.content(d, p, dep);
+        const isPacked = packageList.includes(content);
+        
+        const box = document.createElement('div');
+        box.className = `card ${isPacked ? 'card-packed' : ''}`;
+        
+        box.innerHTML = `
+            <div onclick="togglePackage(${i})" style="cursor:pointer;">
+                <h3 style="display:inline-block;">[${item.cat}] ${item.title}</h3>
+                ${isPacked ? '<span style="color:#e67e22; font-weight:bold; margin-left:10px;">(已打包)</span>' : ''}
+            </div>
+            <div class="preview-area" id="t-${i}">${content}</div>
+            <div class="input-row" style="margin-top:10px; gap:8px;">
+                <button class="copy-btn" style="flex:1; margin-top:0;" onclick="copyText('t-${i}', event)">單獨複製</button>
+                <button class="copy-btn" style="flex:1; margin-top:0; background:${isPacked ? '#e67e22' : '#3498db'};" onclick="togglePackage(${i})">
+                    ${isPacked ? '取消打包' : '加入打包'}
+                </button>
+            </div>
+        `;
+        list.appendChild(box);
+    });
+}
 // --- 房價計算 ---
 
 function runManualCalc() {
