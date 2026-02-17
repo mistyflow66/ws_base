@@ -128,12 +128,26 @@ function toggleAccordion(contentId, iconId) {
 }
 
 function copyText(id, e) {
-    const t = document.getElementById(id).innerText;
+    const el = document.getElementById(id);
+    // 使用 innerText 配合 CSS 的 white-space: pre-wrap 能精準抓取換行
+    const t = el.innerText || el.textContent; 
+    
     navigator.clipboard.writeText(t).then(() => {
         const btn = e.currentTarget;
         const oldTxt = btn.innerText;
-        btn.innerText = "✅ 已複製";
-        setTimeout(() => btn.innerText = oldTxt, 1200);
+        const oldBg = btn.style.background; // 記住原本的顏色（藍色或橘色）
+        
+        // 視覺回饋：文字變更 + 背景變綠
+        btn.innerText = "✅ 已複製內容";
+        btn.style.background = "#2ecc71"; 
+        
+        setTimeout(() => {
+            btn.innerText = oldTxt;
+            btn.style.background = oldBg; // 1.2秒後恢復原狀
+        }, 1200);
+    }).catch(err => {
+        console.error('複製失敗:', err);
+        alert('複製失敗，請手動選取文字');
     });
 }
 
@@ -317,3 +331,4 @@ function openPulse() {
     window.location.href = "pulse://";
     setTimeout(() => { window.open("https://admin.booking.com/", "_blank"); }, 800);
 }
+
