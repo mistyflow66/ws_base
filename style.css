@@ -1,0 +1,98 @@
+/* --- 基礎設定 --- */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }      
+body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: #f0f2f5; margin: 0; color: #333; overflow-x: hidden; }      
+.container { max-width: 500px; margin: auto; background: #fff; min-height: 100vh; display: flex; flex-direction: column; }      
+
+/* --- 導覽列與分頁 --- */
+.nav-tabs { display: flex; padding: 10px; background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 1000; }
+.tab-btn { flex: 1; padding: 12px; border: none; background: #f8f9fa; cursor: pointer; font-size: 1rem; font-weight: bold; color: #7f8c8d; transition: 0.3s; }
+.tab-btn.active { background: #27ae60; color: white; border-radius: 8px; }
+.content { padding: 15px; flex-grow: 1; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* --- 卡片與輸入框 --- */
+.card { background: #fff; border: 1px solid #eef0f2; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; }
+h3 { font-size: 1rem; margin: 0 0 10px 0; color: #2c3e50; border-left: 4px solid #27ae60; padding-left: 10px; }
+input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; margin-bottom: 10px; outline: none; }
+input:focus { border-color: #27ae60; }
+.input-row { display: flex; gap: 8px; }
+.input-row-3 { display: flex; gap: 8px; margin-bottom: 10px; }
+
+/* --- 房價輸入區 (Label 優化) --- */
+.price-input-group { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.price-input-group label { font-size: 0.8rem; font-weight: bold; color: #27ae60; margin-bottom: 4px; }
+.price-input-group input { text-align: center; padding: 10px 5px; margin-bottom: 0; }
+
+.room-select-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; }
+.room-select-grid label { font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px; }
+
+/* --- 按鈕樣式 --- */
+.copy-btn { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 8px; cursor: pointer; font-size: 1rem; transition: active 0.1s; }
+.copy-btn:active { opacity: 0.8; transform: scale(0.98); }
+.btn-pack { background: #f39c12; }
+.btn-save { background: #e74c3c; }
+.btn-stat { background: #8e44ad; }
+
+/* --- 預覽與高亮 --- */
+.preview-area { background: #f9fafb; padding: 12px; border-radius: 8px; font-size: 0.9rem; white-space: pre-wrap; border: 1px solid #eee; line-height: 1.6; color: #444; }
+.highlight { color: #e74c3c; font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
+.private-price { color: #27ae60; font-size: 1.4rem; font-weight: 800; border-top: 1px dashed #ddd; padding-top: 10px; margin-top: 10px; }
+
+/* --- 縮合式組件 --- */
+.accordion-header { background: #fff9e6; border: 1px solid #ffeaa7; padding: 12px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.order-add-header { background: #fff5f5; border-color: #fab1a0; margin-bottom: 10px; }
+.acc-title { font-weight: bold; color: #d35400; }
+.accordion-content { display: none; background: #fff; border: 1px solid #ffeaa7; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+.accordion-content.active { display: block; animation: slideDown 0.3s ease-out; }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 視圖切換器 --- */
+.view-switcher { display: flex; gap: 8px; margin: 15px 0; background: #eee; padding: 4px; border-radius: 10px; }
+.view-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; background: none; font-size: 0.85rem; cursor: pointer; font-weight: bold; color: #666; }
+.view-btn.active { background: #fff; color: #27ae60; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+/* --- 月曆樣式 --- */
+.calendar-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+.cal-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; border-radius: 6px; background: #f8f9fa; color: #ccc; }
+.cal-header { font-weight: bold; color: #2c3e50; background: #eee; height: 30px; }
+.cal-day.has-order { background: #27ae60; color: white; font-weight: bold; cursor: pointer; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+
+/* --- 訂單標籤 --- */
+.source-tag { position: absolute; top: 12px; right: 12px; font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; color: white; font-weight: bold; }
+.tag-booking { background: #003580; }
+.tag-line { background: #00b900; }
+
+/* --- 載入遮罩 --- */
+.loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* --- 彈窗 (Modal) --- */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 2000; backdrop-filter: blur(2px); }
+.modal-content { background: white; margin: 15% auto; padding: 20px; width: 90%; max-width: 400px; border-radius: 16px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.close-btn { position: absolute; top: 10px; right: 15px; font-size: 28px; color: #999; cursor: pointer; }
+
+/* --- 經營統計與分類 --- */
+.stats-hidden { display: none; background: #f0f7ff; padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid #d0e4ff; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-item { background: #fff; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eef; }
+.stat-label { font-size: 0.75rem; color: #7f8c8d; }
+.stat-value { font-size: 1.1rem; font-weight: bold; color: #2980b9; }
+
+.category-nav { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 15px; padding: 5px 0; -webkit-overflow-scrolling: touch; }
+.cat-tag { background: #eee; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; white-space: nowrap; border: none; color: #666; font-weight: bold; }
+.cat-tag.active { background: #3498db; color: white; }
+
+/* --- 財務單元 --- */
+.fin-row { display: flex; justify-content: space-between; padding: 8px 0; align-items: center; }
+.fin-input { width: 90px; margin: 0; padding: 6px; height: 34px; text-align: right; }
+.fin-hr { border: none; border-top: 1px solid #eee; margin: 10px 0; }
+.fin-total { font-size: 1.2rem; color: #27ae60; font-weight: 800; }
+.color-red { color: #e74c3c; }
+.mt-15 { margin-top: 15px; }
+.month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; }
