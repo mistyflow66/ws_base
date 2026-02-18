@@ -174,7 +174,7 @@ input:focus, select:focus {
 /* --- 分類標籤 --- */
 .category-nav {
     position: sticky;
-    top: 78px; /* 增加高度，完全避開上方分頁按鈕 */
+    top: 80px; /* 增加高度，完全避開上方分頁按鈕 */
     z-index: 100;
     background-color: #ffffff !important;
     padding: 10px 15px; /* 增加左右內距 */

@@ -388,13 +388,14 @@ async function addOrder() {
 // 全域變數，用來存放當前顯示的物件以便點擊調用
 let currentViewOrders = [];
 
+// 核心：修改原本的 renderOrderList，加入統計連動
 function renderOrderList() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
 
-    // 過濾、格式化並「排序」
+    // 1. 過濾並排序訂單
     currentViewOrders = globalOrderData
         .filter(r => r[3] && r[3].includes(monthStr))
         .map(r => ({
@@ -402,24 +403,27 @@ function renderOrderList() {
             guests: r[5], rooms: r[6], total: r[7], deposit: r[8],
             bal: r[9], nights: r[10], note: r[11]
         }))
-        .sort((a, b) => new Date(a.date) - new Date(b.date)); // 日期由早到晚排序
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
 
+    // 2. 渲染月曆與列表 (維持原有功能)
     renderCalendar(year, month);
-
     const listDiv = document.getElementById('order-list');
-    listDiv.innerHTML = currentViewOrders.map((o, index) => `
-        <div class="order-list-item" onclick="handleOrderClick(${index})">
-            <div class="order-info">
-                <div style="font-weight:bold;">${formatDate(o.date)} | ${o.name}</div>
-                <div style="font-size:0.85rem; color:#6a7181;">${o.rooms}房 / ${o.nights}晚</div>
-            </div>
-            <div style="text-align:right;">
-                <span class="source-tag tag-${getSourceClass(o.source)}">${o.source}</span>
-                <div style="color:#af6a58; font-weight:bold; margin-top:4px;">$${o.total}</div>
-            </div>
-        </div>`).join('');
-    
-    updateStatistics(currentViewOrders);
+    if (listDiv) {
+        listDiv.innerHTML = currentViewOrders.map((o, index) => `
+            <div class="order-list-item" onclick="handleOrderClick(${index})">
+                <div class="order-info">
+                    <div style="font-weight:bold;">${formatDate(o.date)} | ${o.name}</div>
+                    <div style="font-size:0.85rem; color:#6a7181;">${o.rooms}房 / ${o.nights}晚</div>
+                </div>
+                <div style="text-align:right;">
+                    <span class="source-tag tag-${getSourceClass(o.source)}">${o.source}</span>
+                    <div style="color:#af6a58; font-weight:bold; margin-top:4px;">$${o.total}</div>
+                </div>
+            </div>`).join('');
+    }
+
+    // 3. 【關鍵】自動帶入經營數據統計與財務計算
+    updateStatistics(currentViewOrders); 
     const rawMData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
     calculateFinance(rawMData);
 }
@@ -775,24 +779,41 @@ function closeUtilityCalc() {
 }
 
 function calculateUtility() {
-    const s = new Date(document.getElementById('u-start').value);
-    const e = new Date(document.getElementById('u-end').value);
+    const startVal = document.getElementById('u-start').value;
+    const endVal = document.getElementById('u-end').value;
     const total = parseFloat(document.getElementById('u-total').value) || 0;
-    if (isNaN(s) || isNaN(e) || total <= 0) return;
 
-    const totalDays = (e - s) / (1000*60*60*24) + 1;
-    const mStart = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1);
-    const mEnd = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + 1, 0);
+    if (!startVal || !endVal || total <= 0) return;
+
+    // 轉換為日期物件
+    const s = new Date(startVal);
+    const e = new Date(endVal);
     
+    // 計算該單據的總天數 (需包含結束當天，所以 +1)
+    const totalDays = Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
+    if (totalDays <= 0) return;
+
+    // 計算當前月曆顯示月份的範圍
+    const viewYear = currentViewDate.getFullYear();
+    const viewMonth = currentViewDate.getMonth();
+    const mStart = new Date(viewYear, viewMonth, 1);
+    const mEnd = new Date(viewYear, viewMonth + 1, 0); // 該月最後一天
+
+    // 取得重疊天數
     const overlapS = s > mStart ? s : mStart;
     const overlapE = e < mEnd ? e : mEnd;
-    let days = (overlapE - overlapS) / (1000*60*60*24) + 1;
-    days = days > 0 ? days : 0;
+    
+    let diff = Math.round((overlapE - overlapS) / (1000 * 60 * 60 * 24)) + 1;
+    let overlapDays = diff > 0 ? diff : 0;
 
-    const res = Math.round((total / totalDays) * days);
-    document.getElementById('u-days').innerText = Math.round(days);
-    document.getElementById('u-res').innerText = res;
+    // 計算分攤金額
+    const resValue = Math.round((total / totalDays) * overlapDays);
+
+    // 更新顯示
+    document.getElementById('u-days').innerText = overlapDays;
+    document.getElementById('u-res').innerText = resValue.toLocaleString();
 }
+
 document.querySelectorAll('#u-start, #u-end, #u-total').forEach(el => el.addEventListener('input', calculateUtility));
 
 function applyUtility() {

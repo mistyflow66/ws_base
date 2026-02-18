@@ -228,34 +228,33 @@
 </div>
 
 <div class="card">
-    <button class="copy-btn" style="background: #6a7181;" onclick="toggleStatsSection()">
+    <h3 style="margin-bottom: 20px;">
         <i class="fa-solid fa-chart-line"></i> 經營數據統計分析
-    </button>
-
-    <div id="stats-area" style="display: none; margin-top: 15px;">
-        <div class="stat-grid">
-            <div class="stat-item">
-                <div class="stat-label">總來客</div>
-                <div class="stat-value" id="stat-total-guests">0</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">總開房</div>
-                <div class="stat-value" id="stat-total-rooms">0</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Booking%</div>
-                <div class="stat-value" id="stat-b-rate">0%</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">私訊%</div>
-                <div class="stat-value" id="stat-o-rate">0%</div>
-            </div>
+    </h3>
+    
+    <div class="stat-grid">
+        <div class="stat-item">
+            <div class="stat-label">總來客</div>
+            <div class="stat-value" id="stat-total-guests">0</div>
         </div>
-
-        <button class="copy-btn" onclick="openArchiveModal()" style="background: #3a4553; margin-top: 15px;">
-            <i class="fa-solid fa-cloud-arrow-up"></i> 生成本月封存數據
-        </button>
+        <div class="stat-item">
+            <div class="stat-label">總開房</div>
+            <div class="stat-value" id="stat-total-rooms">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Booking%</div>
+            <div class="stat-value" id="stat-b-rate">0%</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">私訊%</div>
+            <div class="stat-value" id="stat-o-rate">0%</div>
+        </div>
     </div>
+
+    <button class="copy-btn" onclick="openArchiveModal()" style="background: #3a4553; margin-top: 20px;">
+        <i class="fa-solid fa-cloud-arrow-up"></i> 生成本月封存數據
+    </button>
+</div>
 </div>
         <div class="card finance-card">
     <h3><i class="fa-solid fa-sack-dollar"></i> 財務月結試算</h3>
