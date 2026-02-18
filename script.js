@@ -636,13 +636,14 @@ function toggleAccordion(contentId, iconId) {
 
 function toggleStats() {
     const s = document.getElementById('stats-area');
-    const me = document.getElementById('month-end-calc-container'); // 假設給封存區一個外層 ID
-    
     const isVisible = s.style.display === 'block';
-    s.style.display = isVisible ? 'none' : 'block';
     
-    // 同步顯示封存按鈕區
-    if (me) me.style.display = isVisible ? 'none' : 'block';
+    if (isVisible) {
+        s.style.display = 'none';
+    } else {
+        s.style.display = 'block';
+        prepareMonthEnd(); // 顯示時同步最新的財務數據
+    }
 }
 
 function changeMonth(n) {
@@ -677,14 +678,23 @@ function toggleMonthEnd() {
 
 // 2. 準備結算數據
 function prepareMonthEnd() {
-    const month = document.getElementById('cal-month-title').innerText;
     const income = parseFloat(document.getElementById('fin-income').innerText.replace(/[^0-9.-]+/g,"")) || 0;
-    const fee = Math.round(income * 0.12); // 如果你有跨平台，這裡可改用讀取的 fee
+    const bTotal = currentViewOrders.filter(o => o.source === 'Booking').reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    const fee = Math.round(bTotal * 0.12);
 
-    document.getElementById('me-month').innerText = month;
-    document.getElementById('me-income').innerText = '$' + income.toLocaleString();
-    document.getElementById('me-fee').innerText = '-$' + fee.toLocaleString();
-    updateNetPreview();
+    // 這裡我們建立一個虛擬的顯示對象給 mini 區使用
+    const laundry = parseFloat(document.getElementById('laundry-cost').value) || 0;
+    const utility = parseFloat(document.getElementById('utility-cost').value) || 0;
+    
+    // 把資料塞進隱藏或顯示的欄位
+    document.getElementById('final-laundry').value = laundry;
+    document.getElementById('final-utility').value = utility;
+    
+    const net = income - fee - laundry - utility;
+    document.getElementById('me-net-preview').innerText = '$' + net.toLocaleString();
+    
+    // 為了讓 submitMonthEnd 能讀到，我們需要更新這幾個標記位
+    window.currentMonthEndData = { income, fee }; 
 }
 
 // 3. 淨利即時預覽
@@ -732,15 +742,17 @@ document.querySelectorAll('#u-start, #u-end, #u-total').forEach(el => el.addEven
 function applyUtility() {
     const resValue = document.getElementById('u-res').innerText;
     
-    // 填入封存區
+    // 1. 填入封存區的小輸入框
     document.getElementById('final-utility').value = resValue;
-    // 同步到底部預覽
+    
+    // 2. 同步到底部的財務預覽框
     const utilityCost = document.getElementById('utility-cost');
     if (utilityCost) utilityCost.value = resValue;
 
+    // 3. 重新觸發計算
     updateNetPreview();
     
-    // 重新觸發底部財務計算 (mData 取當前月份)
+    // 4. 更新全域財務統計
     const monthTitle = document.getElementById('cal-month-title').innerText;
     const monthStr = monthTitle.replace('年 ', '-').replace('月', '').trim();
     const currentMData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));

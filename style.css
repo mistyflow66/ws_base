@@ -155,23 +155,15 @@ input:focus, select:focus {
 }
 
 /* --- 分類標籤 --- */
-.category-nav { 
-  display: flex; 
-  gap: 8px; 
-  overflow-x: auto; 
-  padding: 10px 12px;
-  white-space: nowrap; /* 確保標籤不換行，保持橫向滑動 */
-  scrollbar-width: none; 
-  
-  /* --- 置頂關鍵設定 --- */
-  position: sticky;
-    top: 50px; /* 避開最上層的三個分頁按鈕 (約 50px) */
+.category-nav {
+    position: sticky;
+    top: 58px; /* 增加高度，完全避開上方 3 個分頁按鈕 */
     z-index: 100;
-    background-color: #f4f7f6; /* 確保背景不透明，遮掉下方滾過的內容 */
-    padding: 10px 0;
-    margin-bottom: 20px; /* 增加與下方模板框的距離 */
-    border-bottom: 1px solid #ddd;
-}
+    background-color: #ffffff; /* 統一改為純白底 */
+    padding: 12px 0;
+    margin-bottom: 25px; /* 增加與第一個模板框的距離 */
+    border-bottom: 1px solid #eee;
+    }
 
 hr {
     margin: 20px 0;
@@ -442,14 +434,23 @@ hr {
 .form-group-inline {
     display: flex;
     gap: 8px;
-    align-items: flex-end; /* 確保輸入框與按鈕對齊 */
+    align-items: center; /* 改為 center 較能對齊 input */
+    margin-bottom: 10px;
 }
 
 .form-group-inline input {
     flex: 1;
+    margin-bottom: 0; /* 移除 input 預設底邊距，避免對不齊 */
 }
 
 .form-group-inline button {
-    height: 40px; /* 與 input 高度一致 */
-    white-space: nowrap; /* 避免文字斷行 */
-}
+    height: 44px; /* 對齊 input 的預設高度 */
+    white-space: nowrap; 
+    background: #95a5a6; /* 灰底 */
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0 15px;
+    cursor: pointer;
+    font-weight: 600;
+} /* <--- 確保這裡也有正確閉合 */

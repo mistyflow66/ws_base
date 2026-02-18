@@ -237,25 +237,28 @@
     <i class="fa-solid fa-chart-line"></i> 經營數據統計分析
 </button>
 
-<div id="month-end-calc-container" style="display:none; margin-top: 10px;">
-    <div class="card" style="border: 2px dashed #3a4553;">
-        <h3 style="margin:0; font-size: 1rem;"><i class="fa-solid fa-file-invoice-dollar"></i> 月度結算封存</h3>
-        
-        <div id="month-end-calc" style="margin-top:15px;">
-            <div class="form-group-inline" style="margin-bottom:10px;">
-                <input type="number" id="final-utility" placeholder="輸入或試算" oninput="updateNetPreview()">
-                <button onclick="openUtilityCalc()" style="background:#3a4553; color:white; border-radius:4px; border:none;">試算</button>
-            </div>
+<div id="stats-area" style="display:none;">
+    <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">總來客</div><div id="stat-total-guests" class="stat-value">0</div></div>
+        <div class="stat-item"><div class="stat-label">總開房</div><div id="stat-total-rooms" class="stat-value">0</div></div>
+        <div class="stat-item"><div class="stat-label">Booking%</div><div id="stat-b-rate" class="stat-value">0%</div></div>
+        <div class="stat-item"><div class="stat-label">私訊%</div><div id="stat-o-rate" class="stat-value">0%</div></div>
+    </div>
 
-            <div style="margin-top:15px; padding-top:15px; text-align:center;">
-                <div style="font-size:0.8rem; color:#666;">預估本月實際淨利</div>
-                <div id="me-net-preview" style="font-size:1.6rem; font-weight:bold; color:#af6a58;">$0</div>
-            </div>
-            
-            <button class="copy-btn" style="width:100%; margin-top:15px; background:#3a4553;" onclick="submitMonthEnd()">
-                確認封存
-            </button>
+    <div id="month-end-mini-zone" style="margin-top: 15px; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; background: #fff;">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-size: 0.9rem; color: #666;"><i class="fa-solid fa-file-invoice-dollar"></i> 月度結算預覽</span>
+            <span id="me-net-preview" style="font-weight: bold; color: #af6a58;">$0</span>
         </div>
+        
+        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <input type="number" id="final-utility" placeholder="水電攤提" style="flex:1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <button onclick="openUtilityCalc()" style="background:#95a5a6; color:white; border:none; padding: 0 10px; border-radius: 4px; font-size: 0.8rem;">試算</button>
+        </div>
+
+        <input type="hidden" id="final-laundry"> <button class="copy-btn" onclick="submitMonthEnd()" style="background: #95a5a6; font-size: 0.85rem; padding: 8px; width: 100%;">
+            確認封存此月數據
+        </button>
     </div>
 </div>
 
