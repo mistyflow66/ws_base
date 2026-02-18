@@ -362,3 +362,32 @@ input:focus, select:focus {
 .tag-fb { background: #f3e5f5; color: #7b1fa2; border: 1px solid #e1bee7; }
 /* 預設：灰 */
 .tag-default { background: #f5f5f5; color: #616161; }
+
+/* 動態來源按鈕強化 */
+#btn-pulse {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+#btn-pulse:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 讓按鈕內的品牌圖示（FontAwesome）大一點 */
+#btn-pulse i {
+    font-size: 1.2rem;
+    margin-right: 8px;
+}
+
+/* 月曆格子點擊感強化 */
+.cal-day[onclick] {
+    cursor: pointer;
+}
+
+.cal-day[onclick]:hover {
+    filter: brightness(0.95);
+    transform: scale(1.05);
+    z-index: 2;
+    transition: all 0.2s ease;
+}

@@ -380,22 +380,64 @@ function showOrderDetail(order) {
     if (!order) return;
     const infoList = document.getElementById('detail-info-list');
     
-    // 顯示視圖渲染
+    // 1. 格式化日期
+    const displayDate = formatDate(order.date);
+    
+    // 2. 準備來源按鈕資訊
+    const s = order.source || "私LINE";
+    let btnConfig = {
+        text: "開啟 App",
+        icon: "fa-external-link",
+        color: "#af6a58",
+        url: "#"
+    };
+
+    if (s.includes("Booking")) {
+        btnConfig = { text: "Pulse", icon: "fa-square-b", color: "#003580", url: "pulse://" };
+    } else if (s.includes("官方LINE")) {
+        btnConfig = { text: "LINE OA", icon: "fa-comment-dots", color: "#00b900", url: "lineoa://" };
+    } else if (s.includes("LINE")) {
+        btnConfig = { text: "LINE", icon: "fa-line", color: "#00c300", url: "line://" };
+    } else if (s.includes("FB") || s.includes("Messenger")) {
+        btnConfig = { text: "Messenger", icon: "fa-facebook-messenger", color: "#0084ff", url: "fb-messenger://" };
+    }
+
+    // 3. 渲染詳細資訊內容
     infoList.innerHTML = `
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-user"></i> 訂房人</span><span class="info-value">${order.name}</span></div>
-        <div class="info-item"><span class="info-label"><i class="fa-solid fa-calendar"></i> 入住日期</span><span class="info-value">${order.date} (${order.nights}晚)</span></div>
-        <div class="info-item"><span class="info-label"><i class="fa-solid fa-tag"></i> 來源</span><span class="source-tag tag-${getSourceClass(order.source)}">${order.source}</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-calendar"></i> 入住日期</span><span class="info-value">${displayDate} (${order.nights}晚)</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-tag"></i> 來源</span><span class="source-tag tag-${getSourceClass(s)}">${s}</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-bed"></i> 房型/人數</span><span class="info-value">${order.rooms}房 / ${order.guests}人</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-money-bill"></i> 總金額</span><span class="info-value">$${order.total}</span></div>
+        <div class="info-item" style="color:#af6a58; font-weight:bold;"><span class="info-label"><i class="fa-solid fa-hand-holding-dollar"></i> 已付訂金</span><span class="info-value">$${order.deposit || 0}</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-pen"></i> 備註</span><span class="info-value">${order.note || '無'}</span></div>
     `;
 
-    // 預填編輯欄位 (確保 ID 對應 HTML)
+    // 4. 更新底部的動態按鈕
+    const actionBtn = document.getElementById('btn-pulse');
+    if (actionBtn) {
+        actionBtn.innerHTML = `<i class="fa-brands ${btnConfig.icon}"></i> ${btnConfig.text}`;
+        actionBtn.style.background = btnConfig.color;
+        actionBtn.onclick = () => {
+            if (btnConfig.url !== "#") {
+                window.location.href = btnConfig.url;
+                // 電腦版通常沒反應，這很正常，因為電腦沒安裝這些 App Scheme
+                setTimeout(() => {
+                    if (confirm("無法開啟 App，是否改由網頁版開啟？")) {
+                        if (s.includes("Booking")) window.open("https://admin.booking.com");
+                        // 這裡可以根據需要增加其他網頁版連結
+                    }
+                }, 1000);
+            }
+        };
+    }
+
+    // 預填編輯欄位 (保持原樣)
     document.getElementById('e-oid').value = order.id || '';
     document.getElementById('e-name').value = order.name || '';
-    document.getElementById('e-date').value = order.date || '';
+    document.getElementById('e-date').value = order.date ? order.date.split('T')[0] : '';
     document.getElementById('e-nights').value = order.nights || '1';
-    document.getElementById('e-source').value = order.source || '私LINE';
+    document.getElementById('e-source').value = s;
     document.getElementById('e-guests').value = order.guests || '';
     document.getElementById('e-rooms').value = order.rooms || '3';
     document.getElementById('e-total').value = order.total || '';
@@ -529,4 +571,11 @@ function switchOrderView(type) {
     document.getElementById('btn-list').classList.toggle('active', type === 'list');
     document.getElementById('calendar-grid').style.display = type === 'cal' ? 'grid' : 'none';
     document.getElementById('order-list').style.display = type === 'list' ? 'block' : 'none';
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    // 確保不會因為時區轉換差一天
+    return `${date.getMonth() + 1}/${date.getDate()}`;
 }
