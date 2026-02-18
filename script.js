@@ -810,26 +810,25 @@ document.querySelectorAll('#u-start, #u-end, #u-total').forEach(el => el.addEven
  * 移除了會導致數據歸零的 calculateFinance 全域計算，改為局部更新
  */
 function applyUtility() {
-    // 1. 取得試算結果，並移除千分位逗號，避免 input 無法讀取
+    // 1. 取得本次試算的結果
     const resText = document.getElementById('u-res').innerText;
-    const resValue = parseInt(resText.replace(/,/g, '')) || 0;
+    const currentCalcValue = parseInt(resText.replace(/,/g, '')) || 0;
     
-    // 2. 同步到底部的財務預覽輸入框
-    const utilityCost = document.getElementById('utility-cost');
-    if (utilityCost) {
-        utilityCost.value = resValue;
+    // 2. 取得原本輸入框已經有的數值 (例如已經算好電費，現在要加水費)
+    const utilityInput = document.getElementById('utility-cost');
+    const previousValue = parseInt(utilityInput.value) || 0;
+
+    // 3. 詢問使用者是要「覆蓋」還是「累加」
+    const isAppend = confirm(`目前金額為 ${previousValue}，是否要累加本次試算結果 ${currentCalcValue}？\n(取消則為覆蓋)`);
+    
+    if (isAppend) {
+        utilityInput.value = previousValue + currentCalcValue;
+    } else {
+        utilityInput.value = currentCalcValue;
     }
 
-    // 3. 填入封存預留區的小輸入框 (如果有該 ID)
-    const finalUtility = document.getElementById('final-utility');
-    if (finalUtility) {
-        finalUtility.value = resValue;
-    }
-
-    // 4. 僅觸發淨利預覽計算 (此函數只做加減法，不會動到全域訂單數據)
+    // 4. 更新財務與關閉彈窗
     updateNetPreview();
-    
-    // 5. 關閉彈窗
     closeUtilityCalc();
 }
 

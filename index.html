@@ -260,17 +260,16 @@
     <h3><i class="fa-solid fa-sack-dollar"></i> 財務月結試算</h3>
     <div class="fin-row"><span>總房費收入</span><b id="fin-income">$0</b></div>
     <div class="fin-row" style="color:#e74c3c;"><span>Booking 手續費(12%)</span><b id="fin-fee">-$0</b></div>
-    <div class="fin-row"><span>洗衣費</span><input type="number" id="laundry-cost" value="0" class="fin-input" oninput="calculateFinance()"></div>
-    
+   <div class="fin-row">
+    <span>本月洗衣費</span>
+    <input type="number" id="laundry-cost" class="fin-input-standard" style="border-radius:8px;" value="0" oninput="updateNetPreview()">
+</div>
+
 <div class="fin-row">
     <span>水電攤提</span>
-    <div class="utility-row-container">
-        <button type="button" class="btn-utility-calc" onclick="openUtilityCalc()">
-            試算
-        </button>
-        <div class="fin-input-wrapper">
-            <input type="number" id="utility-cost" class="fin-input" value="0" oninput="updateNetPreview()">
-        </div>
+    <div class="input-group-custom">
+        <button type="button" class="btn-calc-sm" onclick="openUtilityCalc()">試算</button>
+        <input type="number" id="utility-cost" class="fin-input-standard" value="0" oninput="updateNetPreview()">
     </div>
 </div>
     
