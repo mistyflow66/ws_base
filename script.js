@@ -396,7 +396,15 @@ function showOrderDetail(order) {
     let btnConfig = { text: "開啟 App", icon: "fa-solid fa-comment-dots", color: "#af6a58", appUrl: "#", webUrl: "#" };
 
 if (s.includes("Booking")) {
-    btnConfig = { text: "Pulse", icon: "fa-solid fa-house-laptop", color: "#003580", appUrl: "pulse://", webUrl: "https://admin.booking.com" };
+    btnConfig = { 
+        text: "Pulse", 
+        icon: "fa-solid fa-house-laptop", 
+        color: "#003580", 
+        // 嘗試使用更具體的路徑，這在 iOS/Android 上更容易喚醒 App
+        appUrl: "pulse://hotel/", 
+        webUrl: "https://admin.booking.com" 
+    };
+}
 } else if (s.includes("官方LINE")) {
     btnConfig = { text: "LINE OA", icon: "fa-solid fa-comment-medical", color: "#00b900", appUrl: "lineoa://", webUrl: "https://manager.line.biz" };
 } else if (s.includes("LINE")) {
