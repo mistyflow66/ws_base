@@ -40,7 +40,7 @@
     
    <div id="tpl-page" class="page active">
       <div class="card info-base">
-        <label>💡 基礎資訊（填寫後自動帶入）</label>
+        <label><i class="fa-solid fa-lightbulb"></i> 基礎資訊（填寫後自動帶入）</label>
         <div class="input-row">
   <input type="text" id="v-date" placeholder="入住日期(如3/12)" oninput="updateAll()">
   <input type="text" id="v-pwd" placeholder="今日大門密碼" oninput="updateAll()">
@@ -86,30 +86,43 @@
           <option value="cny">農曆過年</option>
         </select>
         
-        <div class="input-row-3">
-          <div class="price-input-group">
-            <label>201價格</label>
-            <input type="number" id="p-201" placeholder="1900" oninput="runManualCalc()">
-          </div>
-          <div class="price-input-group">
-            <label>202價格</label>
-            <input type="number" id="p-202" placeholder="2400" oninput="runManualCalc()">
-          </div>
-          <div class="price-input-group">
-            <label>301價格</label>
-            <input type="number" id="p-301" placeholder="3500" oninput="runManualCalc()">
-          </div>
-        </div>
+        <h3 class="mt-15">房價與開房設定</h3>
 
-        <h3 class="mt-15">2. 選擇本次開房床數</h3>
-        <div class="room-select-grid">
-          <div><label>201</label><select id="m-201" onchange="runManualCalc()"><option value="0">不開</option><option value="1">1 床</option></select></div>
-          <div><label>202</label><select id="m-202" onchange="runManualCalc()"><option value="0">不開</option><option value="1">1 床</option><option value="2">2 床</option></select></div>
-          <div><label>301</label><select id="m-301" onchange="runManualCalc()"><option value="0">不開</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
-        </div>
-      </div>
-      <div id="calc-result"></div>
-    </div>
+<div class="price-combo">
+
+  <div class="price-row">
+    <label>201</label>
+    <input type="number" id="p-201" oninput="runManualCalc()">
+    <select id="m-201" onchange="runManualCalc()">
+      <option value="0">不開</option>
+      <option value="1">1 床</option>
+    </select>
+  </div>
+
+  <div class="price-row">
+    <label>202</label>
+    <input type="number" id="p-202" oninput="runManualCalc()">
+    <select id="m-202" onchange="runManualCalc()">
+      <option value="0">不開</option>
+      <option value="1">1 床</option>
+      <option value="2">2 床</option>
+    </select>
+  </div>
+
+  <div class="price-row">
+    <label>301</label>
+    <input type="number" id="p-301" oninput="runManualCalc()">
+    <select id="m-301" onchange="runManualCalc()">
+      <option value="0">不開</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+    </select>
+  </div>
+
+</div>
+
 
     <div id="order-page" class="page">
   <div id="lock-screen" class="card">
@@ -124,7 +137,7 @@
       <span id="order-acc-icon"><i class="fa-solid fa-chevron-down"></i></span>
     </div>
     
-    <div class="accordion-content" id="order-add-content">
+    <div class="accordion-content collapsed" id="order-add-content">
       <input type="text" id="o-name" placeholder="訂房人姓名">
       <div class="input-row">
         <input type="date" id="o-date">
@@ -162,11 +175,18 @@
     </div>
 
     <div class="card">
-      <div class="month-nav">
-        <button class="cat-tag" onclick="changeMonth(-1)"><i class="fa-solid fa-angle-left"></i></button>
-        <h3 id="cal-month-title"></h3>
-        <button class="cat-tag" onclick="changeMonth(1)"><i class="fa-solid fa-angle-right"></i></button>
-      </div>
+      <div class="month-nav unified-nav">
+  <button class="nav-arrow" onclick="changeMonth(-1)">
+    <i class="fa-solid fa-angle-left"></i>
+  </button>
+
+  <h3 id="cal-month-title"></h3>
+
+  <button class="nav-arrow" onclick="changeMonth(1)">
+    <i class="fa-solid fa-angle-right"></i>
+  </button>
+</div>
+
     
 
           <div class="view-switcher">
@@ -190,7 +210,7 @@
         </div>
 
         <div class="card finance-card">
-          <h3>💰 財務月結試算</h3>
+          <h3><i class="fa-solid fa-sack-dollar"></i> 財務月結試算</h3>
           <div class="fin-row"><span>總房費收入</span><b id="fin-income">$0</b></div>
           <div class="fin-row color-red"><span>Booking 手續費</span><b id="fin-fee">-$0</b></div>
           <div class="fin-row"><span>洗衣費</span><input type="number" id="laundry-cost" value="0" class="fin-input" oninput="calculateFinance()"></div>

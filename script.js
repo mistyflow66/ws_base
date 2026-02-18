@@ -24,7 +24,7 @@ const TPL_DATA = [
             dateObj.setDate(dateObj.getDate() + (parseInt(nights) || 1));
             checkoutText = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
         }
-        return `好的，請您確認以下訊息是否正確：\n1. ${d}入住-${checkoutText}退房\n包棟 3 房 ${nights} 晚，私訊優惠價 ${total} 元\n若以下訊息無誤，再麻煩您先匯訂金 ${dep} 元到以下帳號，煦願民宿先幫您預留日期，謝謝您的預訂\n\n中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`;
+        return `好的，請您確認以下訊息是否正確：\n1. ${d}入住-${checkoutText}退房\n ${nights} 晚，私訊優惠價 ${total} 元\n若以下訊息無誤，再麻煩您先匯訂金 ${dep} 元到以下帳號，煦願民宿先幫您預留日期，謝謝您的預訂\n\n中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`;
     } // 這是函數的 }
   }, // <--- 這是物件的 }，這行一定要有逗號
   { 
@@ -102,6 +102,8 @@ let currentView = 'cal'; // 'cal' 或 'list'
 // --- 初始化與基礎功能 ---
 
 window.onload = () => {
+    updatePricePlaceholder();
+
     // 2. 若已輸入過密碼就不用再次輸入
     const savedKey = localStorage.getItem('bnb_admin_key');
     if (savedKey) {
@@ -176,7 +178,7 @@ function updateTpl(filter = 'all') {
             <div class="preview-area" id="t-${i}">${content}</div>
             <div class="input-row" style="margin-top:10px; gap:8px;">
                 <button class="copy-btn" style="flex:1; margin-top:0;" onclick="copyText('t-${i}', event)">單獨複製</button>
-                <button class="copy-btn" style="flex:1; margin-top:0; background:${isPacked ? '#e67e22' : '#3498db'};" onclick="togglePackage(${i})">
+                <button class="copy-btn" style="flex:1; margin-top:0; background:${isPacked ? '#af6a58' : '#ff85a2'};" onclick="togglePackage(${i})">
                     ${isPacked ? '取消打包' : '加入打包'}
                 </button>
             </div>
@@ -204,6 +206,16 @@ function togglePackage(index) {
     updateAll(); 
 }
 // --- 房價計算 ---
+function updatePricePlaceholder() {
+    const s = document.getElementById('m-season').value;
+    ['201','202','301'].forEach(rid => {
+        const input = document.getElementById('p-'+rid);
+        const firstBedPrice = PRICE_MAP[rid][s][1];
+        if (firstBedPrice) {
+            input.placeholder = firstBedPrice;
+        }
+    });
+}
 
 function runManualCalc() {
     const s = document.getElementById('m-season').value;
@@ -402,25 +414,18 @@ function openEdit(oid) {
 
     toggleEditMode(false); // 預設為檢視模式
     document.getElementById('btn-pulse').style.display = r[1] === 'Booking' ? 'block' : 'none';
-    document.getElementById('edit-modal').classList.add('active'); // 觸發 CSS 置中
+    document.getElementById('edit-modal').style.display = 'flex'; // 觸發 CSS 置中
 }
 
 function toggleEditMode(isEdit) {
     document.getElementById('info-display-view').style.display = isEdit ? 'none' : 'block';
     document.getElementById('info-edit-view').style.display = isEdit ? 'block' : 'none';
-    document.getElementById('modal-title').innerHTML = isEdit ? 
-        '<i class="fa-solid fa-pen-to-square"></i> 編輯訂單' : 
-        '<i class="fa-solid fa-circle-info"></i> 訂單詳細資訊';
 
-    
-    // 填入晚數資料 (index 10)
-    if(document.getElementById('e-nights')) {
-        document.getElementById('e-nights').value = r[10] || 1;
-    }
-
-    document.getElementById('btn-pulse').style.display = r[1] === 'Booking' ? 'block' : 'none';
-    document.getElementById('edit-modal').style.display = 'block';
+    document.getElementById('modal-title').innerHTML = isEdit
+        ? '<i class="fa-solid fa-pen-to-square"></i> 編輯訂單'
+        : '<i class="fa-solid fa-circle-info"></i> 訂單詳細資訊';
 }
+
 
 function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
 
