@@ -291,49 +291,57 @@ async function addOrder() {
     toggleLoading(false);
 }
 
-// --- 視圖渲染 ---
+// 全域變數，用來存放當前顯示的物件以便點擊調用
+let currentViewOrders = [];
+
 function renderOrderList() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
 
-    const mData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
-    renderCalendar(year, month, mData);
+    // 存入全域變數
+    currentViewOrders = globalOrderData
+        .filter(r => r[3] && r[3].includes(monthStr))
+        .map(r => ({
+            id: r[0], source: r[1], name: r[2], date: r[3],
+            guests: r[5], rooms: r[6], total: r[7], deposit: r[8],
+            bal: r[9], nights: r[10], note: r[11]
+        }));
+
+    renderCalendar(year, month); // 改為直接讀取全域變數
 
     const listDiv = document.getElementById('order-list');
-    listDiv.innerHTML = mData.map(r => {
-        const dateObj = new Date(r[3]);
-        return `
-            <div class="order-list-item" onclick="openEdit('${r[0]}')">
-                <div>
-                    <span class="source-tag ${r[1] === 'Booking' ? 'tag-booking' : 'tag-line'}">${r[1]}</span>
-                    <b>${dateObj.getMonth() + 1}/${dateObj.getDate()} | ${r[2]}</b>
-                </div>
-                <div style="text-align:right;">
-                    <div style="color:#af6a58; font-weight:bold;">$${r[7]}</div>
-                    <div style="font-size:0.75rem;">${r[6]}房 / ${r[10]}晚</div>
-                </div>
-            </div>`;
-    }).join('');
+    listDiv.innerHTML = currentViewOrders.map((o, index) => `
+        <div class="order-list-item" onclick="handleOrderClick(${index})">
+            <div class="order-info">
+                <div style="font-weight:bold;">${o.date.split('-')[2]}日 | ${o.name}</div>
+                <div style="font-size:0.85rem; color:#6a7181;">${o.rooms}房 / ${o.nights}晚</div>
+            </div>
+            <div style="text-align:right;">
+                <span class="source-tag tag-${getSourceClass(o.source)}">${o.source}</span>
+                <div style="color:#af6a58; font-weight:bold; margin-top:4px;">$${o.total}</div>
+            </div>
+        </div>`).join('');
     
-    updateStatistics(mData);
-    calculateFinance(mData);
+    updateStatistics(currentViewOrders);
+    const rawMData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
+    calculateFinance(rawMData);
 }
 
-function renderCalendar(year, month, mData) {
+function renderCalendar(year, month) {
     const grid = document.getElementById('calendar-grid');
     grid.innerHTML = '';
     const bookedStatus = {}; 
 
-    mData.forEach(r => {
-        const checkInDate = new Date(r[3]);
-        const nights = parseInt(r[10]) || 1;
+    currentViewOrders.forEach((o, index) => {
+        const checkInDate = new Date(o.date);
+        const nights = parseInt(o.nights) || 1;
         for (let i = 0; i < nights; i++) {
             const current = new Date(checkInDate);
             current.setDate(checkInDate.getDate() + i);
             if (current.getFullYear() === year && current.getMonth() === month) {
-                bookedStatus[current.getDate()] = { oid: r[0], isFirstDay: (i === 0) };
+                bookedStatus[current.getDate()] = { orderIndex: index, isFirstDay: (i === 0) };
             }
         }
     });
@@ -343,23 +351,124 @@ function renderCalendar(year, month, mData) {
     
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
-    const now = new Date();
-
     for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="cal-day"></div>`;
+    
     for (let day = 1; day <= lastDate; day++) {
         const status = bookedStatus[day];
         let className = 'cal-day';
-        if (day === now.getDate() && month === now.getMonth() && year === now.getFullYear()) className += ' today';
+        const isToday = (day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear());
+        if (isToday) className += ' today';
         if (status) className += status.isFirstDay ? ' has-order' : ' has-order stay-over';
-        grid.innerHTML += `<div class="${className}" onclick="${status ? `openEdit('${status.oid}')` : ''}">${day}</div>`;
+        
+        // 修正點擊：傳入索引
+        const clickAction = status ? `onclick="handleOrderClick(${status.orderIndex})"` : '';
+        grid.innerHTML += `<div class="${className}" ${clickAction}>${day}</div>`;
     }
 }
 
-// --- 統計功能 ---
+// 新增一個處理點擊的中轉函數
+function handleOrderClick(index) {
+    const order = currentViewOrders[index];
+    if (order) {
+        showOrderDetail(order);
+    }
+}
+
+// --- 訂單詳情彈窗與編輯邏輯 ---
+
+function showOrderDetail(order) {
+    if (!order) return;
+    const infoList = document.getElementById('detail-info-list');
+    
+    // 顯示視圖渲染
+    infoList.innerHTML = `
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-user"></i> 訂房人</span><span class="info-value">${order.name}</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-calendar"></i> 入住日期</span><span class="info-value">${order.date} (${order.nights}晚)</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-tag"></i> 來源</span><span class="source-tag tag-${getSourceClass(order.source)}">${order.source}</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-bed"></i> 房型/人數</span><span class="info-value">${order.rooms}房 / ${order.guests}人</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-money-bill"></i> 總金額</span><span class="info-value">$${order.total}</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-pen"></i> 備註</span><span class="info-value">${order.note || '無'}</span></div>
+    `;
+
+    // 預填編輯欄位 (確保 ID 對應 HTML)
+    document.getElementById('e-oid').value = order.id || '';
+    document.getElementById('e-name').value = order.name || '';
+    document.getElementById('e-date').value = order.date || '';
+    document.getElementById('e-nights').value = order.nights || '1';
+    document.getElementById('e-source').value = order.source || '私LINE';
+    document.getElementById('e-guests').value = order.guests || '';
+    document.getElementById('e-rooms').value = order.rooms || '3';
+    document.getElementById('e-total').value = order.total || '';
+    document.getElementById('e-dep').value = order.deposit || 0;
+    document.getElementById('e-note').value = order.note || '';
+
+    toggleEditMode(false); 
+    document.getElementById('edit-modal').classList.add('active');
+}
+
+function closeEditModal() {
+    document.getElementById('edit-modal').classList.remove('active');
+}
+
+function toggleEditMode(isEdit) {
+    document.getElementById('info-display-view').style.display = isEdit ? 'none' : 'block';
+    document.getElementById('info-edit-view').style.display = isEdit ? 'block' : 'none';
+    const modalTitle = document.getElementById('modal-title');
+    modalTitle.innerText = isEdit ? "編輯訂單" : "訂單詳細資訊";
+}
+
+function getSourceClass(source) {
+    if (!source) return 'default';
+    const s = source.toLowerCase();
+    if (s.includes('line')) return 'line';
+    if (s.includes('booking')) return 'booking';
+    if (s.includes('fb') || s.includes('messenger')) return 'fb';
+    return 'default';
+}
+
+// --- 修正後的更新功能 (對接雲端) ---
+async function submitUpdate() {
+    const key = document.getElementById('admin-key').value;
+    toggleLoading(true);
+    const total = document.getElementById('e-total').value;
+    const dep = document.getElementById('e-dep').value;
+    const data = {
+        action: "update", key: key,
+        id: document.getElementById('e-oid').value,
+        name: document.getElementById('e-name').value, 
+        date: document.getElementById('e-date').value,
+        source: document.getElementById('e-source').value, 
+        guests: document.getElementById('e-guests').value,
+        rooms: document.getElementById('e-rooms').value, 
+        total: total, dep: dep, bal: total - dep,
+        nights: document.getElementById('e-nights').value,
+        note: document.getElementById('e-note').value 
+    };
+    await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
+    closeEditModal();
+    fetchOrders();
+    toggleLoading(false);
+}
+
+async function submitDelete() {
+    if(!confirm("確定要刪除這筆訂單嗎？此操作無法復原。")) return;
+    const key = document.getElementById('admin-key').value;
+    toggleLoading(true);
+    const data = {
+        action: "delete", key: key,
+        id: document.getElementById('e-oid').value
+    };
+    await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
+    closeEditModal();
+    fetchOrders();
+    toggleLoading(false);
+}
+
+// --- 統計與其他功能 (保留原樣) ---
 function updateStatistics(mData) {
-    const totalG = mData.reduce((s, r) => s + (parseInt(r[5]) || 0), 0);
-    const totalR = mData.reduce((s, r) => s + (parseInt(r[6]) || 0), 0);
-    const bCount = mData.filter(r => r[1] === 'Booking').length;
+    const totalG = mData.reduce((s, o) => s + (parseInt(o.guests) || 0), 0);
+    const totalR = mData.reduce((s, o) => s + (parseInt(o.rooms) || 0), 0);
+    const bCount = mData.filter(o => o.source === 'Booking').length;
     document.getElementById('stat-total-guests').innerText = totalG;
     document.getElementById('stat-total-rooms').innerText = totalR;
     const bRate = mData.length ? Math.round((bCount/mData.length)*100) : 0;
@@ -368,6 +477,7 @@ function updateStatistics(mData) {
 }
 
 function calculateFinance(mData) {
+    // 這裡 mData 是原始 Array 格式 [id, source, name, date...]
     const income = mData.reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
     const bTotal = mData.filter(r => r[1] === 'Booking').reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
     const fee = Math.round(bTotal * 0.12);
@@ -378,7 +488,6 @@ function calculateFinance(mData) {
     if(document.getElementById('fin-net')) document.getElementById('fin-net').innerText = '$' + (income - fee - laundry - utility).toLocaleString();
 }
 
-// --- 輔助功能 ---
 function copyText(id, e) {
     const el = document.getElementById(id);
     const t = el.innerText || el.value;
@@ -420,115 +529,4 @@ function switchOrderView(type) {
     document.getElementById('btn-list').classList.toggle('active', type === 'list');
     document.getElementById('calendar-grid').style.display = type === 'cal' ? 'grid' : 'none';
     document.getElementById('order-list').style.display = type === 'list' ? 'block' : 'none';
-}
-/**
- * 切換編輯模式：控制 Modal 內的「純顯示」與「編輯表單」
- * @param {boolean} isEdit - true 為進入編輯模式, false 為回歸顯示模式
- */
-function toggleEditMode(isEdit) {
-    const displayView = document.getElementById('info-display-view');
-    const editView = document.getElementById('info-edit-view');
-    const modalTitle = document.getElementById('modal-title');
-
-    if (isEdit) {
-        displayView.style.display = 'none';
-        editView.style.display = 'block';
-        modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> 編輯訂單資料';
-    } else {
-        displayView.style.display = 'block';
-        editView.style.display = 'none';
-        modalTitle.innerHTML = '<i class="fa-solid fa-circle-info"></i> 訂單詳細資訊';
-    }
-}
-
-/**
- * 顯示訂單詳情：點擊月曆或清單卡片時調用
- * @param {Object} order - 傳入訂單物件
- */
-function showOrderDetail(order) {
-    // 1. 填入顯示視圖的內容
-    const infoList = document.getElementById('detail-info-list');
-    infoList.innerHTML = `
-        <div class="info-item">
-            <span class="info-label">訂房人</span>
-            <span class="info-value">${order.name}</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">入住日期</span>
-            <span class="info-value">${order.date} (${order.nights}晚)</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">來源管道</span>
-            <span class="source-tag tag-${getSourceClass(order.source)}">${order.source}</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">房型/人數</span>
-            <span class="info-value">${order.rooms}房 / ${order.guests}人</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">總價/訂金</span>
-            <span class="info-value">$${order.total} / 已付 $${order.deposit || 0}</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">備註事項</span>
-            <span class="info-value">${order.note || '無'}</span>
-        </div>
-    `;
-
-    // 2. 預填編輯表單的內容 (對應你 HTML 裡的 e- 開頭 ID)
-    document.getElementById('e-oid').value = order.id; // 隱藏欄位紀錄 ID
-    document.getElementById('e-name').value = order.name;
-    document.getElementById('e-date').value = order.date;
-    document.getElementById('e-nights').value = order.nights;
-    document.getElementById('e-source').value = order.source;
-    document.getElementById('e-guests').value = order.guests;
-    document.getElementById('e-rooms').value = order.rooms;
-    document.getElementById('e-total').value = order.total;
-    document.getElementById('e-dep').value = order.deposit || 0;
-    document.getElementById('e-note').value = order.note || "";
-
-    // 3. 打開 Modal
-    toggleEditMode(false); // 確保每次點開都是先看詳情
-    document.getElementById('edit-modal').classList.add('active');
-}
-
-/**
- * 關閉 Modal
- */
-function closeEditModal() {
-    document.getElementById('edit-modal').classList.remove('active');
-}
-
-/**
- * 輔助：判定來源類別
- */
-function getSourceClass(source) {
-    const s = source.toUpperCase();
-    if (s.includes('LINE')) return 'line';
-    if (s.includes('BOOKING')) return 'booking';
-    if (s.includes('FB')) return 'fb';
-    return 'default';
-}
-
-/**
- * 提交刪除 (範例)
- */
-function submitDelete() {
-    const oid = document.getElementById('e-oid').value;
-    if (confirm(`確定要刪除這筆訂單嗎？此操作無法還原。`)) {
-        // 這裡接你原本的雲端刪除程式碼...
-        console.log("刪除訂單 ID:", oid);
-        closeEditModal();
-    }
-}
-
-/**
- * 提交更新 (範例)
- */
-function submitUpdate() {
-    const oid = document.getElementById('e-oid').value;
-    // 這裡讀取 e-name, e-date... 等欄位的值
-    // 並發送 API 請求到雲端資料庫
-    alert("訂單已更新！");
-    closeEditModal();
 }

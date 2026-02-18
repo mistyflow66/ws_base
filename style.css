@@ -107,8 +107,17 @@ input:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(175, 106, 88, 0.1);
   background: #fff;
 }
-.input-row { display: flex; gap: 10px; }
-.wide-select { flex: 1.5; }
+.input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center; /* 確保垂直居中 */
+}
+
+.input-row select, .input-row input {
+    flex: 1; /* 讓它們平分空間 */
+    min-width: 0; /* 防止寬度溢出 */
+}
 
 /* --- 按鈕系統 --- */
 .copy-btn { 

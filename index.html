@@ -137,12 +137,17 @@
               <option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option>
             </select>
           </div>
+          
           <div class="input-row">
-            <input type="number" id="o-guests" placeholder="人數">
-            <select id="o-nights" class="wide-select">
-              <option value="1">1 晚</option><option value="2">2 晚</option><option value="3">3 晚</option><option value="4">4 晚</option>
-            </select>
+            <div style="flex:1;"><input type="number" id="o-guests" placeholder="入住人數" style="width:100%;"></div>
+            <div style="flex:1;">
+              <select id="o-nights" style="width:100%;">
+                <option value="" disabled selected>選擇晚數</option>
+                <option value="1">1 晚</option><option value="2">2 晚</option><option value="3">3 晚</option><option value="4">4 晚</option>
+              </select>
+            </div>
           </div>
+
           <div class="input-row">
             <select id="o-rooms">
               <option value="1">1 房</option><option value="2">2 房</option><option value="3" selected>3 房 (包棟)</option>
