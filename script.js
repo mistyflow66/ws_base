@@ -750,12 +750,31 @@ function prepareMonthEnd() {
 
 // 3. 淨利即時預覽
 function updateNetPreview() {
-    const income = parseFloat(document.getElementById('me-income').innerText.replace(/[^0-9.-]+/g,"")) || 0;
-    const fee = parseFloat(document.getElementById('me-fee').innerText.replace(/[^0-9.-]+/g,"")) || 0;
-    const laundry = parseFloat(document.getElementById('final-laundry').value) || 0;
-    const utility = parseFloat(document.getElementById('final-utility').value) || 0;
+    // 1. 取得基本房費與手續費 (從全域變數拿，若無則設為 0)
+    const income = window.currentMonthFin?.income || 0;
+    const fee = window.currentMonthFin?.fee || 0;
+
+    // 2. 取得即時輸入的洗衣費與水電費
+    // 使用 parseInt 確保它是數字，避免字串相加錯誤
+    const laundry = parseInt(document.getElementById('laundry-cost').value) || 0;
+    const utility = parseInt(document.getElementById('utility-cost').value) || 0;
+
+    // 3. 計算實際淨利
     const net = income - fee - laundry - utility;
-    document.getElementById('me-net-preview').innerText = '$' + net.toLocaleString();
+
+    // 4. 更新畫面顯示 (財務月結試算區的總額)
+    const netDisplay = document.getElementById('archive-net-profit-preview');
+    if (netDisplay) {
+        netDisplay.innerText = '$' + net.toLocaleString();
+    }
+
+    // 5. 【關鍵】同步回全域變數，這樣「封存彈窗」開啟時數據才會正確
+    if (!window.currentMonthFin) window.currentMonthFin = {};
+    window.currentMonthFin.laundry = laundry;
+    window.currentMonthFin.utility = utility;
+    window.currentMonthFin.net = net;
+    
+    console.log("財務數據已同步更新:", window.currentMonthFin);
 }
 
 // 4. 水電分攤邏輯
@@ -847,6 +866,7 @@ function openArchiveModal() {
     const rooms = document.getElementById('stat-total-rooms').innerText;
     const bRate = document.getElementById('stat-b-rate').innerText;
     const oRate = document.getElementById('stat-o-rate').innerText;
+    const totalExpenses = (fin.laundry || 0) + (fin.utility || 0);
 
     const listContainer = document.getElementById('archive-summary-list');
     if (listContainer) {
@@ -878,7 +898,7 @@ function openArchiveModal() {
             </div>
             <div class="archive-list-item">
                 <span class="archive-label">洗衣/水電雜支</span>
-                <span class="archive-value" style="color:#e74c3c;">-$${(fin.laundry + fin.utility).toLocaleString()}</span>
+                <span class="archive-value">-$${totalExpenses.toLocaleString()}</span>
             </div>
         `;
     }
