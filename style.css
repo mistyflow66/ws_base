@@ -601,6 +601,7 @@ hr {
     height: 40px !important;
     border: 1px solid #e2e8f0;
     border-radius: 0 8px 8px 0 !important; /* 只有右邊圓角 */
+    border-left: none !important; /* 讓左邊框消失，與按鈕完美融合 */
     text-align: right;
     padding: 0 10px;
     margin-bottom: 0 !important;

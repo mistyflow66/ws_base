@@ -267,9 +267,11 @@
 
 <div class="fin-row">
     <span>水電攤提</span>
-    <div class="input-group-custom">
-        <button type="button" class="btn-calc-sm" onclick="openUtilityCalc()">試算</button>
-        <input type="number" id="utility-cost" class="fin-input-standard" value="0" oninput="updateNetPreview()">
+    <div class="utility-row-container">
+        <button type="button" class="btn-utility-calc" onclick="openUtilityCalc()">
+            試算
+        </button>
+        <input type="number" id="utility-cost" class="fin-input-utility" value="0" oninput="updateNetPreview()">
     </div>
 </div>
     
