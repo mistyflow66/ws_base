@@ -805,54 +805,97 @@ function calculateUtility() {
 
 document.querySelectorAll('#u-start, #u-end, #u-total').forEach(el => el.addEventListener('input', calculateUtility));
 
+/**
+ * [修正版] 套用水電試算結果
+ * 移除了會導致數據歸零的 calculateFinance 全域計算，改為局部更新
+ */
 function applyUtility() {
-    const resValue = document.getElementById('u-res').innerText;
+    // 1. 取得試算結果，並移除千分位逗號，避免 input 無法讀取
+    const resText = document.getElementById('u-res').innerText;
+    const resValue = parseInt(resText.replace(/,/g, '')) || 0;
     
-    // 1. 填入封存區的小輸入框
-    document.getElementById('final-utility').value = resValue;
-    
-    // 2. 同步到底部的財務預覽框
+    // 2. 同步到底部的財務預覽輸入框
     const utilityCost = document.getElementById('utility-cost');
-    if (utilityCost) utilityCost.value = resValue;
+    if (utilityCost) {
+        utilityCost.value = resValue;
+    }
 
-    // 3. 重新觸發計算
+    // 3. 填入封存預留區的小輸入框 (如果有該 ID)
+    const finalUtility = document.getElementById('final-utility');
+    if (finalUtility) {
+        finalUtility.value = resValue;
+    }
+
+    // 4. 僅觸發淨利預覽計算 (此函數只做加減法，不會動到全域訂單數據)
     updateNetPreview();
     
-    // 4. 更新全域財務統計
-    const monthTitle = document.getElementById('cal-month-title').innerText;
-    const monthStr = monthTitle.replace('年 ', '-').replace('月', '').trim();
-    const currentMData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
-    calculateFinance(currentMData);
-
+    // 5. 關閉彈窗
     closeUtilityCalc();
 }
 
+/**
+ * 開啟封存確認彈窗
+ * 抓取當前頁面最新的經營數據與財務數值
+ */
 function openArchiveModal() {
     const monthTitle = document.getElementById('cal-month-title').innerText;
+    
+    // 確保從全域變數中拿取最新的財務狀態
     const fin = window.currentMonthFin || { income:0, fee:0, laundry:0, utility:0, net:0 };
     
-    // 抓取經營數據卡片數值
+    // 從畫面上抓取已經由 renderOrderList 自動算好的經營數據
     const guests = document.getElementById('stat-total-guests').innerText;
     const rooms = document.getElementById('stat-total-rooms').innerText;
     const bRate = document.getElementById('stat-b-rate').innerText;
     const oRate = document.getElementById('stat-o-rate').innerText;
 
     const listContainer = document.getElementById('archive-summary-list');
-    listContainer.innerHTML = `
-        <div class="archive-list-item"><span class="archive-label">結算月份</span><span class="archive-value">${monthTitle}</span></div>
-        <div class="archive-list-item"><span class="archive-label">總來客數</span><span class="archive-value">${guests} 人</span></div>
-        <div class="archive-list-item"><span class="archive-label">總開房數</span><span class="archive-value">${rooms} 房</span></div>
-        <div class="archive-list-item"><span class="archive-label">通路佔比</span><span class="archive-value">Booking ${bRate} / 私訊 ${oRate}</span></div>
-        <hr style="border:0; border-top:1px dashed #eee; margin:10px 0;">
-        <div class="archive-list-item"><span class="archive-label">房費總收入</span><span class="archive-value">$${fin.income.toLocaleString()}</span></div>
-        <div class="archive-list-item"><span class="archive-label">Booking 手續費</span><span class="archive-value" style="color:#e74c3c;">-$${fin.fee.toLocaleString()}</span></div>
-        <div class="archive-list-item"><span class="archive-label">洗衣/水電雜支</span><span class="archive-value">-$${(fin.laundry + fin.utility).toLocaleString()}</span></div>
-    `;
+    if (listContainer) {
+        listContainer.innerHTML = `
+            <div class="archive-list-item">
+                <span class="archive-label"><i class="fa-regular fa-calendar-check"></i> 結算月份</span>
+                <span class="archive-value">${monthTitle}</span>
+            </div>
+            <div class="archive-list-item">
+                <span class="archive-label"><i class="fa-solid fa-users"></i> 總來客數</span>
+                <span class="archive-value">${guests} 人</span>
+            </div>
+            <div class="archive-list-item">
+                <span class="archive-label"><i class="fa-solid fa-bed"></i> 總開房數</span>
+                <span class="archive-value">${rooms} 房</span>
+            </div>
+            <div class="archive-list-item">
+                <span class="archive-label"><i class="fa-solid fa-chart-pie"></i> 通路佔比</span>
+                <span class="archive-value">Booking ${bRate} / 私訊 ${oRate}</span>
+            </div>
+            <hr style="border:0; border-top:1px dashed #eee; margin:15px 0;">
+            <div class="archive-list-item">
+                <span class="archive-label">房費總收入</span>
+                <span class="archive-value">$${fin.income.toLocaleString()}</span>
+            </div>
+            <div class="archive-list-item">
+                <span class="archive-label">Booking 手續費</span>
+                <span class="archive-value" style="color:#e74c3c;">-$${fin.fee.toLocaleString()}</span>
+            </div>
+            <div class="archive-list-item">
+                <span class="archive-label">洗衣/水電雜支</span>
+                <span class="archive-value" style="color:#e74c3c;">-$${(fin.laundry + fin.utility).toLocaleString()}</span>
+            </div>
+        `;
+    }
 
-    document.getElementById('archive-net-profit').innerText = '$' + fin.net.toLocaleString();
+    // 更新彈窗內的最終淨利顯示
+    const netDisplay = document.getElementById('archive-net-profit');
+    if (netDisplay) {
+        netDisplay.innerText = '$' + fin.net.toLocaleString();
+    }
+    
     document.getElementById('archive-modal').classList.add('active');
 }
 
+/**
+ * 關閉封存確認彈窗
+ */
 function closeArchiveModal() {
     document.getElementById('archive-modal').classList.remove('active');
 }

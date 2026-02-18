@@ -264,11 +264,13 @@
     
 <div class="fin-row">
     <span>水電攤提</span>
-    <div class="input-row-utility">
-        <input type="number" id="utility-cost" class="fin-input" value="0" oninput="updateNetPreview()">
+    <div class="utility-row-container">
         <button type="button" class="btn-utility-calc" onclick="openUtilityCalc()">
             試算
         </button>
+        <div class="fin-input-wrapper">
+            <input type="number" id="utility-cost" class="fin-input" value="0" oninput="updateNetPreview()">
+        </div>
     </div>
 </div>
     

@@ -174,7 +174,7 @@ input:focus, select:focus {
 /* --- 分類標籤 --- */
 .category-nav {
     position: sticky;
-    top: 80px; /* 增加高度，完全避開上方分頁按鈕 */
+    top: 82px; /* 增加高度，完全避開上方分頁按鈕 */
     z-index: 100;
     background-color: #ffffff !important;
     padding: 10px 15px; /* 增加左右內距 */
@@ -544,52 +544,35 @@ hr {
     margin-top: 15px;
 }
 
-/* --- 水電試算 Modal 內部的調整 --- */
-.utility-calc-box {
-    padding: 10px 0;
+/* --- 水電試算區域排版 --- */
+
+/* 1. 財務列容器：確保文字與右側輸入區對齊 */
+.fin-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
 }
 
-.utility-result-preview {
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 8px;
-    margin-top: 10px;
-    font-size: 0.9rem;
-    border: 1px solid #eee;
+/* 2. 水電輸入容器：讓按鈕在左，輸入框在右 */
+.utility-row-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* 按鈕與輸入框的間距 */
 }
 
-.utility-result-preview span {
-    color: var(--primary);
-    font-weight: bold;
-}
-
-/* 修正原本 input-row 在 Modal 內可能擠壓的問題 */
-.modal-content .input-row {
-    flex-wrap: wrap;
-}
-
-.modal-content .input-row > * {
-    flex: 1 1 100%; /* 手機端自動換行 */
-}
-
-@media (min-width: 400px) {
-    .modal-content .input-row > * {
-        flex: 1; /* 寬度足夠時恢復併排 */
-    }
-}
-
-/* 強化試算按鈕互動感 */
+/* 3. 扁平化全圓角試算按鈕 (置左且等高) */
 .btn-utility-calc {
     background-color: #6a7181;
     color: white;
     border: none;
-    border-radius: 50px; /* 完全圓角 */
-    padding: 0 20px;
-    height: 44px;
-    cursor: pointer; /* 滑鼠變成手指 */
-    transition: all 0.2s ease;
-    margin-left: 12px; /* 拉開與輸入框的距離 */
+    border-radius: 50px; 
+    padding: 0 15px;
+    height: 42px; /* 關鍵：與輸入框等高 */
+    cursor: pointer;
+    font-size: 0.85rem;
     font-weight: 600;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -599,16 +582,44 @@ hr {
 .btn-utility-calc:hover {
     background-color: #3a4553;
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .btn-utility-calc:active {
     transform: translateY(0);
 }
 
-/* 確保輸入框列的對齊 */
-.input-row-utility {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
+/* 4. 輸入框寬度控制 */
+.fin-input-wrapper {
+    width: 90px; /* 固定輸入框寬度，讓介面整齊 */
+}
+
+.fin-input-wrapper input {
+    height: 42px !important;
+    margin-bottom: 0 !important; /* 移除底邊距避免對不齊 */
+    text-align: right;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+/* --- 水電試算 Modal 內部原有的樣式保留並優化 --- */
+.utility-calc-box {
+    padding: 10px 0;
+}
+
+.utility-result-preview {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+    border: 1px solid #eee;
+    text-align: center;
+}
+
+.utility-result-preview span {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 1.1rem;
 }
