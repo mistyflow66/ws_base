@@ -421,3 +421,114 @@ function switchOrderView(type) {
     document.getElementById('calendar-grid').style.display = type === 'cal' ? 'grid' : 'none';
     document.getElementById('order-list').style.display = type === 'list' ? 'block' : 'none';
 }
+/**
+ * 切換編輯模式：控制 Modal 內的「純顯示」與「編輯表單」
+ * @param {boolean} isEdit - true 為進入編輯模式, false 為回歸顯示模式
+ */
+function toggleEditMode(isEdit) {
+    const displayView = document.getElementById('info-display-view');
+    const editView = document.getElementById('info-edit-view');
+    const modalTitle = document.getElementById('modal-title');
+
+    if (isEdit) {
+        displayView.style.display = 'none';
+        editView.style.display = 'block';
+        modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> 編輯訂單資料';
+    } else {
+        displayView.style.display = 'block';
+        editView.style.display = 'none';
+        modalTitle.innerHTML = '<i class="fa-solid fa-circle-info"></i> 訂單詳細資訊';
+    }
+}
+
+/**
+ * 顯示訂單詳情：點擊月曆或清單卡片時調用
+ * @param {Object} order - 傳入訂單物件
+ */
+function showOrderDetail(order) {
+    // 1. 填入顯示視圖的內容
+    const infoList = document.getElementById('detail-info-list');
+    infoList.innerHTML = `
+        <div class="info-item">
+            <span class="info-label">訂房人</span>
+            <span class="info-value">${order.name}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">入住日期</span>
+            <span class="info-value">${order.date} (${order.nights}晚)</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">來源管道</span>
+            <span class="source-tag tag-${getSourceClass(order.source)}">${order.source}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">房型/人數</span>
+            <span class="info-value">${order.rooms}房 / ${order.guests}人</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">總價/訂金</span>
+            <span class="info-value">$${order.total} / 已付 $${order.deposit || 0}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">備註事項</span>
+            <span class="info-value">${order.note || '無'}</span>
+        </div>
+    `;
+
+    // 2. 預填編輯表單的內容 (對應你 HTML 裡的 e- 開頭 ID)
+    document.getElementById('e-oid').value = order.id; // 隱藏欄位紀錄 ID
+    document.getElementById('e-name').value = order.name;
+    document.getElementById('e-date').value = order.date;
+    document.getElementById('e-nights').value = order.nights;
+    document.getElementById('e-source').value = order.source;
+    document.getElementById('e-guests').value = order.guests;
+    document.getElementById('e-rooms').value = order.rooms;
+    document.getElementById('e-total').value = order.total;
+    document.getElementById('e-dep').value = order.deposit || 0;
+    document.getElementById('e-note').value = order.note || "";
+
+    // 3. 打開 Modal
+    toggleEditMode(false); // 確保每次點開都是先看詳情
+    document.getElementById('edit-modal').classList.add('active');
+}
+
+/**
+ * 關閉 Modal
+ */
+function closeEditModal() {
+    document.getElementById('edit-modal').classList.remove('active');
+}
+
+/**
+ * 輔助：判定來源類別
+ */
+function getSourceClass(source) {
+    const s = source.toUpperCase();
+    if (s.includes('LINE')) return 'line';
+    if (s.includes('BOOKING')) return 'booking';
+    if (s.includes('FB')) return 'fb';
+    return 'default';
+}
+
+/**
+ * 提交刪除 (範例)
+ */
+function submitDelete() {
+    const oid = document.getElementById('e-oid').value;
+    if (confirm(`確定要刪除這筆訂單嗎？此操作無法還原。`)) {
+        // 這裡接你原本的雲端刪除程式碼...
+        console.log("刪除訂單 ID:", oid);
+        closeEditModal();
+    }
+}
+
+/**
+ * 提交更新 (範例)
+ */
+function submitUpdate() {
+    const oid = document.getElementById('e-oid').value;
+    // 這裡讀取 e-name, e-date... 等欄位的值
+    // 並發送 API 請求到雲端資料庫
+    alert("訂單已更新！");
+    closeEditModal();
+}
