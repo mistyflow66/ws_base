@@ -234,28 +234,57 @@ function updatePricePlaceholder() {
     const s = document.getElementById('m-season').value;
     ['201','202','301'].forEach(rid => {
         const input = document.getElementById('p-'+rid);
+        // 預設顯示該房型在該季節開 1 床的價格作為參考
         if (input && PRICE_MAP[rid][s][1]) input.placeholder = PRICE_MAP[rid][s][1];
     });
 }
 
 function runManualCalc() {
-    const s = document.getElementById('m-season').value;
+    const s = document.getElementById('m-season').value; // 季節 (平日/假日等)
     let totalBT = 0;
+    let roomDetails = []; // 用來存儲選中的房型與床數文字
+
     ['201','202','301'].forEach(rid => {
-        const b = parseInt(document.getElementById('m-'+rid).value);
+        const b = parseInt(document.getElementById('m-'+rid).value); // 取得開幾床
         if(b > 0) {
             const customPrice = parseFloat(document.getElementById('p-'+rid).value);
             totalBT += customPrice || PRICE_MAP[rid][s][b];
+            
+            // 房號對應名稱 (可依需求修改)
+            const rName = rid === '201' ? '雙人房' : (rid === '202' ? '三人房' : '四人房');
+            roomDetails.push(`${rName}開${b}床`);
         }
     });
+
+    if (totalBT === 0) return; // 沒選房型就不計算
+
+    // 私訊價計算
     const priv = Math.ceil((totalBT * 0.88 * 1.03) / 10) * 10;
+    // 額外計算：Booking 抽成 12% 後的實得金額 (供您參考)
+    const bookingNet = Math.round(priv * 0.88);
+
     const resDiv = document.getElementById('calc-result');
     if(resDiv) {
+        // 組合成你要的格式：平日---雙人房開2床，私訊優惠價 $XXXX 元
+        const seasonText = document.getElementById('m-season').options[document.getElementById('m-season').selectedIndex].text;
+        const roomsText = roomDetails.join('、');
+        const copyContent = `${seasonText}---${roomsText}，私訊優惠價 $${priv.toLocaleString()} 元`;
+
         resDiv.innerHTML = `
             <div class="card" style="border: 2px solid #af6a58;">
-                <div style="font-weight:bold; color:#af6a58;">私訊優惠價：$${priv.toLocaleString()}</div>
-                <div class="preview-area" id="p-res" style="margin-top:10px;">房價報價：私訊優惠價 $${priv.toLocaleString()} 元</div>
-                <button class="copy-btn" style="background:#af6a58;" onclick="copyText('p-res', event)">複製報價</button>
+                <div style="font-weight:bold; color:#af6a58; font-size:1.1rem;">私訊優惠價：$${priv.toLocaleString()}</div>
+                
+                <div style="font-size:0.8rem; color:#999; margin-top:4px;">
+                    (Booking 扣 12% 抽成後實得：$${bookingNet.toLocaleString()})
+                </div>
+
+                <div class="preview-area" id="p-res" style="margin-top:12px; background:#f9f9f9; padding:10px; border-radius:4px; font-size:0.9rem; line-height:1.5;">
+                    ${copyContent}
+                </div>
+                
+                <button class="copy-btn" style="background:#af6a58; margin-top:10px; width:100%;" onclick="copyText('p-res', event)">
+                    <i class="fa-solid fa-copy"></i> 複製報價
+                </button>
             </div>`;
     }
 }
@@ -404,7 +433,7 @@ if (s.includes("Booking")) {
         appUrl: "pulse://hotel/", 
         webUrl: "https://admin.booking.com" 
     };
-}
+
 } else if (s.includes("官方LINE")) {
     btnConfig = { text: "LINE OA", icon: "fa-solid fa-comment-medical", color: "#00b900", appUrl: "lineoa://", webUrl: "https://manager.line.biz" };
 } else if (s.includes("LINE")) {
@@ -412,20 +441,27 @@ if (s.includes("Booking")) {
 } else if (s.includes("FB") || s.includes("Messenger")) {
     btnConfig = { text: "Messenger", icon: "fa-brands fa-facebook-messenger", color: "#0084ff", appUrl: "fb-messenger://", webUrl: "https://www.facebook.com/messages" };
 }
+}
 
 
-    // 渲染詳細資訊內容
+   // 渲染詳細資訊內容
     const depositAmount = parseFloat(order.deposit) || 0;
     infoList.innerHTML = `
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-user"></i> 訂房人</span><span class="info-value">${order.name}</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-calendar"></i> 入住日期</span><span class="info-value">${displayDate} (${order.nights}晚)</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-tag"></i> 來源</span><span class="source-tag tag-${getSourceClass(s)}">${s}</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-bed"></i> 房型/人數</span><span class="info-value">${order.rooms}房 / ${order.guests}人</span></div>
-        <div class="info-item"><span class="info-label"><i class="fa-solid fa-money-bill"></i> 總金額</span><span class="info-value">$${order.total}</span></div>
+        
         <div class="info-item" style="color:#af6a58; font-weight:bold;">
+            <span class="info-label"><i class="fa-solid fa-money-bill"></i> 總金額</span>
+            <span class="info-value">$${order.total}</span>
+        </div>
+        
+        <div class="info-item">
             <span class="info-label"><i class="fa-solid fa-hand-holding-dollar"></i> 已付訂金</span>
             <span class="info-value">$${depositAmount}</span>
         </div>
+        
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-pen"></i> 備註</span><span class="info-value">${order.note || '無'}</span></div>
     `;
 
@@ -466,7 +502,7 @@ if (actionBtn) {
 
     toggleEditMode(false); 
     document.getElementById('edit-modal').classList.add('active');
-}
+
 function closeEditModal() {
     document.getElementById('edit-modal').classList.remove('active');
 }
