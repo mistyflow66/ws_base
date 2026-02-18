@@ -415,6 +415,7 @@ function handleOrderClick(index) {
 }
 
 // --- 訂單詳情彈窗與編輯邏輯 ---
+// --- 訂單詳情彈窗與編輯邏輯 ---
 
 function showOrderDetail(order) {
     if (!order) return;
@@ -422,29 +423,26 @@ function showOrderDetail(order) {
     const displayDate = formatDate(order.date);
     const s = order.source || "私LINE";
     
+    // 1. 定義按鈕配置
     let btnConfig = { text: "開啟 App", icon: "fa-solid fa-comment-dots", color: "#af6a58", appUrl: "#", webUrl: "#" };
 
-if (s.includes("Booking")) {
-    btnConfig = { 
-        text: "Pulse", 
-        icon: "fa-solid fa-house-laptop", 
-        color: "#003580", 
-        // 嘗試使用更具體的路徑，這在 iOS/Android 上更容易喚醒 App
-        appUrl: "pulse://hotel/", 
-        webUrl: "https://admin.booking.com" 
-    };
+    if (s.includes("Booking")) {
+        btnConfig = { 
+            text: "Pulse", 
+            icon: "fa-solid fa-house-laptop", 
+            color: "#003580", 
+            appUrl: "pulse://hotel/", 
+            webUrl: "https://admin.booking.com" 
+        };
+    } else if (s.includes("官方LINE")) {
+        btnConfig = { text: "LINE OA", icon: "fa-solid fa-comment-medical", color: "#00b900", appUrl: "lineoa://", webUrl: "https://manager.line.biz" };
+    } else if (s.includes("LINE")) {
+        btnConfig = { text: "LINE", icon: "fa-solid fa-comment-dots", color: "#00c300", appUrl: "line://", webUrl: "https://line.me" };
+    } else if (s.includes("FB") || s.includes("Messenger")) {
+        btnConfig = { text: "Messenger", icon: "fa-solid fa-comment-dots", color: "#0084ff", appUrl: "fb-messenger://", webUrl: "https://www.facebook.com/messages" };
+    }
 
-} else if (s.includes("官方LINE")) {
-    btnConfig = { text: "LINE OA", icon: "fa-solid fa-comment-medical", color: "#00b900", appUrl: "lineoa://", webUrl: "https://manager.line.biz" };
-} else if (s.includes("LINE")) {
-    btnConfig = { text: "LINE", icon: "fa-brands fa-line", color: "#00c300", appUrl: "line://", webUrl: "https://line.me" };
-} else if (s.includes("FB") || s.includes("Messenger")) {
-    btnConfig = { text: "Messenger", icon: "fa-brands fa-facebook-messenger", color: "#0084ff", appUrl: "fb-messenger://", webUrl: "https://www.facebook.com/messages" };
-}
-}
-
-
-   // 渲染詳細資訊內容
+    // 2. 渲染詳細資訊內容
     const depositAmount = parseFloat(order.deposit) || 0;
     infoList.innerHTML = `
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-user"></i> 訂房人</span><span class="info-value">${order.name}</span></div>
@@ -465,30 +463,25 @@ if (s.includes("Booking")) {
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-pen"></i> 備註</span><span class="info-value">${order.note || '無'}</span></div>
     `;
 
-    // 更新底部按鈕
-    /* --- 整合後的按鈕點擊邏輯 --- */
-const actionBtn = document.getElementById('btn-pulse');
-if (actionBtn) {
-    actionBtn.innerHTML = `<i class="${btnConfig.icon}"></i> ${btnConfig.text}`;
-    actionBtn.style.background = btnConfig.color;
+    // 3. 更新聯絡按鈕點擊邏輯
+    const actionBtn = document.getElementById('btn-pulse');
+    if (actionBtn) {
+        actionBtn.innerHTML = `<i class="${btnConfig.icon}"></i> ${btnConfig.text}`;
+        actionBtn.style.background = btnConfig.color;
 
-    actionBtn.onclick = () => {
-        // 1. 優先嘗試開啟手機 App (例如 pulse://)
-        if (btnConfig.appUrl && btnConfig.appUrl !== "#") {
-            window.location.href = btnConfig.appUrl;
-        }
-
-        // 2. 0.5秒後執行：如果是電腦版或沒裝 App，則開啟網頁版
-        setTimeout(() => {
-            if (btnConfig.webUrl && btnConfig.webUrl !== "#") {
-                // 使用 window.open 開啟新分頁，這在電腦上體驗最好
-                window.open(btnConfig.webUrl, "_blank");
+        actionBtn.onclick = () => {
+            if (btnConfig.appUrl && btnConfig.appUrl !== "#") {
+                window.location.href = btnConfig.appUrl;
             }
-        }, 500);
-    };
-}
+            setTimeout(() => {
+                if (btnConfig.webUrl && btnConfig.webUrl !== "#") {
+                    window.open(btnConfig.webUrl, "_blank");
+                }
+            }, 500);
+        };
+    }
 
-    // 預填編輯欄位
+    // 4. 預填編輯欄位
     document.getElementById('e-oid').value = order.id || '';
     document.getElementById('e-name').value = order.name || '';
     document.getElementById('e-date').value = order.date ? order.date.split('T')[0] : '';
@@ -502,6 +495,7 @@ if (actionBtn) {
 
     toggleEditMode(false); 
     document.getElementById('edit-modal').classList.add('active');
+} 
 
 function closeEditModal() {
     document.getElementById('edit-modal').classList.remove('active');
