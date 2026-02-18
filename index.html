@@ -164,7 +164,7 @@
         <div class="card">
           <div class="month-nav unified-nav">
             <button class="nav-arrow" onclick="changeMonth(-1)"><i class="fa-solid fa-angle-left"></i></button>
-            <h3 id="cal-month-title">2026年 2月</h3>
+            <h3 id="cal-month-title">讀取中...</h3>
             <button class="nav-arrow" onclick="changeMonth(1)"><i class="fa-solid fa-angle-right"></i></button>
           </div>
 
@@ -175,6 +175,63 @@
           
           <div id="calendar-grid" class="calendar-container"></div>
           <div id="order-list" class="mt-15" style="display:none;"></div>
+
+          <div class="card" style="margin-top: 20px; border: 2px dashed #3a4553;">
+    <h3 onclick="toggleMonthEnd()" style="cursor:pointer; display:flex; justify-content:space-between; margin:0;">
+        <span><i class="fa-solid fa-file-invoice-dollar"></i> 月度結算封存預覽</span>
+        <span id="me-icon">▼</span>
+    </h3>
+    
+    <div id="month-end-calc" style="display:none; margin-top:15px;">
+        <div style="background:#f8f9fa; padding:12px; border-radius:8px; margin-bottom:15px; font-size:0.9rem; line-height:1.6;">
+            <div style="display:flex; justify-content:space-between;"><span>月份：</span><strong id="me-month">--</strong></div>
+            <div style="display:flex; justify-content:space-between;"><span>房費總收入：</span><strong id="me-income">$0</strong></div>
+            <div style="display:flex; justify-content:space-between;"><span>Booking 12% 手續費：</span><strong id="me-fee">-$0</strong></div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:10px;">
+            <label style="font-size:0.85rem; color:#af6a58;">本月洗衣費支出</label>
+            <input type="number" id="final-laundry" class="form-control" placeholder="請輸入金額" oninput="updateNetPreview()">
+        </div>
+        
+        <div class="form-group" style="margin-bottom:10px;">
+            <label style="font-size:0.85rem; color:#af6a58;">本月水電攤提/雜費</label>
+            <div style="display:flex; gap:5px;">
+                <input type="number" id="final-utility" class="form-control" placeholder="輸入或試算" oninput="updateNetPreview()">
+                <button onclick="openUtilityCalc()" style="padding:0 12px; background:#3a4553; color:white; border-radius:4px; border:none; font-size:0.8rem;">試算</button>
+            </div>
+        </div>
+
+        <div style="border-top:1px solid #eee; margin-top:15px; padding-top:15px; text-align:center;">
+            <div style="font-size:0.8rem; color:#666;">預估本月實際淨利</div>
+            <div id="me-net-preview" style="font-size:1.6rem; font-weight:bold; color:#af6a58;">$0</div>
+        </div>
+
+        <button class="copy-btn" style="width:100%; margin-top:15px; background:#3a4553;" onclick="submitMonthEnd()">
+            <i class="fa-solid fa-cloud-arrow-up"></i> 確認數據，封存至雲端
+        </button>
+    </div>
+</div>
+
+<div id="u-modal" class="modal-overlay" style="display:none; z-index:2000;">
+    <div class="modal-content" style="max-width:320px;">
+        <h3 style="margin-top:0;"><i class="fa-solid fa-calculator"></i> 水電分攤器</h3>
+        <label style="font-size:0.8rem;">帳單起始日</label>
+        <input type="date" id="u-start" class="form-control" style="margin-bottom:10px;">
+        <label style="font-size:0.8rem;">帳單結束日</label>
+        <input type="date" id="u-end" class="form-control" style="margin-bottom:10px;">
+        <input type="number" id="u-total" placeholder="帳單總金額" class="form-control" style="margin-bottom:15px;">
+        
+        <div style="background:#f4f7f6; padding:12px; border-radius:6px; font-size:0.85rem; line-height:1.6;">
+            <div>本月佔用：<span id="u-days">0</span> 天</div>
+            <div style="font-weight:bold; color:#af6a58;">分攤金額：$<span id="u-res">0</span></div>
+        </div>
+        <div class="input-row" style="margin-top:15px; gap:8px;">
+            <button class="copy-btn" style="flex:1; background:#ccc;" onclick="closeUtilityCalc()">取消</button>
+            <button class="copy-btn" style="flex:1; background:#af6a58;" onclick="applyUtility()">帶入</button>
+        </div>
+    </div>
+</div>
 
           <button class="copy-btn btn-stat" onclick="toggleStats()" style="background: #6a7181; margin-top: 15px;">
             <i class="fa-solid fa-chart-line"></i> 經營數據統計分析

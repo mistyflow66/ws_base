@@ -23,7 +23,7 @@ const TPL_DATA = [
         let checkoutText = "退房日期";
         if (d && d.includes('/')) {
             let parts = d.split('/');
-            let dateObj = new Date(2026, parseInt(parts[0]) - 1, parseInt(parts[1]));
+            let dateObj = new Date(new Date().getFullYear(), parseInt(parts[0]) - 1, parseInt(parts[1]));
             dateObj.setDate(dateObj.getDate() + (parseInt(nights) || 1));
             checkoutText = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
         }
@@ -112,10 +112,16 @@ let currentView = 'cal';
 // --- 初始化與基礎功能 ---
 window.onload = () => {
     updatePricePlaceholder();
+    // 確保 currentViewDate 是當前的正確時間
+    currentViewDate = new Date(); 
+    
     const savedKey = localStorage.getItem('bnb_admin_key');
     if (savedKey) {
         document.getElementById('admin-key').value = savedKey;
         fetchOrders(); 
+    } else {
+        // 即便沒登入，也先渲染空的月曆顯示正確的當月份標題
+        renderOrderList();
     }
     updateAll();
 };
@@ -185,9 +191,9 @@ function updateTpl(filter = 'all') {
             <div class="preview-area" id="t-${i}">${content}</div>
             <div class="input-row" style="margin-top:10px; gap:8px;">
                 <button class="copy-btn" style="flex:1; background:#af6a58;" onclick="copyText('t-${i}', event)">單獨複製</button>
-                <button class="copy-btn" style="flex:1; background:${isPacked ? '#af6a58' : '#d4a397'};" onclick="togglePackage(${i})">
-                    ${isPacked ? '取消打包' : '加入打包'}
-                </button>
+                <button class="copy-btn" style="flex:1; background:${isPacked ? '#af6a58' : '#bdc3c7'};" onclick="togglePackage(${i})">
+    ${isPacked ? '取消打包' : '加入打包'}
+</button>
             </div>
         `;
         list.appendChild(box);
@@ -241,6 +247,11 @@ function updatePricePlaceholder() {
 
 function runManualCalc() {
     const s = document.getElementById('m-season').value; // 季節 (平日/假日等)
+    const resDiv = document.getElementById('calc-result'); // 提前抓取顯示容器
+    
+    // 如果找不到顯示容器，直接結束，避免報錯
+    if (!resDiv) return;
+
     let totalBT = 0;
     let roomDetails = []; // 用來存儲選中的房型與床數文字
 
@@ -250,29 +261,32 @@ function runManualCalc() {
             const customPrice = parseFloat(document.getElementById('p-'+rid).value);
             totalBT += customPrice || PRICE_MAP[rid][s][b];
             
-            // 房號對應名稱 (可依需求修改)
+            // 房號對應名稱
             const rName = rid === '201' ? '雙人房' : (rid === '202' ? '三人房' : '四人房');
             roomDetails.push(`${rName}開${b}床`);
         }
     });
 
-    if (totalBT === 0) return; // 沒選房型就不計算
+    // 若沒選房型（金額為 0），則清空顯示區域並中止執行
+    if (totalBT === 0) {
+        resDiv.innerHTML = ''; 
+        return; 
+    }
 
     // 私訊價計算
     const priv = Math.ceil((totalBT * 0.88 * 1.03) / 10) * 10;
-    // 額外計算：Booking 抽成 12% 後的實得金額 (供您參考)
+    // 額外計算：Booking 抽成 12% 後的實得金額
     const bookingNet = Math.round(priv * 0.88);
 
-    const resDiv = document.getElementById('calc-result');
-    if(resDiv) {
     // 取得季節文字 (例如: 一般平日)
     const seasonText = document.getElementById('m-season').options[document.getElementById('m-season').selectedIndex].text;
     // 取得房型文字 (例如: 雙人房開1床、三人房開1床)
     const roomsText = roomDetails.join('、');
     
-    // 組合最終文字 (移除中間的 --- 改為空格，更簡潔專業)
+    // 組合最終文字
     const copyContent = `${seasonText} ${roomsText}，私訊優惠價 $${priv.toLocaleString()} 元`;
 
+    // 渲染報價結果到頁面
     resDiv.innerHTML = `
         <div class="card" style="border: 2px solid #af6a58;">
             <div style="font-weight:bold; color:#af6a58; font-size:1.1rem;">私訊優惠價：$${priv.toLocaleString()}</div>
@@ -290,7 +304,6 @@ function runManualCalc() {
                 <i class="fa-solid fa-copy"></i> 複製報價
             </button>
         </div>`;
-}
 }
 
 // --- 訂單雲端 CRUD 作業 ---
@@ -572,15 +585,28 @@ function updateStatistics(mData) {
 }
 
 function calculateFinance(mData) {
-    // 這裡 mData 是原始 Array 格式 [id, source, name, date...]
+    // 1. 取得原始收入與手續費 (這段不變)
     const income = mData.reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
     const bTotal = mData.filter(r => r[1] === 'Booking').reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
     const fee = Math.round(bTotal * 0.12);
+    
+    // 2. 取得輸入的成本 (維持讀取底部欄位)
     const laundry = parseFloat(document.getElementById('laundry-cost')?.value) || 0;
     const utility = parseFloat(document.getElementById('utility-cost')?.value) || 0;
+
+    // 3. 【新增：同步到封存區】
+    const finalLaundry = document.getElementById('final-laundry');
+    const finalUtility = document.getElementById('final-utility');
+    if (finalLaundry) finalLaundry.value = laundry;
+    if (finalUtility) finalUtility.value = utility;
+
+    // 4. 更新底部的顯示 (這段不變)
     if(document.getElementById('fin-income')) document.getElementById('fin-income').innerText = '$' + income.toLocaleString();
     if(document.getElementById('fin-fee')) document.getElementById('fin-fee').innerText = '-$' + fee.toLocaleString();
     if(document.getElementById('fin-net')) document.getElementById('fin-net').innerText = '$' + (income - fee - laundry - utility).toLocaleString();
+    
+    // 5. 【新增：同時觸發封存區的淨利計算】
+    if (typeof updateNetPreview === "function") updateNetPreview();
 }
 
 function copyText(id, e) {
@@ -631,4 +657,114 @@ function formatDate(dateStr) {
     const date = new Date(dateStr);
     // 使用 getUTCMonth 避免時區導致日期減一天的問題
     return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
+}
+
+// 1. 切換月結區塊顯示
+function toggleMonthEnd() {
+    const area = document.getElementById('month-end-calc');
+    const icon = document.getElementById('me-icon');
+    const isVisible = area.style.display === 'block';
+    area.style.display = isVisible ? 'none' : 'block';
+    icon.innerText = isVisible ? '▼' : '▲';
+    if (!isVisible) prepareMonthEnd(); // 打開時更新數據
+}
+
+// 2. 準備結算數據
+function prepareMonthEnd() {
+    const month = document.getElementById('cal-month-title').innerText;
+    const income = parseFloat(document.getElementById('fin-income').innerText.replace(/[^0-9.-]+/g,"")) || 0;
+    const fee = Math.round(income * 0.12); // 如果你有跨平台，這裡可改用讀取的 fee
+
+    document.getElementById('me-month').innerText = month;
+    document.getElementById('me-income').innerText = '$' + income.toLocaleString();
+    document.getElementById('me-fee').innerText = '-$' + fee.toLocaleString();
+    updateNetPreview();
+}
+
+// 3. 淨利即時預覽
+function updateNetPreview() {
+    const income = parseFloat(document.getElementById('me-income').innerText.replace(/[^0-9.-]+/g,"")) || 0;
+    const fee = parseFloat(document.getElementById('me-fee').innerText.replace(/[^0-9.-]+/g,"")) || 0;
+    const laundry = parseFloat(document.getElementById('final-laundry').value) || 0;
+    const utility = parseFloat(document.getElementById('final-utility').value) || 0;
+    const net = income - fee - laundry - utility;
+    document.getElementById('me-net-preview').innerText = '$' + net.toLocaleString();
+}
+
+// 4. 水電分攤邏輯
+function openUtilityCalc() { document.getElementById('u-modal').style.display = 'flex'; }
+function closeUtilityCalc() { document.getElementById('u-modal').style.display = 'none'; }
+
+function calculateUtility() {
+    const s = new Date(document.getElementById('u-start').value);
+    const e = new Date(document.getElementById('u-end').value);
+    const total = parseFloat(document.getElementById('u-total').value) || 0;
+    if (isNaN(s) || isNaN(e) || total <= 0) return;
+
+    const totalDays = (e - s) / (1000*60*60*24) + 1;
+    // 抓取當前畫面的月份
+    const mStart = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1);
+    const mEnd = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + 1, 0);
+    
+    const overlapS = s > mStart ? s : mStart;
+    const overlapE = e < mEnd ? e : mEnd;
+    let days = (overlapE - overlapS) / (1000*60*60*24) + 1;
+    days = days > 0 ? days : 0;
+
+    const res = Math.round((total / totalDays) * days);
+    document.getElementById('u-days').innerText = Math.round(days);
+    document.getElementById('u-res').innerText = res;
+}
+document.querySelectorAll('#u-start, #u-end, #u-total').forEach(el => el.addEventListener('input', calculateUtility));
+
+function applyUtility() {
+    const resValue = document.getElementById('u-res').innerText;
+    
+    // 填入封存區輸入框
+    document.getElementById('final-utility').value = resValue;
+    
+    // 【新增：同時填入底部預覽輸入框】
+    const utilityCost = document.getElementById('utility-cost');
+    if (utilityCost) utilityCost.value = resValue;
+
+    updateNetPreview();
+    
+    // 【新增：重新計算底部預覽金額】
+    // 這裡我們需要傳入當前的資料，或是直接觸發 calculateFinance
+    // 簡單做法：直接調用 renderOrderList 內部的邏輯或重刷一次
+    const month = document.getElementById('cal-month-title').innerText.replace('年 ', '-').replace('月', '');
+    const currentMData = globalOrderData.filter(r => r[3] && r[3].includes(month));
+    calculateFinance(currentMData);
+
+    closeUtilityCalc();
+}
+
+// 5. 提交月結至 GAS
+async function submitMonthEnd() {
+    const key = document.getElementById('admin-key').value;
+    const month = document.getElementById('me-month').innerText;
+    const income = parseFloat(document.getElementById('me-income').innerText.replace(/[^0-9.-]+/g,""));
+    const fee = parseFloat(document.getElementById('me-fee').innerText.replace(/[^0-9.-]+/g,""));
+    const laundry = parseFloat(document.getElementById('final-laundry').value) || 0;
+    const utility = parseFloat(document.getElementById('final-utility').value) || 0;
+    
+    if(!confirm(`確認封存 ${month} 的數據嗎？數據將上傳至「月結紀錄」工作表。`)) return;
+    
+    toggleLoading(true);
+    const payload = {
+        action: "monthEnd", key: key, month: month,
+        income: income, fee: fee, laundry: laundry, utility: utility,
+        net: (income - fee - laundry - utility),
+        guests: document.getElementById('stat-total-guests').innerText,
+        rooms: document.getElementById('stat-total-rooms').innerText,
+        bRate: document.getElementById('stat-b-rate').innerText,
+        oRate: document.getElementById('stat-o-rate').innerText
+    };
+
+    try {
+        const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+        const result = await res.json();
+        if(result.result === "success") alert("月結封存成功！");
+    } catch(e) { alert("上傳失敗，請檢查網路"); }
+    toggleLoading(false);
 }

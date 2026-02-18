@@ -159,10 +159,19 @@ input:focus, select:focus {
   display: flex; 
   gap: 8px; 
   overflow-x: auto; 
-  padding: 5px 0 15px 0;
-  scrollbar-width: none; /* Firefox */
+  padding: 10px 12px;
+  white-space: nowrap; /* 確保標籤不換行，保持橫向滑動 */
+  scrollbar-width: none; 
+  
+  /* --- 置頂關鍵設定 --- */
+  position: sticky; 
+  top: 51px;   /* 根據 .nav-tabs 高度微調 */
+  z-index: 900; 
+  background: var(--bg-body); /* 建議跟隨頁面背景色 */
+  border-bottom: 1px solid var(--border-color); 
 }
-.category-nav::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+.category-nav::-webkit-scrollbar { display: none; }
 
 .cat-tag { 
   background: #edf2f7; 
