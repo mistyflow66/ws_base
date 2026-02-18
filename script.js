@@ -265,28 +265,32 @@ function runManualCalc() {
 
     const resDiv = document.getElementById('calc-result');
     if(resDiv) {
-        // 組合成你要的格式：平日---雙人房開2床，私訊優惠價 $XXXX 元
-        const seasonText = document.getElementById('m-season').options[document.getElementById('m-season').selectedIndex].text;
-        const roomsText = roomDetails.join('、');
-        const copyContent = `${seasonText}---${roomsText}，私訊優惠價 $${priv.toLocaleString()} 元`;
+    // 取得季節文字 (例如: 一般平日)
+    const seasonText = document.getElementById('m-season').options[document.getElementById('m-season').selectedIndex].text;
+    // 取得房型文字 (例如: 雙人房開1床、三人房開1床)
+    const roomsText = roomDetails.join('、');
+    
+    // 組合最終文字 (移除中間的 --- 改為空格，更簡潔專業)
+    const copyContent = `${seasonText} ${roomsText}，私訊優惠價 $${priv.toLocaleString()} 元`;
 
-        resDiv.innerHTML = `
-            <div class="card" style="border: 2px solid #af6a58;">
-                <div style="font-weight:bold; color:#af6a58; font-size:1.1rem;">私訊優惠價：$${priv.toLocaleString()}</div>
-                
-                <div style="font-size:0.8rem; color:#999; margin-top:4px;">
-                    (Booking 扣 12% 抽成後實得：$${bookingNet.toLocaleString()})
-                </div>
+    resDiv.innerHTML = `
+        <div class="card" style="border: 2px solid #af6a58;">
+            <div style="font-weight:bold; color:#af6a58; font-size:1.1rem;">私訊優惠價：$${priv.toLocaleString()}</div>
+            
+            <div style="font-size:0.8rem; color:#999; margin-top:4px;">
+                (Booking 扣 12% 抽成後實得：$${bookingNet.toLocaleString()})
+            </div>
 
-                <div class="preview-area" id="p-res" style="margin-top:12px; background:#f9f9f9; padding:10px; border-radius:4px; font-size:0.9rem; line-height:1.5;">
-                    ${copyContent}
-                </div>
-                
-                <button class="copy-btn" style="background:#af6a58; margin-top:10px; width:100%;" onclick="copyText('p-res', event)">
-                    <i class="fa-solid fa-copy"></i> 複製報價
-                </button>
-            </div>`;
-    }
+            <div class="preview-area" id="p-res" 
+                 contenteditable="true"
+                 style="margin-top:12px; background:#fcfcfc; padding:12px; border-radius:4px; font-size:0.95rem; line-height:1.6; text-align:left; border:1px dashed #af6a58; outline:none; color:#333;">${copyContent}</div>
+            
+            <button class="copy-btn" style="background:#af6a58; margin-top:10px; width:100%; border:none; padding:10px; color:white; border-radius:4px; cursor:pointer;" 
+                    onclick="copyText('p-res', event)">
+                <i class="fa-solid fa-copy"></i> 複製報價
+            </button>
+        </div>`;
+}
 }
 
 // --- 訂單雲端 CRUD 作業 ---
