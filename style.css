@@ -120,8 +120,9 @@ input:focus, select:focus {
 }
 
 /* --- 按鈕系統 --- */
+/* --- 按鈕系統：基礎設定 --- */
 .copy-btn { 
-  background: var(--accent); 
+  background: var(--accent); /* 預設深色 */
   color: white; 
   border: none; 
   padding: 14px; 
@@ -135,20 +136,26 @@ input:focus, select:focus {
   align-items: center;
   gap: 8px;
 }
-.copy-btn:active { transform: scale(0.97); opacity: 0.9; }
-.btn-save, .btn-pack { background: var(--primary); }
-.btn-cancel { background: #95a5a6; }
-.btn-delete { background: #e74c3c; }
 
+/* --- 打包狀態專用顏色 (修正重點) --- */
+
+/* 「加入打包」：應該是顯眼的主色 (莫蘭迪陶瓦紅) */
 .btn-pack-add { 
-    background-color: #af6a58 !important; /* 深棕色 (主色) */
-    color: white; 
+    background-color: var(--primary) !important; 
+    color: white !important; 
 }
 
+/* 「取消打包」：應該是淺色背景，呈現已選取的狀態感 */
 .btn-pack-del { 
     background-color: #e2c0b8 !important; /* 淺棕色 */
-    color: #af6a58; 
+    color: #af6a58 !important; /* 深棕文字 */
+    border: 1px solid var(--primary); /* 增加邊框感 */
 }
+
+/* 其他功能按鈕 */
+.btn-save { background: var(--primary); }
+.btn-cancel { background: #95a5a6; }
+.btn-delete { background: #e74c3c; }
 
 /* --- 打包預覽區 --- */
 .preview-area {
@@ -167,7 +174,7 @@ input:focus, select:focus {
 /* --- 分類標籤 --- */
 .category-nav {
     position: sticky;
-    top: 72px; /* 增加高度，完全避開上方分頁按鈕 */
+    top: 78px; /* 增加高度，完全避開上方分頁按鈕 */
     z-index: 100;
     background-color: #ffffff !important;
     padding: 10px 15px; /* 增加左右內距 */

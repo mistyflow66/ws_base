@@ -174,6 +174,9 @@ function updateTpl(filter = 'all') {
     const list = document.getElementById('tpl-list');
     if (!list) return; 
     list.innerHTML = '';
+    
+    // 記錄目前的過濾狀態，方便 togglePackage 重新整理
+    window.currentFilter = filter;
 
     TPL_DATA.forEach((item, i) => {
         if (filter !== 'all' && item.cat !== filter) return;
@@ -181,26 +184,33 @@ function updateTpl(filter = 'all') {
         const content = item.content(d, p, dep, bal, "", nights, total); 
         const isPacked = packageList.includes(content);
         
+        // 核心修正：根據狀態動態決定按鈕樣式
+        const packClass = isPacked ? 'btn-pack-del' : 'btn-pack-add';
+        const packText = isPacked ? '取消打包' : '加入打包';
+        const packIcon = isPacked ? 'fa-xmark' : 'fa-plus';
+
         const box = document.createElement('div');
         box.className = `card ${isPacked ? 'card-packed' : ''}`;
         box.innerHTML = `
-            <div onclick="togglePackage(${i})" style="cursor:pointer;">
+            <div onclick="togglePackage(${i}, this.parentElement.querySelector('.btn-toggle-main'))" style="cursor:pointer;">
                 <h3 style="display:inline-block; color:#3a4553;">[${item.cat}] ${item.title}</h3>
-                ${isPacked ? '<span style="color:#af6a58; font-weight:bold; margin-left:10px;">(已打包)</span>' : ''}
+                ${isPacked ? '<span style="color:#af6a58; font-weight:bold; margin-left:10px;"><i class="fa-solid fa-check"></i> 已打包</span>' : ''}
             </div>
             <div class="preview-area" id="t-${i}">${content}</div>
             <div class="input-row" style="margin-top:10px; gap:8px;">
-                <button class="copy-btn" style="flex:1; background:#af6a58;" onclick="copyText('t-${i}', event)">單獨複製</button>
-                <button class="copy-btn" style="flex:1; background:${isPacked ? '#af6a58' : '#bdc3c7'};" onclick="togglePackage(${i})">
-    ${isPacked ? '取消打包' : '加入打包'}
-</button>
+                <button class="copy-btn" style="flex:1; background:#af6a58;" onclick="copyText('t-${i}', event)">
+                    <i class="fa-solid fa-copy"></i> 單獨複製
+                </button>
+                <button class="copy-btn ${packClass} btn-toggle-main" style="flex:1;" onclick="togglePackage(${i}, this)">
+                    <i class="fa-solid ${packIcon}"></i> ${packText}
+                </button>
             </div>
         `;
         list.appendChild(box);
     });
 }
 
-function togglePackage(index) {
+function togglePackage(index, btn) {
     const d = document.getElementById('v-date').value || "____";
     const p = document.getElementById('v-pwd').value || "____";
     const dep = document.getElementById('v-dep').value || "0";
@@ -210,10 +220,34 @@ function togglePackage(index) {
     
     const content = TPL_DATA[index].content(d, p, dep, bal, "", nights, total);
     const idx = packageList.indexOf(content);
-    if (idx === -1) packageList.push(content);
-    else packageList.splice(idx, 1);
     
-    updateAll(); 
+    if (idx === -1) {
+        // --- 加入打包 ---
+        packageList.push(content);
+        // 變換為「已選取」狀態 (淺色/X)
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> 取消打包';
+            btn.classList.remove('btn-pack-add'); 
+            btn.classList.add('btn-pack-del');
+        }
+    } else {
+        // --- 移除打包 ---
+        packageList.splice(idx, 1);
+        // 恢復為「未選取」狀態 (深色/+)
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-plus"></i> 加入打包';
+            btn.classList.remove('btn-pack-del');
+            btn.classList.add('btn-pack-add');
+        }
+    }
+    
+    // 如果是點擊卡片標題觸發（沒有按鈕對象），則重刷列表以更新圖示與文字標記
+    if (!btn) {
+        updateTpl(window.currentFilter || 'all');
+    }
+
+    // 更新上方的「已打包訊息」大預覽框
+    updatePackagePreview(); 
 }
 
 function updatePackagePreview() {
@@ -231,10 +265,14 @@ function updatePackagePreview() {
 function clearPackage() {
     if(confirm("確定要清空已打包的內容嗎？")) {
         packageList = [];
-        updateAll();
+        
+        // 1. 更新頂部大預覽框內容
+        updatePackagePreview();
+        
+        // 2. 核心修正：直接重新跑一次 updateTpl，讓所有按鈕變回「加入打包」的深色樣式
+        updateTpl(window.currentFilter || 'all');
     }
 }
-
 // --- 房價計算器 ---
 function updatePricePlaceholder() {
     const s = document.getElementById('m-season').value;
@@ -577,9 +615,11 @@ function updateStatistics(mData) {
     const totalG = mData.reduce((s, o) => s + (parseInt(o.guests) || 0), 0);
     const totalR = mData.reduce((s, o) => s + (parseInt(o.rooms) || 0), 0);
     const bCount = mData.filter(o => o.source === 'Booking').length;
+    
     document.getElementById('stat-total-guests').innerText = totalG;
     document.getElementById('stat-total-rooms').innerText = totalR;
-    const bRate = mData.length ? Math.round((bCount/mData.length)*100) : 0;
+    
+    const bRate = mData.length ? Math.round((bCount / mData.length) * 100) : 0;
     document.getElementById('stat-b-rate').innerText = bRate + '%';
     document.getElementById('stat-o-rate').innerText = (100 - bRate) + '%';
 }
@@ -657,8 +697,17 @@ function toggleStats() {
 }
 
 function changeMonth(n) {
+    // 1. 切換月份邏輯
     currentViewDate.setMonth(currentViewDate.getMonth() + n);
+    
+    // 2. 重新渲染訂單列表與月曆
     renderOrderList();
+    
+    // 3. 【新增】隱藏經營數據統計區塊
+    const statsArea = document.getElementById('stats-area');
+    if (statsArea) {
+        statsArea.style.display = 'none';
+    }
 }
 
 function switchOrderView(type) {
@@ -830,4 +879,31 @@ async function finalConfirmArchive() {
         alert("上傳失敗，請檢查網路連線");
     }
     toggleLoading(false);
+}
+
+// 修改按鈕觸發的函數
+function toggleStatsSection() {
+    const statsArea = document.getElementById('stats-area');
+    
+    if (statsArea.style.display === 'none') {
+        // 抓取目前畫面上顯示的年份與月份標題
+        const monthTitle = document.getElementById('cal-month-title').innerText;
+        const monthStr = monthTitle.replace('年 ', '-').replace('月', '').trim();
+        
+        // 從全域資料過濾出該月份的訂單
+        const currentMData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
+        
+        // 執行統計數據更新
+        updateStatistics(currentMData.map(r => ({
+            source: r[1],
+            guests: r[5],
+            rooms: r[6]
+        })));
+        
+        // 顯示區塊
+        statsArea.style.display = 'block';
+    } else {
+        // 若已顯示則隱藏
+        statsArea.style.display = 'none';
+    }
 }
