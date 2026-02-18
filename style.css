@@ -577,3 +577,38 @@ hr {
         flex: 1; /* 寬度足夠時恢復併排 */
     }
 }
+
+/* 強化試算按鈕互動感 */
+.btn-utility-calc {
+    background-color: #6a7181;
+    color: white;
+    border: none;
+    border-radius: 50px; /* 完全圓角 */
+    padding: 0 20px;
+    height: 44px;
+    cursor: pointer; /* 滑鼠變成手指 */
+    transition: all 0.2s ease;
+    margin-left: 12px; /* 拉開與輸入框的距離 */
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.btn-utility-calc:hover {
+    background-color: #3a4553;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-utility-calc:active {
+    transform: translateY(0);
+}
+
+/* 確保輸入框列的對齊 */
+.input-row-utility {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}

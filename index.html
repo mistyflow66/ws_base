@@ -262,13 +262,15 @@
     <div class="fin-row" style="color:#e74c3c;"><span>Booking 手續費(12%)</span><b id="fin-fee">-$0</b></div>
     <div class="fin-row"><span>洗衣費</span><input type="number" id="laundry-cost" value="0" class="fin-input" oninput="calculateFinance()"></div>
     
-    <div class="fin-row">
-        <span>水電攤提</span>
-        <div style="display:flex; gap:5px; align-items:center;">
-            <button onclick="openUtilityCalc()" style="padding:2px 8px; background:#95a5a6; color:white; border:none; border-radius:4px; font-size:0.7rem;">試算</button>
-            <input type="number" id="utility-cost" value="5000" class="fin-input" oninput="calculateFinance()">
-        </div>
+<div class="fin-row">
+    <span>水電攤提</span>
+    <div class="input-row-utility">
+        <input type="number" id="utility-cost" class="fin-input" value="0" oninput="updateNetPreview()">
+        <button type="button" class="btn-utility-calc" onclick="openUtilityCalc()">
+            試算
+        </button>
     </div>
+</div>
     
     <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
     <div class="fin-row fin-total" style="font-size:1.2rem; color:#af6a58;"><span>實際淨利</span><b id="fin-net">$0</b></div>

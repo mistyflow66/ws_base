@@ -651,17 +651,6 @@ function calculateFinance(mData) {
     window.currentMonthFin = { income, fee, laundry, utility, net: (income - fee - laundry - utility) };
 }
 
-// 修改水電帶入函數
-function applyUtility() {
-    const resValue = document.getElementById('u-res').innerText;
-    // 直接帶入財務卡片的輸入框
-    const utilityInput = document.getElementById('utility-cost');
-    if (utilityInput) {
-        utilityInput.value = resValue;
-        calculateFinance(); // 立即重新計算
-    }
-    closeUtilityCalc();
-}
 
 function copyText(id, e) {
     const el = document.getElementById(id);
