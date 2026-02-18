@@ -86,14 +86,19 @@ const TPL_DATA = [
     content: () => `分享很不錯的步道給您參考\n仁山步道\nhttps://maps.app.goo.gl/C9XisDS8qaQax11q6\n三清宮步道\nhttps://maps.app.goo.gl/rmyyNfcdFHc8YdbX6`
   },
   { 
-    cat: '退房', 
+    cat: '入住', 
     title: '住宿資料填寫', 
     content: () => `麻煩您✏️住宿資料\n（一人代表填寫即可，謝謝！）\n姓名：\n出生年月：\n身分證號：\n住址：\n電話：`
   },
-  { 
-    cat: '退房', 
-    title: '五星好評邀請', 
-    content: () => `有空歡迎幫您我們留言+5星好評，您的肯定是我們前進的動力！煦願民宿感謝您💕\nhttps://maps.app.goo.gl/vcoPQQuMRaME1rpY6`
+  {
+    cat: "退房",
+    title: "退房好評邀請",
+    content: "已收到您退房鑰匙.，祝您假日愉快！\n有空歡迎幫我們留言+5星好評，您的肯定是我們前進的動力！\n煦願民宿感謝您❤️ https://maps.app.goo.gl/vcoPQQuMRaME1rpY6"
+  },
+  {
+    cat: "退房",
+    title: "退房手續說明",
+    content: "退房時，麻煩您把鑰匙掛在一樓電視旁的鑰匙架上、拍照回傳給我們\n二樓冷/暖氣關機，大門關上\n這樣就做好退房手續唷！"
   }
 ]; 
 
@@ -383,20 +388,20 @@ function showOrderDetail(order) {
     const displayDate = formatDate(order.date);
     const s = order.source || "私LINE";
     
-    // 定義按鈕設定
-    let btnConfig = { text: "開啟 App", icon: "fa-solid fa-external-link", color: "#af6a58", url: "#" };
+    // 統一圖示為 fa-comment-dots，僅顏色與文字隨來源變動
+    let btnConfig = { text: "開啟 App", icon: "fa-solid fa-comment-dots", color: "#af6a58", url: "#" };
 
     if (s.includes("Booking")) {
-        btnConfig = { text: "Pulse", icon: "fa-brands fa-square-b", color: "#003580", url: "pulse://" };
+        btnConfig = { text: "Pulse", icon: "fa-solid fa-comment-dots", color: "#003580", url: "pulse://" };
     } else if (s.includes("官方LINE")) {
         btnConfig = { text: "LINE OA", icon: "fa-solid fa-comment-dots", color: "#00b900", url: "lineoa://" };
     } else if (s.includes("LINE")) {
-        btnConfig = { text: "LINE", icon: "fa-brands fa-line", color: "#00c300", url: "line://" };
+        btnConfig = { text: "LINE", icon: "fa-solid fa-comment-dots", color: "#00c300", url: "line://" };
     } else if (s.includes("FB") || s.includes("Messenger")) {
-        btnConfig = { text: "Messenger", icon: "fa-brands fa-facebook-messenger", color: "#0084ff", url: "fb-messenger://" };
+        btnConfig = { text: "Messenger", icon: "fa-solid fa-comment-dots", color: "#0084ff", url: "fb-messenger://" };
     }
 
-    // 渲染詳細資訊
+    // 渲染詳細資訊內容
     const depositAmount = parseFloat(order.deposit) || 0;
     infoList.innerHTML = `
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-user"></i> 訂房人</span><span class="info-value">${order.name}</span></div>
@@ -414,11 +419,15 @@ function showOrderDetail(order) {
     // 更新底部按鈕
     const actionBtn = document.getElementById('btn-pulse');
     if (actionBtn) {
-        // 這裡將 class 套用進去
         actionBtn.innerHTML = `<i class="${btnConfig.icon}"></i> ${btnConfig.text}`;
         actionBtn.style.background = btnConfig.color;
         actionBtn.onclick = () => {
             if (btnConfig.url !== "#") window.location.href = btnConfig.url;
+            // 電腦版保險：若沒反應則改開網頁版
+            setTimeout(() => {
+                if (s.includes("Booking")) window.open("https://admin.booking.com");
+                else if (s.includes("LINE")) window.open("https://manager.line.biz");
+            }, 500);
         };
     }
 
