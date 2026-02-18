@@ -1,3 +1,7 @@
+/**
+ * 煦願民宿智慧工作站 (B&B Smart Workstation) - 完整核心邏輯
+ */
+
 const GAS_URL = "https://script.google.com/macros/s/AKfycbySPYLiPf6pUhZqbHMSK2z2eYtrzVWrPUweojAoCG8_15IrxQH0dhTOiXp1gf58dpiEQg/exec"; 
 
 const PRICE_MAP = {      
@@ -16,7 +20,6 @@ const TPL_DATA = [
     cat: '訂房', 
     title: '預留確認 (含匯款帳號)', 
     content: (d, p, dep, bal, note, nights, total) => {
-        // 自動計算退房日期的簡易邏輯（以 3/12 格式為例）
         let checkoutText = "退房日期";
         if (d && d.includes('/')) {
             let parts = d.split('/');
@@ -25,8 +28,8 @@ const TPL_DATA = [
             checkoutText = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
         }
         return `好的，請您確認以下訊息是否正確：\n1. ${d}入住-${checkoutText}退房\n ${nights} 晚，私訊優惠價 ${total} 元\n若以下訊息無誤，再麻煩您先匯訂金 ${dep} 元到以下帳號，煦願民宿先幫您預留日期，謝謝您的預訂\n\n中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`;
-    } // 這是函數的 }
-  }, // <--- 這是物件的 }，這行一定要有逗號
+    }
+  },
   { 
     cat: '詢問', 
     title: '詢問設備需求', 
@@ -35,7 +38,7 @@ const TPL_DATA = [
   { 
     cat: '訂房', 
     title: '匯款帳號資訊', 
-    content: (d,p,dep) => `中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`
+    content: () => `中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`
   },
   { 
     cat: '訂房', 
@@ -45,7 +48,7 @@ const TPL_DATA = [
   { 
     cat: '入住', 
     title: '今日指南(密碼/鑰匙/規範)', 
-    content: (d,p) => `煦願小幫手先介紹：\n🌟這邊先給您今日大門密碼：${p}\n\n🔓開門方法：\n（1）從外開門：手掌觸碰螢幕，按鍵亮起後輸入${p.replace('*','')}和*字鍵\n（2）從裡面出去：按下安全鈕、手把同時下壓即可開門\n\n🌟房間鑰匙配備在-電視櫃旁鑰匙架，歡迎使用\n隔天11點退房時，鑰匙放回架上，回傳照片即做好退房手續喔～\n\n🌟民宿拖鞋每一組客人離開後都清洗過，每一組客人都是專屬的室內拖鞋，請您放心使用～\n\n🌟民宿室內全面禁菸，若有需要吸菸的朋友，我們每個陽台和車庫都備有煙灰缸，謝謝您🙏\n\n🌟民宿備有大、小毛巾、漱口杯、沐浴乳和洗髮精是用-沙威隆系列，並備有旋轉式按摩蓮蓬頭和吹風機，舒緩您旅途的疲憊\n\n🌟吧台上面的飲品和零食、礦泉水是為您們做準備，請自行取用\n\n🌟溫馨提醒，現在民宿不能主動提供牙刷牙膏一次性用具，若真的沒有帶，請告知\n\n煦願民宿祝您入住愉快☺️`
+    content: (d, p) => `煦願小幫手先介紹：\n🌟這邊先給您今日大門密碼：${p}\n\n🔓開門方法：\n（1）從外開門：手掌觸碰螢幕，按鍵亮起後輸入${p.replace('*','')}和*字鍵\n（2）從裡面出去：按下安全鈕、手把同時下壓即可開門\n\n🌟房間鑰匙配備在-電視櫃旁鑰匙架，歡迎使用\n隔天11點退房時，鑰匙放回架上，回傳照片即做好退房手續喔～\n\n🌟民宿拖鞋每一組客人離開後都清洗過，每一組客人都是專屬的室內拖鞋，請您放心使用～\n\n🌟民宿室內全面禁菸，若有需要吸菸的朋友，我們每個陽台和車庫都備有煙灰缸，謝謝您🙏\n\n🌟民宿備有大、小毛巾、漱口杯、沐浴乳和洗髮精是用-沙威隆系列，並備有旋轉式按摩蓮蓬頭和吹風機，舒緩您旅途的疲憊\n\n🌟吧台上面的飲品和零食、礦泉水是為您們做準備，請自行取用\n\n🌟溫馨提醒，現在民宿不能主動提供牙刷牙膏一次性用具，若真的沒有帶，請告知\n\n煦願民宿祝您入住愉快☺️`
   },
   { 
     cat: '入住', 
@@ -97,14 +100,11 @@ const TPL_DATA = [
 let packageList = [];
 let globalOrderData = [];
 let currentViewDate = new Date();
-let currentView = 'cal'; // 'cal' 或 'list'
+let currentView = 'cal';
 
 // --- 初始化與基礎功能 ---
-
 window.onload = () => {
     updatePricePlaceholder();
-
-    // 2. 若已輸入過密碼就不用再次輸入
     const savedKey = localStorage.getItem('bnb_admin_key');
     if (savedKey) {
         document.getElementById('admin-key').value = savedKey;
@@ -123,36 +123,35 @@ function switchPage(id, e) {
     if(e) e.currentTarget.classList.add('active');
 }
 
-// 修改 updateAll 函數
-function updateAll() {
-    // 這裡不需要重複呼叫 calculateBalance()，因為 HTML input 已經直接觸發它了
-    // 但為了保險，我們維持基礎邏輯
-
-    if (typeof runManualCalc === "function") {
-        runManualCalc(); 
-    }
-
-    // 更新模板預覽
-    const tplList = document.getElementById('tpl-list');
-    if (tplList) {
-        const activeCatBtn = document.querySelector('.category-nav .cat-tag.active');
-        let filter = 'all';
-        if (activeCatBtn) {
-            const btnText = activeCatBtn.innerText;
-            filter = (btnText === '全部') ? 'all' : btnText;
-        }
-        updateTpl(filter);
-        updatePackagePreview();
-    }
+// --- 房價與計算連動 ---
+function calculateBalance() {
+    const total = parseFloat(document.getElementById('v-total').value) || 0;
+    const dep = parseFloat(document.getElementById('v-dep').value) || 0;
+    const bal = total - dep;
+    
+    if (document.getElementById('v-bal')) document.getElementById('v-bal').value = bal;
+    const display = document.getElementById('v-bal-display');
+    if (display) display.innerText = `自動計算尾款：$${(bal > 0 ? bal : 0).toLocaleString()}`;
+    
+    updateAll();
 }
-// --- 模板與打包邏輯 ---
+
+function updateAll() {
+    if (typeof runManualCalc === "function") runManualCalc(); 
+
+    const activeCatBtn = document.querySelector('.category-nav .cat-tag.active');
+    let filter = activeCatBtn ? (activeCatBtn.innerText === '全部' ? 'all' : activeCatBtn.innerText) : 'all';
+    
+    updateTpl(filter);
+    updatePackagePreview();
+}
+
+// --- 模板渲染與打包邏輯 ---
 function updateTpl(filter = 'all') {
     const d = document.getElementById('v-date').value || "____";
     const p = document.getElementById('v-pwd').value || "____";
     const dep = document.getElementById('v-dep').value || "0";
-    const bal = document.getElementById('v-bal').value || "0"; 
-    
-    // 關鍵修正：抓取「晚數」與「總價」
+    const bal = document.getElementById('v-bal') ? document.getElementById('v-bal').value : "0"; 
     const nights = document.getElementById('o-nights') ? document.getElementById('o-nights').value : "1";
     const total = document.getElementById('v-total') ? document.getElementById('v-total').value : "0";
 
@@ -163,22 +162,20 @@ function updateTpl(filter = 'all') {
     TPL_DATA.forEach((item, i) => {
         if (filter !== 'all' && item.cat !== filter) return;
 
-        // 這裡對齊 TPL_DATA 的參數順序：(d, p, dep, bal, note, nights, total)
         const content = item.content(d, p, dep, bal, "", nights, total); 
         const isPacked = packageList.includes(content);
         
         const box = document.createElement('div');
         box.className = `card ${isPacked ? 'card-packed' : ''}`;
-        
         box.innerHTML = `
             <div onclick="togglePackage(${i})" style="cursor:pointer;">
-                <h3 style="display:inline-block;">[${item.cat}] ${item.title}</h3>
-                ${isPacked ? '<span style="color:#e67e22; font-weight:bold; margin-left:10px;">(已打包)</span>' : ''}
+                <h3 style="display:inline-block; color:#3a4553;">[${item.cat}] ${item.title}</h3>
+                ${isPacked ? '<span style="color:#af6a58; font-weight:bold; margin-left:10px;">(已打包)</span>' : ''}
             </div>
             <div class="preview-area" id="t-${i}">${content}</div>
             <div class="input-row" style="margin-top:10px; gap:8px;">
-                <button class="copy-btn" style="flex:1; margin-top:0;" onclick="copyText('t-${i}', event)">單獨複製</button>
-                <button class="copy-btn" style="flex:1; margin-top:0; background:${isPacked ? '#af6a58' : '#ff85a2'};" onclick="togglePackage(${i})">
+                <button class="copy-btn" style="flex:1; background:#af6a58;" onclick="copyText('t-${i}', event)">單獨複製</button>
+                <button class="copy-btn" style="flex:1; background:${isPacked ? '#af6a58' : '#d4a397'};" onclick="togglePackage(${i})">
                     ${isPacked ? '取消打包' : '加入打包'}
                 </button>
             </div>
@@ -190,38 +187,51 @@ function updateTpl(filter = 'all') {
 function togglePackage(index) {
     const d = document.getElementById('v-date').value || "____";
     const p = document.getElementById('v-pwd').value || "____";
-    const dep = document.getElementById('v-dep').value || "____";
-    const bal = document.getElementById('v-bal').value || "____"; // 新增
+    const dep = document.getElementById('v-dep').value || "0";
+    const bal = document.getElementById('v-bal') ? document.getElementById('v-bal').value : "0";
+    const nights = document.getElementById('o-nights') ? document.getElementById('o-nights').value : "1";
+    const total = document.getElementById('v-total') ? document.getElementById('v-total').value : "0";
     
-    // 傳入 4 個參數以生成與預覽一致的內容
-    const content = TPL_DATA[index].content(d, p, dep, bal);
-
+    const content = TPL_DATA[index].content(d, p, dep, bal, "", nights, total);
     const idx = packageList.indexOf(content);
-    if (idx === -1) {
-        packageList.push(content);
-    } else {
-        packageList.splice(idx, 1);
-    }
+    if (idx === -1) packageList.push(content);
+    else packageList.splice(idx, 1);
     
     updateAll(); 
 }
-// --- 房價計算 ---
+
+function updatePackagePreview() {
+    const pkgDiv = document.getElementById('pkg-preview');
+    if (!pkgDiv) return;
+    if (packageList.length === 0) {
+        pkgDiv.innerText = "尚未選擇任何訊息...";
+        pkgDiv.style.color = "#95a5a6";
+    } else {
+        pkgDiv.innerText = packageList.join('\n\n---\n\n');
+        pkgDiv.style.color = "#3a4553";
+    }
+}
+
+function clearPackage() {
+    if(confirm("確定要清空已打包的內容嗎？")) {
+        packageList = [];
+        updateAll();
+    }
+}
+
+// --- 房價計算器 ---
 function updatePricePlaceholder() {
     const s = document.getElementById('m-season').value;
     ['201','202','301'].forEach(rid => {
         const input = document.getElementById('p-'+rid);
-        const firstBedPrice = PRICE_MAP[rid][s][1];
-        if (firstBedPrice) {
-            input.placeholder = firstBedPrice;
-        }
+        if (input && PRICE_MAP[rid][s][1]) input.placeholder = PRICE_MAP[rid][s][1];
     });
 }
 
 function runManualCalc() {
     const s = document.getElementById('m-season').value;
-    const rooms = ['201','202','301'];
     let totalBT = 0;
-    rooms.forEach(rid => {
+    ['201','202','301'].forEach(rid => {
         const b = parseInt(document.getElementById('m-'+rid).value);
         if(b > 0) {
             const customPrice = parseFloat(document.getElementById('p-'+rid).value);
@@ -229,18 +239,18 @@ function runManualCalc() {
         }
     });
     const priv = Math.ceil((totalBT * 0.88 * 1.03) / 10) * 10;
-    document.getElementById('calc-result').innerHTML = `
-        <div class="card">
-            <div class="highlight">Booking 總價：$${totalBT.toLocaleString()}</div>
-            <div class="private-price">私訊優惠價：$${priv.toLocaleString()}</div>
-            <div class="preview-area" id="p-res" style="margin-top:10px;">房價報價：私訊優惠價 $${priv.toLocaleString()}</div>
-            <button class="copy-btn" onclick="copyText('p-res', event)">複製報價</button>
-        </div>`;
+    const resDiv = document.getElementById('calc-result');
+    if(resDiv) {
+        resDiv.innerHTML = `
+            <div class="card" style="border: 2px solid #af6a58;">
+                <div style="font-weight:bold; color:#af6a58;">私訊優惠價：$${priv.toLocaleString()}</div>
+                <div class="preview-area" id="p-res" style="margin-top:10px;">房價報價：私訊優惠價 $${priv.toLocaleString()} 元</div>
+                <button class="copy-btn" style="background:#af6a58;" onclick="copyText('p-res', event)">複製報價</button>
+            </div>`;
+    }
 }
 
-// --- 訂單雲端作業 (CRUD) ---
-
-// 3. 按下送出密碼要有載入中訊息
+// --- 訂單雲端 CRUD 作業 ---
 async function fetchOrders() {
     const key = document.getElementById('admin-key').value;
     toggleLoading(true);
@@ -258,24 +268,22 @@ async function fetchOrders() {
     toggleLoading(false);
 }
 
-// --- 5. 新增訂單 (加入備註欄位) ---
 async function addOrder() {
+    const key = document.getElementById('admin-key').value;
+    if(!key) return alert("請輸入金鑰");
     toggleLoading(true);
     const total = document.getElementById('o-total').value;
     const dep = document.getElementById('o-dep').value;
     const data = {
-        action: "add", 
-        key: document.getElementById('admin-key').value,
+        action: "add", key: key,
         name: document.getElementById('o-name').value, 
         date: document.getElementById('o-date').value,
         source: document.getElementById('o-source').value, 
         guests: document.getElementById('o-guests').value,
         rooms: document.getElementById('o-rooms').value, 
-        total: total,
-        dep: dep, 
-        bal: total - dep,
+        total: total, dep: dep, bal: total - dep,
         nights: document.getElementById('o-nights').value,
-        note: document.getElementById('o-note').value // 加入備註
+        note: document.getElementById('o-note').value 
     };
     await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
     alert("儲存成功"); 
@@ -283,18 +291,7 @@ async function addOrder() {
     toggleLoading(false);
 }
 
-// --- 渲染視圖與切換 ---
-
-// 4. 能切換月曆視圖/條列式卡片
-function switchOrderView(type) {
-    currentView = type;
-    document.getElementById('btn-cal').classList.toggle('active', type === 'cal');
-    document.getElementById('btn-list').classList.toggle('active', type === 'list');
-    document.getElementById('calendar-grid').style.display = type === 'cal' ? 'grid' : 'none';
-    document.getElementById('order-list').style.display = type === 'list' ? 'block' : 'none';
-}
-
-// --- 3. 修正卡片日期亂碼 (MM/DD) ---
+// --- 視圖渲染 ---
 function renderOrderList() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
@@ -302,28 +299,24 @@ function renderOrderList() {
     document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
 
     const mData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
-
     renderCalendar(year, month, mData);
 
     const listDiv = document.getElementById('order-list');
     listDiv.innerHTML = mData.map(r => {
         const dateObj = new Date(r[3]);
-        const displayDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
         return `
             <div class="order-list-item" onclick="openEdit('${r[0]}')">
                 <div>
                     <span class="source-tag ${r[1] === 'Booking' ? 'tag-booking' : 'tag-line'}">${r[1]}</span>
-                    <b style="font-size:1rem;">${displayDate} | ${r[2]}</b>
+                    <b>${dateObj.getMonth() + 1}/${dateObj.getDate()} | ${r[2]}</b>
                 </div>
                 <div style="text-align:right;">
-                    <div style="font-size:0.85rem; color:#af6a58; font-weight:bold;">總金額: $${r[7]}</div> <div style="font-size:0.75rem; color:#6a7181;">${r[6]}房 / ${r[10]}晚</div>
+                    <div style="color:#af6a58; font-weight:bold;">$${r[7]}</div>
+                    <div style="font-size:0.75rem;">${r[6]}房 / ${r[10]}晚</div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }).join('');
-
     
-    switchOrderView(currentView);
     updateStatistics(mData);
     calculateFinance(mData);
 }
@@ -331,149 +324,45 @@ function renderOrderList() {
 function renderCalendar(year, month, mData) {
     const grid = document.getElementById('calendar-grid');
     grid.innerHTML = '';
-    
     const bookedStatus = {}; 
 
-    // 1. 掃描訂單並區分首日與續日
     mData.forEach(r => {
-        const orderId = r[0];
         const checkInDate = new Date(r[3]);
         const nights = parseInt(r[10]) || 1;
-
         for (let i = 0; i < nights; i++) {
             const current = new Date(checkInDate);
             current.setDate(checkInDate.getDate() + i);
-            
             if (current.getFullYear() === year && current.getMonth() === month) {
-                // 存入物件：oid 是訂單編號，isFirstDay 判斷是否為入住第一天
-                bookedStatus[current.getDate()] = { 
-                    oid: orderId, 
-                    isFirstDay: (i === 0) 
-                };
+                bookedStatus[current.getDate()] = { oid: r[0], isFirstDay: (i === 0) };
             }
         }
     });
 
-    // 2. 渲染標題
     const weeks = ['日', '一', '二', '三', '四', '五', '六'];
     weeks.forEach(w => grid.innerHTML += `<div class="cal-day cal-header">${w}</div>`);
     
-    // 3. 渲染日期
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
     const now = new Date();
 
     for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="cal-day"></div>`;
-    
     for (let day = 1; day <= lastDate; day++) {
         const status = bookedStatus[day];
         let className = 'cal-day';
-        
-        // 標示今天
         if (day === now.getDate() && month === now.getMonth() && year === now.getFullYear()) className += ' today';
-        
-        // 標示訂單（首日深色，續日淺色）
-        if (status) {
-            className += status.isFirstDay ? ' has-order' : ' has-order stay-over';
-        }
-
-        const oid = status ? status.oid : '';
-        grid.innerHTML += `<div class="${className}" onclick="${oid ? `openEdit('${oid}')` : ''}">${day}</div>`;
+        if (status) className += status.isFirstDay ? ' has-order' : ' has-order stay-over';
+        grid.innerHTML += `<div class="${className}" onclick="${status ? `openEdit('${status.oid}')` : ''}">${day}</div>`;
     }
 }
-    
 
-// --- 編輯、刪除與 App 連動 ---
-
-function openEdit(oid) {
-    const r = globalOrderData.find(o => o[0] === oid);
-    if(!r) return;
-
-    // 填入隱藏欄位與編輯框
-    document.getElementById('e-oid').value = r[0];
-    document.getElementById('e-source').value = r[1];
-    document.getElementById('e-name').value = r[2];
-    document.getElementById('e-date').value = r[3];
-    document.getElementById('e-guests').value = r[5];
-    document.getElementById('e-rooms').value = r[6];
-    document.getElementById('e-total').value = r[7];
-    document.getElementById('e-dep').value = r[8];
-    document.getElementById('e-note').value = r[11] || ""; // 備註在 index 11
-    document.getElementById('e-nights').value = r[10] || 1;
-
-    // 渲染「檢視模式」的條列資訊
-    const displayList = document.getElementById('detail-info-list');
-    displayList.innerHTML = `
-        <div class="info-item"><span class="info-label">訂房人</span><span class="info-value">${r[2]}</span></div>
-        <div class="info-item"><span class="info-label">入住日期</span><span class="info-value">${r[3]} (${r[10]}晚)</span></div>
-        <div class="info-item"><span class="info-label">來源</span><span class="info-value">${r[1]}</span></div>
-        <div class="info-item"><span class="info-label">總價/訂金</span><span class="info-value">$${r[7]} / $${r[8]}</span></div>
-        <div class="info-item"><span class="info-label">尾款</span><span class="info-value" style="color:#af6a58; font-weight:bold;">$${r[9]}</span></div>
-        <div class="info-item"><span class="info-label">備註</span><span class="info-value">${r[11] || '無'}</span></div>
-    `;
-
-    toggleEditMode(false); // 預設為檢視模式
-    document.getElementById('btn-pulse').style.display = r[1] === 'Booking' ? 'block' : 'none';
-    document.getElementById('edit-modal').style.display = 'flex'; // 觸發 CSS 置中
-}
-
-function toggleEditMode(isEdit) {
-    document.getElementById('info-display-view').style.display = isEdit ? 'none' : 'block';
-    document.getElementById('info-edit-view').style.display = isEdit ? 'block' : 'none';
-
-    document.getElementById('modal-title').innerHTML = isEdit
-        ? '<i class="fa-solid fa-pen-to-square"></i> 編輯訂單'
-        : '<i class="fa-solid fa-circle-info"></i> 訂單詳細資訊';
-}
-
-
-function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
-
-function openPulse() {
-    window.location.href = "pulse://";
-    setTimeout(() => { window.open("https://admin.booking.com/", "_blank"); }, 800);
-}
-
-async function submitUpdate() {
-    toggleLoading(true);
-    const total = document.getElementById('e-total').value;
-    const dep = document.getElementById('e-dep').value;
-    const data = {
-        action: "update", 
-        key: document.getElementById('admin-key').value,
-        oid: document.getElementById('e-oid').value,
-        source: document.getElementById('e-source').value, 
-        name: document.getElementById('e-name').value,
-        date: document.getElementById('e-date').value, 
-        guests: document.getElementById('e-guests').value,
-        rooms: document.getElementById('e-rooms').value, 
-        total: total,
-        dep: dep, 
-        bal: total - dep,
-        nights: document.getElementById('e-nights').value // <-- 加入這一行
-    };
-    await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
-    closeEditModal(); 
-    fetchOrders();
-}
-
-async function submitDelete() {
-    if(!confirm("確定要刪除此訂單嗎？")) return;
-    toggleLoading(true);
-    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "delete", key: document.getElementById('admin-key').value, oid: document.getElementById('e-oid').value })});
-    closeEditModal(); fetchOrders();
-}
-
-// --- 統計與輔助 ---
-
+// --- 統計功能 ---
 function updateStatistics(mData) {
     const totalG = mData.reduce((s, r) => s + (parseInt(r[5]) || 0), 0);
     const totalR = mData.reduce((s, r) => s + (parseInt(r[6]) || 0), 0);
     const bCount = mData.filter(r => r[1] === 'Booking').length;
-    const totalC = mData.length;
     document.getElementById('stat-total-guests').innerText = totalG;
     document.getElementById('stat-total-rooms').innerText = totalR;
-    const bRate = totalC ? Math.round((bCount/totalC)*100) : 0;
+    const bRate = mData.length ? Math.round((bCount/mData.length)*100) : 0;
     document.getElementById('stat-b-rate').innerText = bRate + '%';
     document.getElementById('stat-o-rate').innerText = (100 - bRate) + '%';
 }
@@ -482,11 +371,37 @@ function calculateFinance(mData) {
     const income = mData.reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
     const bTotal = mData.filter(r => r[1] === 'Booking').reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
     const fee = Math.round(bTotal * 0.12);
-    const laundry = parseFloat(document.getElementById('laundry-cost').value) || 0;
-    const utility = parseFloat(document.getElementById('utility-cost').value) || 0;
-    document.getElementById('fin-income').innerText = '$' + income.toLocaleString();
-    document.getElementById('fin-fee').innerText = '-$' + fee.toLocaleString();
-    document.getElementById('fin-net').innerText = '$' + (income - fee - laundry - utility).toLocaleString();
+    const laundry = parseFloat(document.getElementById('laundry-cost')?.value) || 0;
+    const utility = parseFloat(document.getElementById('utility-cost')?.value) || 0;
+    if(document.getElementById('fin-income')) document.getElementById('fin-income').innerText = '$' + income.toLocaleString();
+    if(document.getElementById('fin-fee')) document.getElementById('fin-fee').innerText = '-$' + fee.toLocaleString();
+    if(document.getElementById('fin-net')) document.getElementById('fin-net').innerText = '$' + (income - fee - laundry - utility).toLocaleString();
+}
+
+// --- 輔助功能 ---
+function copyText(id, e) {
+    const el = document.getElementById(id);
+    const t = el.innerText || el.value;
+    navigator.clipboard.writeText(t).then(() => {
+        const btn = e.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> 已複製';
+        setTimeout(() => btn.innerHTML = originalText, 1000);
+    });
+}
+
+function filterCat(cat, e) {
+    document.querySelectorAll('.cat-tag').forEach(btn => btn.classList.remove('active'));
+    if (e) e.currentTarget.classList.add('active');
+    updateTpl(cat === 'all' ? 'all' : cat);
+}
+
+function toggleAccordion(contentId, iconId) {
+    const content = document.getElementById(contentId);
+    const icon = document.getElementById(iconId);
+    const isVisible = content.style.display === "block";
+    content.style.display = isVisible ? "none" : "block";
+    if(icon) icon.innerText = isVisible ? "▼" : "▲";
 }
 
 function toggleStats() {
@@ -499,140 +414,10 @@ function changeMonth(n) {
     renderOrderList();
 }
 
-// --- 4. 強化複製功能 (支援編輯後的文字) ---
-function copyText(id, e) {
-    const el = document.getElementById(id);
-    // 優先抓取 contenteditable 的 innerText，確保編輯後的內容被複製
-    const t = el.innerText || el.value;
-    
-    navigator.clipboard.writeText(t).then(() => {
-        const btn = e.currentTarget;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-check"></i> 已複製';
-        setTimeout(() => btn.innerHTML = originalText, 1000);
-    });
-}
-
-function updatePackagePreview() {
-    const pkgDiv = document.getElementById('pkg-preview');
-    if (!pkgDiv) return;
-    
-    if (packageList.length === 0) {
-        pkgDiv.innerText = "尚未選擇任何訊息...";
-        pkgDiv.style.color = "#95a5a6";
-    } else {
-        // 使用換行與分隔線組合所有選中內容
-        pkgDiv.innerText = packageList.join('\n\n------------------\n\n');
-        pkgDiv.style.color = "#333";
-    }
-}
-
-function clearPackage() {
-    if(confirm("確定要清空已打包的內容嗎？")) {
-        packageList = [];
-        updateAll();
-    }
-}
-
-function filterCat(cat, e) {
-    // 切換按鈕的 active 樣式
-    document.querySelectorAll('.category-nav .cat-tag').forEach(btn => btn.classList.remove('active'));
-    if (e) e.currentTarget.classList.add('active');
-    
-    // 重新渲染列表
-    updateTpl(cat === 'all' ? 'all' : cat);
-}
-
-function toggleAccordion(contentId, iconId) {
-    const content = document.getElementById(contentId);
-    const icon = document.getElementById(iconId);
-    if (content.style.display === "block") {
-        content.style.display = "none";
-        icon.innerText = "▼";
-    } else {
-        content.style.display = "block";
-        icon.innerText = "▲";
-    }
-}
-
-// 1. 確保這個函數名稱叫 calculateBalance (對應 HTML 的 oninput)
-function calculateBalance() {
-    const total = parseFloat(document.getElementById('v-total').value) || 0;
-    const dep = parseFloat(document.getElementById('v-dep').value) || 0;
-    const bal = total - dep;
-    
-    // 更新隱藏的尾款欄位
-    const balInput = document.getElementById('v-bal');
-    if (balInput) balInput.value = bal;
-    
-    // 更新文字顯示
-    const display = document.getElementById('v-bal-display');
-    if (display) {
-        display.innerText = `自動計算尾款：$${(bal > 0 ? bal : 0).toLocaleString()}`;
-    }
-    
-    // 觸發模板更新
-    updateAll();
-}
-
-// 2. 修正 updateAll
-function updateAll() {
-    // 房價神器計算
-    if (typeof runManualCalc === "function") {
-        runManualCalc(); 
-    }
-
-    // 渲染模板列表
-    const tplList = document.getElementById('tpl-list');
-    if (tplList) {
-        // 抓取目前選中的分類標籤
-        const activeCatBtn = document.querySelector('.category-nav .cat-tag.active');
-        let filter = 'all';
-        if (activeCatBtn) {
-            const btnText = activeCatBtn.innerText;
-            filter = (btnText === '全部') ? 'all' : btnText;
-        }
-
-        // 執行渲染
-        updateTpl(filter);
-        updatePackagePreview();
-    }
-}
-
-// 3. 確保 updateTpl 抓得到數值
-function updateTpl(filter = 'all') {
-    const d = document.getElementById('v-date').value || "____";
-    const p = document.getElementById('v-pwd').value || "____";
-    const dep = document.getElementById('v-dep').value || "0";
-    // 如果 v-bal 沒值，就顯示 0
-    const bal = document.getElementById('v-bal').value || "0"; 
-    
-    const list = document.getElementById('tpl-list');
-    if (!list) return; 
-    list.innerHTML = '';
-
-    TPL_DATA.forEach((item, i) => {
-        if (filter !== 'all' && item.cat !== filter) return;
-
-        // 這裡會呼叫 TPL_DATA 裡的內容函數
-        const content = item.content(d, p, dep, bal); 
-        const isPacked = packageList.includes(content);
-        
-        const box = document.createElement('div');
-        box.className = `card ${isPacked ? 'card-packed' : ''}`;
-        box.innerHTML = `
-            <div onclick="togglePackage(${i})" style="cursor:pointer;">
-                <h3 style="display:inline-block;">[${item.cat}] ${item.title}</h3>
-                ${isPacked ? '<span style="color:#e67e22; font-weight:bold; margin-left:10px;">(已打包)</span>' : ''}
-            </div>
-            <div class="preview-area" id="t-${i}">${content}</div>
-            <div class="input-row" style="margin-top:10px; gap:8px;">
-                <button class="copy-btn" style="flex:1; margin-top:0;" onclick="copyText('t-${i}', event)">單獨複製</button>
-                <button class="copy-btn" style="flex:1; margin-top:0; background:${isPacked ? '#e67e22' : '#3498db'};" onclick="togglePackage(${i})">
-                    ${isPacked ? '取消打包' : '加入打包'}
-                </button>
-            </div>
-        `;
-        list.appendChild(box);
-    });
+function switchOrderView(type) {
+    currentView = type;
+    document.getElementById('btn-cal').classList.toggle('active', type === 'cal');
+    document.getElementById('btn-list').classList.toggle('active', type === 'list');
+    document.getElementById('calendar-grid').style.display = type === 'cal' ? 'grid' : 'none';
+    document.getElementById('order-list').style.display = type === 'list' ? 'block' : 'none';
 }

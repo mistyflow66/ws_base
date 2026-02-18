@@ -1,12 +1,15 @@
-/* --- 專業配色與全域設定 --- */
+/* --- 煦願民宿：智慧管理系統全域設定 --- */
 :root {
-  --primary-color: #af6a58;    /* 主強調色 */
+  --primary: #af6a58;         /* 主色：莫蘭迪陶瓦紅 */
+  --primary-light: #fcf8f7;   /* 淡主色背景 */
+  --accent: #2c3e50;          /* 強調深色 */
   --bg-main: #f8f8f9;         /* 頁面背景 */
   --bg-card: #ffffff;         /* 卡片背景 */
   --text-dark: #3a4553;       /* 深色文字 */
   --text-muted: #6a7181;      /* 輔助文字 */
-  --border-color: #f3f4f6;    /* 邊框顏色 */
+  --border-color: #f1f3f5;    /* 邊框顏色 */
   --shadow: 0 4px 12px rgba(58, 69, 83, 0.08);
+  --radius: 12px;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }      
@@ -26,7 +29,7 @@ body {
   box-shadow: 0 0 30px rgba(0,0,0,0.05);
 }      
 
-/* --- 導覽列 (專業深色調) --- */
+/* --- 頂部導覽 (Sticky) --- */
 .nav-tabs { 
   display: flex; 
   padding: 12px; 
@@ -48,32 +51,46 @@ body {
   color: var(--text-muted); 
   transition: all 0.3s ease;
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
+.tab-btn i { font-size: 1.1rem; }
 .tab-btn.active { 
-  background: var(--primary-color); 
+  background: var(--primary); 
   color: white; 
 }
 
-/* --- 卡片設計 --- */
+/* --- 卡片與佈局 --- */
+.content { padding: 15px; }
 .card { 
   background: var(--bg-card); 
-  border-radius: 12px; 
+  border-radius: var(--radius); 
   padding: 18px; 
   margin-bottom: 20px; 
   box-shadow: var(--shadow); 
   border: 1px solid var(--border-color);
 }
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 h3 { 
-  font-size: 1.05rem; 
+  font-size: 1rem; 
   margin: 0 0 15px 0; 
   color: var(--text-dark); 
   display: flex; 
   align-items: center; 
   gap: 8px;
 }
-h3 i { color: var(--primary-color); }
+h3 i { color: var(--primary); }
 
-/* --- 表單與輸入框 --- */
+/* --- 表單系統 --- */
 input, select, textarea { 
   width: 100%; 
   padding: 12px 15px; 
@@ -82,19 +99,20 @@ input, select, textarea {
   font-size: 1rem; 
   margin-bottom: 12px; 
   background: #fdfdfd;
-  color: var(--text-dark);
+  transition: all 0.2s;
 }
 input:focus, select:focus { 
-  border-color: var(--primary-color); 
+  border-color: var(--primary); 
   outline: none; 
   box-shadow: 0 0 0 3px rgba(175, 106, 88, 0.1);
+  background: #fff;
 }
 .input-row { display: flex; gap: 10px; }
-.wide-select { flex: 1.5; } /* 讓晚數下拉選單更寬 */
+.wide-select { flex: 1.5; }
 
 /* --- 按鈕系統 --- */
 .copy-btn { 
-  background: var(--text-dark); 
+  background: var(--accent); 
   color: white; 
   border: none; 
   padding: 14px; 
@@ -108,340 +126,194 @@ input:focus, select:focus {
   align-items: center;
   gap: 8px;
 }
-.copy-btn:active { transform: scale(0.97); }
-.btn-save { background: var(--primary-color); }
-.btn-pulse { background: #003580; } /* Booking 專用色 */
+.copy-btn:active { transform: scale(0.97); opacity: 0.9; }
+.btn-save, .btn-pack { background: var(--primary); }
+.btn-cancel { background: #95a5a6; }
+.btn-delete { background: #e74c3c; }
 
-/* --- 編輯預覽區 (可直接編輯) --- */
+/* --- 打包預覽區 --- */
 .preview-area {
   white-space: pre-wrap;
   word-break: break-all;
-  background: #fcf8f7;      
+  background: var(--primary-light);      
   padding: 15px;
   border-radius: 10px;
   line-height: 1.6;
-  margin: 10px 0;
-  border: 1px solid #eee;
+  margin-bottom: 12px;
+  border: 1px dashed var(--primary);
   font-size: 0.95rem;
   color: var(--text-dark);
 }
-.preview-area:focus {
-  border-color: var(--primary-color);
-  background: #ffffff;
+
+/* --- 分類標籤 --- */
+.category-nav { 
+  display: flex; 
+  gap: 8px; 
+  overflow-x: auto; 
+  padding: 5px 0 15px 0;
+  scrollbar-width: none; /* Firefox */
+}
+.category-nav::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+.cat-tag { 
+  background: #edf2f7; 
+  padding: 8px 16px; 
+  border-radius: 20px; 
+  font-size: 0.85rem; 
+  white-space: nowrap; 
+  border: none; 
+  color: var(--text-muted); 
+  font-weight: 600;
+  cursor: pointer;
+}
+.cat-tag.active { background: var(--accent); color: white; }
+
+/* --- 房價神器組合型 --- */
+.price-combo .price-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.price-combo label { width: 40px; font-weight: bold; color: var(--text-muted); }
+.price-combo input { margin-bottom: 0; flex: 2; }
+.price-combo select { margin-bottom: 0; flex: 1; }
+
+/* --- 手風琴收合區 --- */
+.accordion-header {
+  background: var(--primary-light);
+  border: 1px solid #eadedb;
+  color: var(--primary);
+  padding: 12px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.accordion-content {
+  background: #fff;
+  border: 1px solid #eadedb;
+  border-top: none;
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  padding: 15px;
+  margin-bottom: 15px;
 }
 
-/* --- 月曆視圖 (精緻化) --- */
+/* --- 月曆視圖 --- */
+.unified-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.nav-arrow {
+  background: var(--primary-light);
+  border: none;
+  color: var(--primary);
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.view-switcher {
+  display: flex; gap: 4px; background: #f1f3f5; padding: 4px; border-radius: 10px; margin-bottom: 15px;
+}
+.view-btn {
+  flex: 1; border: none; padding: 8px; border-radius: 8px; background: transparent; color: var(--text-muted); font-size: 0.9rem; cursor: pointer;
+}
+.view-btn.active { background: #fff; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
 .calendar-container { 
   display: grid; 
   grid-template-columns: repeat(7, 1fr); 
-  gap: 6px; 
-  background: #fff;
+  gap: 4px; 
 }
 .cal-day { 
   aspect-ratio: 1/1; 
   display: flex; 
+  flex-direction: column;
   align-items: center; 
   justify-content: center; 
-  font-size: 0.9rem; 
+  font-size: 0.85rem; 
   border-radius: 8px; 
   background: #f8f9fa;
   color: #a0aec0;
+  position: relative;
 }
-.cal-header { color: var(--text-dark); font-weight: bold; background: none; }
-.cal-day.has-order { 
-  background: var(--primary-color); 
-  color: white; 
-  font-weight: bold; 
-}
-.cal-day.stay-over { opacity: 0.6; } /* 續日顏色稍淺 */
+.cal-header { color: var(--text-dark); font-weight: bold; background: none; aspect-ratio: auto; padding: 10px 0; }
+.cal-day.today { border: 2px solid var(--primary); color: var(--primary); font-weight: 800; }
+.cal-day.has-order { background: var(--primary); color: white; font-weight: bold; }
+.cal-day.stay-over { background: #e2c0b8; color: white; } /* 續住顏色 */
 
-/* 修正：今天日期的框框樣式 */
-.cal-day.today { 
-  border: 2px solid var(--primary-color); 
-  color: var(--primary-color);
-  font-weight: 800;
+/* --- 經營數據統計 --- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
 }
+.stat-item {
+  background: var(--primary-light);
+  padding: 12px;
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid #f0e6e4;
+}
+.stat-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+.stat-value { font-size: 1.1rem; font-weight: bold; color: var(--primary); }
 
-/* --- 彈窗系統 (置中與詳情模式) --- */
+/* --- 財務月結 --- */
+.finance-card { border-top: 4px solid var(--primary); }
+.fin-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.95rem; }
+.fin-input { width: 80px; padding: 5px; margin-bottom: 0; text-align: right; }
+.fin-total { margin-top: 10px; font-weight: bold; color: var(--primary); border-top: 1px solid #eee; padding-top: 10px; }
+
+/* --- 彈窗系統 (Modal) --- */
 .modal { 
   display: none; 
   position: fixed; 
   top: 0; left: 0; 
   width: 100%; height: 100%; 
-  background: rgba(58, 69, 83, 0.6); 
+  background: rgba(44, 62, 80, 0.7); 
   z-index: 9999; 
   backdrop-filter: blur(4px);
-  align-items: center;     /* 垂直置中 */
-  justify-content: center;  /* 水平置中 */
+  align-items: center; justify-content: center;
 }
 .modal.active { display: flex; }
 .modal-content { 
   background: white; 
   padding: 25px; 
   width: 90%; 
-  max-width: 420px; 
+  max-width: 400px; 
   border-radius: 20px; 
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
 }
+.close-btn { position: absolute; right: 20px; top: 15px; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
 
 .info-list { margin: 15px 0; }
 .info-item { 
   display: flex; 
   justify-content: space-between; 
-  padding: 8px 0; 
+  padding: 10px 0; 
   border-bottom: 1px solid var(--border-color); 
 }
-.info-label { color: var(--text-muted); font-size: 0.9rem; }
-.info-value { font-weight: 500; color: var(--text-dark); }
+.info-label { color: var(--text-muted); }
+.info-value { font-weight: 500; }
 
-/* --- 分類標籤 --- */
-.category-nav { display: flex; 
-    justify-content: center; /* 置中 */
-    flex-wrap: wrap; 
-    gap: 8px; 
-    padding: 15px 0; }
-.cat-tag { 
-  background: #edf2f7; 
-  padding: 8px 16px; 
-  border-radius: 12px; 
-  font-size: 0.85rem; 
-  white-space: nowrap; 
-  border: none; 
-  color: var(--text-muted); 
-  font-weight: 600;
+/* --- 加載動畫 --- */
+.loading-overlay {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: rgba(255,255,255,0.9); z-index: 10001;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
-.cat-tag.active { background: var(--text-dark); color: white; }
-
-/* --- 條列卡片 --- */
-.order-list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  border-bottom: 1px solid var(--border-color);
+.spinner {
+  width: 40px; height: 40px; border: 4px solid var(--primary-light);
+  border-top: 4px solid var(--primary); border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
-.source-tag {
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 6px;
-  margin-right: 8px;
-}
-.tag-booking { background: #ebf4ff; color: #3182ce; }
-.tag-line { background: #f0fff4; color: #38a169; }
-
-/* 修正快速登錄的紅色框框範圍（改為莫蘭迪紅） */
-.accordion-header { background: #fcf8f7; border: 1px solid #eadedb; color: var(--primary-color); }
-.accordion-content { padding: 20px; /* 增加內縮 */
-    background: #ffffff;
-    border: 1px solid #eadedb;
-    border-top: none;
-    border-bottom-left-radius: 12px;
-    border-bottom-right-radius: 12px;
-    margin-bottom: 15px;}
-
-/* 1. 核心修正：隱藏非活動分頁，解決全部擠在同一面的問題 */
-.page { 
-    display: none; 
-}
-.page.active { 
-    display: block; 
-}
-/* 4. 視圖切換按鈕質感提升 */
-.view-switcher {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    background: #f1f3f5;
-    padding: 4px;
-    border-radius: 10px;
-}
-.view-btn {
-    flex: 1;
-    border: none;
-    padding: 10px;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-muted);
-    font-weight: 500;
-    transition: all 0.2s;
-}
-.view-btn.active {
-    background: white;
-    color: var(--primary-color);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-/* ============================= */
-/* 月曆標題列（箭頭 + 年月 同一行） */
-/* ============================= */
-
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 15px;
-}
-
-.calendar-header .month-label {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--text-dark);
-}
-
-.calendar-header button {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: var(--primary-color);
-  padding: 5px 10px;
-}
-
-/* ============================= */
-/* 今天樣式修正（數字不消失） */
-/* ============================= */
-
-.cal-day.today {
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-  font-weight: 800;
-  background: #fff;
-}
-
-/* ============================= */
-/* 房價神器三行整合 */
-/* ============================= */
-
-.price-combo-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.price-combo-row .room-label {
-  width: 40px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.price-combo-row input {
-  flex: 1;
-  margin: 0;
-}
-
-.price-combo-row select {
-  width: 80px;
-  margin: 0;
-}
-
-/* ============================= */
-/* 收合系統（快速登錄 + 經營數據） */
-/* ============================= */
-
-.accordion-header {
-  cursor: pointer;
-  font-weight: 600;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: 0.3s;
-}
-
-.accordion-header::after {
-  content: "＋";
-  font-weight: bold;
-  transition: 0.3s;
-}
-
-.accordion-header.active::after {
-  content: "－";
-}
-
-.accordion-content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease;
-}
-
-.accordion-content.active {
-  max-height: 1000px;
-}
-
-/* 預設收合 */
-#quick-entry .accordion-content,
-#stats-section .accordion-content {
-  max-height: 0;
-}
-
-/* ============================= */
-/* 經營數據四格統一風格 */
-/* ============================= */
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.stat-card {
-  background: #fcf8f7;
-  border-radius: 12px;
-  padding: 15px;
-  text-align: center;
-  border: 1px solid var(--border-color);
-}
-
-.stat-card h4 {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.stat-card p {
-  margin: 6px 0 0 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--primary-color);
-}
-
-/* ============================= */
-/* 加入打包按鈕同色系 */
-/* ============================= */
-
-.btn-pack {
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-/* ============================= */
-/* 快速登錄按鈕統一風格 */
-/* ============================= */
-
-.quick-submit-btn {
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 10px;
-  font-weight: 600;
-  width: 100%;
-}
-
-/* ============================= */
-/* Modal 更穩定置中 */
-/* ============================= */
-
-.modal {
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal.active {
-  display: flex;
-}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }

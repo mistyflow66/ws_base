@@ -3,66 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>煦願民宿｜專業管理系統</title>
+  <title>煦願民宿｜智慧工作站</title>
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/619/619153.png" type="image/png">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="煦願管家">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/619/619153.png">
-
-<meta name="theme-color" content="#ff85a2">
-</head>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="煦願管家">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/619/619153.png">
+  <meta name="theme-color" content="#af6a58"> </head>
 <body>
 
 <div id="loading-mask" class="loading-overlay" style="display:none;">
   <div class="spinner"></div>
-  <p style="margin-top:10px; color:#27ae60; font-weight:bold;">資料同步中...</p>
+  <p style="margin-top:10px; color:#af6a58; font-weight:bold;">資料同步中...</p>
 </div>
 
 <div class="container">
   <div class="nav-tabs">
-  <button class="tab-btn active" onclick="switchPage('tpl-page', event)">
-    <i class="fa-solid fa-message"></i> 回覆模板
-  </button>
-  <button class="tab-btn" onclick="switchPage('calc-page', event)">
-    <i class="fa-solid fa-calculator"></i> 房價神器
-  </button>
-  <button class="tab-btn" onclick="switchPage('order-page', event)">
-    <i class="fa-solid fa-calendar-days"></i> 所有訂單
-  </button>
-</div>
+    <button class="tab-btn active" onclick="switchPage('tpl-page', event)">
+      <i class="fa-solid fa-message"></i> 回覆模板
+    </button>
+    <button class="tab-btn" onclick="switchPage('calc-page', event)">
+      <i class="fa-solid fa-calculator"></i> 房價神器
+    </button>
+    <button class="tab-btn" onclick="switchPage('order-page', event)">
+      <i class="fa-solid fa-calendar-days"></i> 所有訂單
+    </button>
+  </div>
 
   <div class="content">
-    
-   <div id="tpl-page" class="page active">
+    <div id="tpl-page" class="page active">
       <div class="card info-base">
         <label><i class="fa-solid fa-lightbulb"></i> 基礎資訊（填寫後自動帶入）</label>
         <div class="input-row">
-  <input type="text" id="v-date" placeholder="入住日期(如3/12)" oninput="updateAll()">
-  <input type="text" id="v-pwd" placeholder="今日大門密碼" oninput="updateAll()">
-</div>
-<div class="input-row">
-  <input type="number" id="v-total" placeholder="總價" oninput="calculateBalance()">
-  <input type="number" id="v-dep" placeholder="訂金" oninput="calculateBalance()">
-</div>
-<input type="hidden" id="v-bal">
-<div id="v-bal-display" style="font-size: 0.85rem; color: #ff85a2; margin-top: 5px; padding-left: 5px;">
-  自動計算尾款：$0
-</div>
+          <input type="text" id="v-date" placeholder="入住日期(如3/12)" oninput="updateAll()">
+          <input type="text" id="v-pwd" placeholder="今日大門密碼" oninput="updateAll()">
+        </div>
+        <div class="input-row">
+          <input type="number" id="v-total" placeholder="總價" oninput="calculateBalance()">
+          <input type="number" id="v-dep" placeholder="訂金" oninput="calculateBalance()">
+        </div>
+        <input type="hidden" id="v-bal">
+        <div id="v-bal-display" style="font-size: 0.85rem; color: #af6a58; margin-top: 5px; padding-left: 5px; font-weight: bold;">
+          自動計算尾款：$0
+        </div>
       </div>
 
       <div class="card" id="pkg-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h3 style="margin:0;"><i class="fa-solid fa-box-archive"></i> 已打包訊息</h3>
-        <button class="cat-tag" style="background:#95a5a6; color:white; border:none; padding:4px 10px;" onclick="clearPackage()">清空</button>
-    </div>
-    <div class="preview-area" id="pkg-preview" contenteditable="true" style="min-height: 50px; color:#3a4553; border: 1px dashed #af6a58;">尚未選擇任何訊息...</div>
-    <button class="copy-btn btn-pack" onclick="copyText('pkg-preview', event)">複製打包訊息</button>
-</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="margin:0; font-size: 1rem;"><i class="fa-solid fa-box-archive"></i> 已打包訊息</h3>
+          <button class="cat-tag" style="background:#95a5a6; color:white; border:none; padding:4px 10px; cursor:pointer;" onclick="clearPackage()">清空</button>
+        </div>
+        <div class="preview-area" id="pkg-preview" contenteditable="true" style="min-height: 50px; color:#3a4553; border: 1px dashed #af6a58; background: #fff;">尚未選擇任何訊息...</div>
+        <button class="copy-btn btn-pack" style="background:#af6a58;" onclick="copyText('pkg-preview', event)">複製打包訊息</button>
+      </div>
 
       <div class="category-nav" id="cat-nav">
         <button class="cat-tag active" onclick="filterCat('all', event)">全部</button>
@@ -79,127 +77,104 @@
 
     <div id="calc-page" class="page">
       <div class="card">
-        <h3>1. 選擇時段與房價調整</h3>
-        <select id="m-season" onchange="runManualCalc()">
+        <h3><i class="fa-solid fa-clock"></i> 1. 選擇時段</h3>
+        <select id="m-season" onchange="updatePricePlaceholder();runManualCalc()">
           <option value="weekday">一般平日</option>
           <option value="weekend">週六假日</option>
           <option value="cny">農曆過年</option>
         </select>
         
-        <h3 class="mt-15">房價與開房設定</h3>
-
-<div class="price-combo">
-
-  <div class="price-row">
-    <label>201</label>
-    <input type="number" id="p-201" oninput="runManualCalc()">
-    <select id="m-201" onchange="runManualCalc()">
-      <option value="0">不開</option>
-      <option value="1">1 床</option>
-    </select>
-  </div>
-
-  <div class="price-row">
-    <label>202</label>
-    <input type="number" id="p-202" oninput="runManualCalc()">
-    <select id="m-202" onchange="runManualCalc()">
-      <option value="0">不開</option>
-      <option value="1">1 床</option>
-      <option value="2">2 床</option>
-    </select>
-  </div>
-
-  <div class="price-row">
-    <label>301</label>
-    <input type="number" id="p-301" oninput="runManualCalc()">
-    <select id="m-301" onchange="runManualCalc()">
-      <option value="0">不開</option>
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-    </select>
-  </div>
-
-</div>
-
+        <h3 class="mt-15"><i class="fa-solid fa-bed"></i> 2. 房價與開房設定</h3>
+        <div class="price-combo">
+          <div class="price-row">
+            <label>201</label>
+            <input type="number" id="p-201" placeholder="平日價" oninput="runManualCalc()">
+            <select id="m-201" onchange="runManualCalc()">
+              <option value="0">不開</option>
+              <option value="1">1 床</option>
+            </select>
+          </div>
+          <div class="price-row">
+            <label>202</label>
+            <input type="number" id="p-202" placeholder="平日價" oninput="runManualCalc()">
+            <select id="m-202" onchange="runManualCalc()">
+              <option value="0">不開</option>
+              <option value="1">1 床</option>
+              <option value="2">2 床</option>
+            </select>
+          </div>
+          <div class="price-row">
+            <label>301</label>
+            <input type="number" id="p-301" placeholder="平日價" oninput="runManualCalc()">
+            <select id="m-301" onchange="runManualCalc()">
+              <option value="0">不開</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+        </div>
+        <div id="calc-result" class="mt-15"></div>
+      </div>
+    </div>
 
     <div id="order-page" class="page">
-  <div id="lock-screen" class="card">
-    <h3><i class="fa-solid fa-lock"></i> 雲端資料庫連線</h3>
-    <input type="password" id="admin-key" placeholder="輸入管理金鑰">
-    <button class="copy-btn" onclick="fetchOrders()">讀取訂單資料</button>
-  </div>
-
-  <div id="order-content" style="display:none;">
-    <div class="accordion-header order-add-header" onclick="toggleAccordion('order-add-content', 'order-acc-icon')">
-      <span class="acc-title"><i class="fa-solid fa-plus"></i> 快速登錄新訂單</span>
-      <span id="order-acc-icon"><i class="fa-solid fa-chevron-down"></i></span>
-    </div>
-    
-    <div class="accordion-content collapsed" id="order-add-content">
-      <input type="text" id="o-name" placeholder="訂房人姓名">
-      <div class="input-row">
-        <input type="date" id="o-date">
-        <select id="o-source">
-          <option>私LINE</option>
-          <option>Booking</option>
-          <option>官方LINE</option>
-          <option>FB</option>
-        </select>
+      <div id="lock-screen" class="card">
+        <h3><i class="fa-solid fa-lock"></i> 雲端資料庫連線</h3>
+        <input type="password" id="admin-key" placeholder="輸入管理金鑰">
+        <button class="copy-btn" style="background:#af6a58;" onclick="fetchOrders()">讀取訂單資料</button>
       </div>
-      <div class="input-row">
-        <input type="number" id="o-guests" placeholder="人數">
-        <select id="o-nights" class="wide-select">
-          <option value="1">1 晚</option>
-          <option value="2">2 晚</option>
-          <option value="3">3 晚</option>
-          <option value="4">4 晚</option>
-          <option value="5">5 晚</option>
-        </select>
-      </div>
-      <div class="input-row">
-        <select id="o-rooms">
-          <option value="0">0 房</option>
-          <option value="1">1 房</option>
-          <option value="2">2 房</option>
-          <option value="3" selected>3 房 (包棟)</option>
-        </select>
-        <input type="number" id="o-total" placeholder="總房價">
-      </div>
-      <div class="input-row">
-        <input type="number" id="o-dep" placeholder="訂金金額">
-        <input type="text" id="o-note" placeholder="備註（床數、熟客等）">
-      </div>
-      <button class="copy-btn btn-save" onclick="addOrder()">儲存並同步至雲端</button>
-    </div>
 
-    <div class="card">
-      <div class="month-nav unified-nav">
-  <button class="nav-arrow" onclick="changeMonth(-1)">
-    <i class="fa-solid fa-angle-left"></i>
-  </button>
+      <div id="order-content" style="display:none;">
+        <div class="accordion-header order-add-header" onclick="toggleAccordion('order-add-content', 'order-acc-icon')">
+          <span class="acc-title"><i class="fa-solid fa-plus"></i> 快速登錄新訂單</span>
+          <span id="order-acc-icon">▼</span>
+        </div>
+        
+        <div class="accordion-content" id="order-add-content" style="display:none;">
+          <input type="text" id="o-name" placeholder="訂房人姓名">
+          <div class="input-row">
+            <input type="date" id="o-date">
+            <select id="o-source">
+              <option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option>
+            </select>
+          </div>
+          <div class="input-row">
+            <input type="number" id="o-guests" placeholder="人數">
+            <select id="o-nights" class="wide-select">
+              <option value="1">1 晚</option><option value="2">2 晚</option><option value="3">3 晚</option><option value="4">4 晚</option>
+            </select>
+          </div>
+          <div class="input-row">
+            <select id="o-rooms">
+              <option value="1">1 房</option><option value="2">2 房</option><option value="3" selected>3 房 (包棟)</option>
+            </select>
+            <input type="number" id="o-total" placeholder="總房價">
+          </div>
+          <div class="input-row">
+            <input type="number" id="o-dep" placeholder="訂金">
+            <input type="text" id="o-note" placeholder="備註（床數、熟客等）">
+          </div>
+          <button class="copy-btn btn-save" style="background:#af6a58;" onclick="addOrder()">儲存並同步至雲端</button>
+        </div>
 
-  <h3 id="cal-month-title"></h3>
-
-  <button class="nav-arrow" onclick="changeMonth(1)">
-    <i class="fa-solid fa-angle-right"></i>
-  </button>
-</div>
-
-    
+        <div class="card">
+          <div class="month-nav unified-nav">
+            <button class="nav-arrow" onclick="changeMonth(-1)"><i class="fa-solid fa-angle-left"></i></button>
+            <h3 id="cal-month-title">2026年 2月</h3>
+            <button class="nav-arrow" onclick="changeMonth(1)"><i class="fa-solid fa-angle-right"></i></button>
+          </div>
 
           <div class="view-switcher">
-    <button class="view-btn active" id="btn-cal" onclick="switchOrderView('cal')"><i class="fa-solid fa-calendar-days"></i> 月曆視圖</button>
-    <button class="view-btn" id="btn-list" onclick="switchOrderView('list')"><i class="fa-solid fa-list-ul"></i> 條列卡片</button>
-</div>
+            <button class="view-btn active" id="btn-cal" onclick="switchOrderView('cal')">月曆視圖</button>
+            <button class="view-btn" id="btn-list" onclick="switchOrderView('list')">條列卡片</button>
+          </div>
           
           <div id="calendar-grid" class="calendar-container"></div>
           <div id="order-list" class="mt-15" style="display:none;"></div>
 
           <button class="copy-btn btn-stat" onclick="toggleStats()" style="background: #6a7181; margin-top: 15px;">
-    <i class="fa-solid fa-chart-line"></i> 經營數據統計分析</button>
-          <div id="stats-area" class="stats-hidden">
+            <i class="fa-solid fa-chart-line"></i> 經營數據統計分析
+          </button>
+          <div id="stats-area" style="display:none;">
             <div class="stat-grid">
               <div class="stat-item"><div class="stat-label">總來客</div><div id="stat-total-guests" class="stat-value">0</div></div>
               <div class="stat-item"><div class="stat-label">總開房</div><div id="stat-total-rooms" class="stat-value">0</div></div>
@@ -212,11 +187,11 @@
         <div class="card finance-card">
           <h3><i class="fa-solid fa-sack-dollar"></i> 財務月結試算</h3>
           <div class="fin-row"><span>總房費收入</span><b id="fin-income">$0</b></div>
-          <div class="fin-row color-red"><span>Booking 手續費</span><b id="fin-fee">-$0</b></div>
+          <div class="fin-row" style="color:#e74c3c;"><span>Booking 手續費(12%)</span><b id="fin-fee">-$0</b></div>
           <div class="fin-row"><span>洗衣費</span><input type="number" id="laundry-cost" value="0" class="fin-input" oninput="calculateFinance()"></div>
           <div class="fin-row"><span>水電攤提</span><input type="number" id="utility-cost" value="5000" class="fin-input" oninput="calculateFinance()"></div>
-          <hr class="fin-hr">
-          <div class="fin-row fin-total"><span>實際淨利</span><b id="fin-net">$0</b></div>
+          <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+          <div class="fin-row fin-total" style="font-size:1.2rem; color:#af6a58;"><span>實際淨利</span><b id="fin-net">$0</b></div>
         </div>
       </div>
     </div>
@@ -226,14 +201,13 @@
 <div id="edit-modal" class="modal">
   <div class="modal-content">
     <span class="close-btn" onclick="closeEditModal()">&times;</span>
-    <h3 id="modal-title"><i class="fa-solid fa-circle-info"></i> 訂單詳細資訊</h3>
+    <h3 id="modal-title">訂單詳細資訊</h3>
     
     <div id="info-display-view">
-      <div class="info-list" id="detail-info-list">
-        </div>
+      <div class="info-list" id="detail-info-list"></div>
       <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button class="copy-btn" style="flex:1;" onclick="toggleEditMode(true)">編輯資料</button>
-        <button class="copy-btn btn-pulse" id="btn-pulse" onclick="openPulse()">Booking Pulse</button>
+        <button class="copy-btn" style="flex:1; background:#af6a58;" onclick="toggleEditMode(true)">編輯資料</button>
+        <button class="copy-btn" id="btn-pulse" style="flex:1; background:#003580;" onclick="openPulse()">Booking Pulse</button>
       </div>
     </div>
 
@@ -242,12 +216,8 @@
       <input type="text" id="e-name" placeholder="姓名">
       <div class="input-row">
         <input type="date" id="e-date">
-        <select id="e-nights" class="wide-select">
-          <option value="1">1 晚</option>
-          <option value="2">2 晚</option>
-          <option value="3">3 晚</option>
-          <option value="4">4 晚</option>
-          <option value="5">5 晚</option>
+        <select id="e-nights">
+          <option value="1">1 晚</option><option value="2">2 晚</option><option value="3">3 晚</option><option value="4">4 晚</option>
         </select>
       </div>
       <div class="input-row">
@@ -258,23 +228,21 @@
       </div>
       <div class="input-row">
         <select id="e-rooms">
-          <option value="0">0 房</option><option value="1">1 房</option><option value="2">2 房</option><option value="3">3 房</option>
+          <option value="1">1 房</option><option value="2">2 房</option><option value="3">3 房</option>
         </select>
         <input type="number" id="e-total" placeholder="總價">
       </div>
-      <div class="input-row">
-        <input type="number" id="e-dep" placeholder="訂金">
-        <input type="text" id="e-note" placeholder="備註">
-      </div>
+      <input type="number" id="e-dep" placeholder="訂金" style="margin-top:8px;">
+      <input type="text" id="e-note" placeholder="備註" style="margin-top:8px;">
       <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button class="copy-btn" style="flex:2;" onclick="submitUpdate()">儲存更新</button>
-        <button class="copy-btn btn-cancel" style="flex:1; background:#95a5a6;" onclick="toggleEditMode(false)">取消</button>
+        <button class="copy-btn" style="flex:2; background:#af6a58;" onclick="submitUpdate()">儲存更新</button>
+        <button class="copy-btn" style="flex:1; background:#95a5a6;" onclick="toggleEditMode(false)">取消</button>
       </div>
-      <button class="copy-btn btn-delete" style="background:#e74c3c; margin-top:10px;" onclick="submitDelete()">刪除訂單</button>
+      <button class="copy-btn" style="background:#e74c3c; margin-top:10px; width:100%;" onclick="submitDelete()">刪除訂單</button>
     </div>
   </div>
 </div>
+
 <script src="script.js"></script>
 </body>
-
 </html>
