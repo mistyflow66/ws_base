@@ -94,7 +94,7 @@ const TPL_DATA = [
     cat: "退房",
     title: "退房好評邀請",
     // 改成函數格式 () => `...`
-    content: () => `已收到您退房鑰匙.，祝您假日愉快！\n有空歡迎幫我們留言+5星好評，您的肯定是我們前進的動力！\n煦願民宿感謝您❤️ https://maps.app.goo.gl/vcoPQQuMRaME1rpY6`
+    content: () => `已收到您退房鑰匙，祝您假日愉快！\n有空歡迎幫我們留言+5星好評，您的肯定是我們前進的動力！\n煦願民宿感謝您❤️ https://maps.app.goo.gl/vcoPQQuMRaME1rpY6`
   },
   {
     cat: "退房",
@@ -636,7 +636,13 @@ function toggleAccordion(contentId, iconId) {
 
 function toggleStats() {
     const s = document.getElementById('stats-area');
-    s.style.display = s.style.display === 'block' ? 'none' : 'block';
+    const me = document.getElementById('month-end-calc-container'); // 假設給封存區一個外層 ID
+    
+    const isVisible = s.style.display === 'block';
+    s.style.display = isVisible ? 'none' : 'block';
+    
+    // 同步顯示封存按鈕區
+    if (me) me.style.display = isVisible ? 'none' : 'block';
 }
 
 function changeMonth(n) {
@@ -692,8 +698,13 @@ function updateNetPreview() {
 }
 
 // 4. 水電分攤邏輯
-function openUtilityCalc() { document.getElementById('u-modal').style.display = 'flex'; }
-function closeUtilityCalc() { document.getElementById('u-modal').style.display = 'none'; }
+function openUtilityCalc() {
+    document.getElementById('u-modal').style.display = 'flex';
+}
+
+function closeUtilityCalc() {
+    document.getElementById('u-modal').style.display = 'none';
+}
 
 function calculateUtility() {
     const s = new Date(document.getElementById('u-start').value);
@@ -717,23 +728,22 @@ function calculateUtility() {
 }
 document.querySelectorAll('#u-start, #u-end, #u-total').forEach(el => el.addEventListener('input', calculateUtility));
 
+// 3. 修正 applyUtility 連動 (承接上一個問題的邏輯)
 function applyUtility() {
     const resValue = document.getElementById('u-res').innerText;
     
-    // 填入封存區輸入框
+    // 填入封存區
     document.getElementById('final-utility').value = resValue;
-    
-    // 【新增：同時填入底部預覽輸入框】
+    // 同步到底部預覽
     const utilityCost = document.getElementById('utility-cost');
     if (utilityCost) utilityCost.value = resValue;
 
     updateNetPreview();
     
-    // 【新增：重新計算底部預覽金額】
-    // 這裡我們需要傳入當前的資料，或是直接觸發 calculateFinance
-    // 簡單做法：直接調用 renderOrderList 內部的邏輯或重刷一次
-    const month = document.getElementById('cal-month-title').innerText.replace('年 ', '-').replace('月', '');
-    const currentMData = globalOrderData.filter(r => r[3] && r[3].includes(month));
+    // 重新觸發底部財務計算 (mData 取當前月份)
+    const monthTitle = document.getElementById('cal-month-title').innerText;
+    const monthStr = monthTitle.replace('年 ', '-').replace('月', '').trim();
+    const currentMData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
     calculateFinance(currentMData);
 
     closeUtilityCalc();
