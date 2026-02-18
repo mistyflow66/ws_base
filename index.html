@@ -233,7 +233,7 @@
     </div>
 </div>
 
-          <button class="copy-btn btn-stat" onclick="toggleStats()" style="background: #6a7181; margin-top: 15px;">
+<button class="copy-btn btn-stat" onclick="toggleStats()" style="background: #6a7181; margin-top: 15px;">
     <i class="fa-solid fa-chart-line"></i> 經營數據統計分析
 </button>
 
@@ -244,22 +244,9 @@
         <div class="stat-item"><div class="stat-label">Booking%</div><div id="stat-b-rate" class="stat-value">0%</div></div>
         <div class="stat-item"><div class="stat-label">私訊%</div><div id="stat-o-rate" class="stat-value">0%</div></div>
     </div>
-
-    <div id="month-end-mini-zone" style="margin-top: 15px; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; background: #fff;">
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 0.9rem; color: #666;"><i class="fa-solid fa-file-invoice-dollar"></i> 月度結算預覽</span>
-            <span id="me-net-preview" style="font-weight: bold; color: #af6a58;">$0</span>
-        </div>
-        
-        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-            <input type="number" id="final-utility" placeholder="水電攤提" style="flex:1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            <button onclick="openUtilityCalc()" style="background:#95a5a6; color:white; border:none; padding: 0 10px; border-radius: 4px; font-size: 0.8rem;">試算</button>
-        </div>
-
-        <input type="hidden" id="final-laundry"> <button class="copy-btn" onclick="submitMonthEnd()" style="background: #95a5a6; font-size: 0.85rem; padding: 8px; width: 100%;">
-            確認封存此月數據
-        </button>
-    </div>
+    <button class="copy-btn" onclick="openArchiveModal()" style="background: #3a4553; margin-top: 15px; font-size: 0.9rem;">
+        <i class="fa-solid fa-cloud-arrow-up"></i> 生成本月封存數據
+    </button>
 </div>
 
 <div id="stats-area" style="display:none;">
@@ -274,14 +261,22 @@
         </div>
 
         <div class="card finance-card">
-          <h3><i class="fa-solid fa-sack-dollar"></i> 財務月結試算</h3>
-          <div class="fin-row"><span>總房費收入</span><b id="fin-income">$0</b></div>
-          <div class="fin-row" style="color:#e74c3c;"><span>Booking 手續費(12%)</span><b id="fin-fee">-$0</b></div>
-          <div class="fin-row"><span>洗衣費</span><input type="number" id="laundry-cost" value="0" class="fin-input" oninput="calculateFinance()"></div>
-          <div class="fin-row"><span>水電攤提</span><input type="number" id="utility-cost" value="5000" class="fin-input" oninput="calculateFinance()"></div>
-          <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-          <div class="fin-row fin-total" style="font-size:1.2rem; color:#af6a58;"><span>實際淨利</span><b id="fin-net">$0</b></div>
+    <h3><i class="fa-solid fa-sack-dollar"></i> 財務月結試算</h3>
+    <div class="fin-row"><span>總房費收入</span><b id="fin-income">$0</b></div>
+    <div class="fin-row" style="color:#e74c3c;"><span>Booking 手續費(12%)</span><b id="fin-fee">-$0</b></div>
+    <div class="fin-row"><span>洗衣費</span><input type="number" id="laundry-cost" value="0" class="fin-input" oninput="calculateFinance()"></div>
+    
+    <div class="fin-row">
+        <span>水電攤提</span>
+        <div style="display:flex; gap:5px; align-items:center;">
+            <button onclick="openUtilityCalc()" style="padding:2px 8px; background:#95a5a6; color:white; border:none; border-radius:4px; font-size:0.7rem;">試算</button>
+            <input type="number" id="utility-cost" value="5000" class="fin-input" oninput="calculateFinance()">
         </div>
+    </div>
+    
+    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+    <div class="fin-row fin-total" style="font-size:1.2rem; color:#af6a58;"><span>實際淨利</span><b id="fin-net">$0</b></div>
+</div>
       </div>
     </div>
   </div>
@@ -328,6 +323,26 @@
         <button class="copy-btn" style="flex:1; background:#95a5a6;" onclick="toggleEditMode(false)">取消</button>
       </div>
       <button class="copy-btn" style="background:#e74c3c; margin-top:10px; width:100%;" onclick="submitDelete()">刪除訂單</button>
+    </div>
+  </div>
+</div>
+
+<div id="archive-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeArchiveModal()">&times;</span>
+    <h3><i class="fa-solid fa-file-shield"></i> 本月經營數據封存確認</h3>
+    
+    <div class="info-list" id="archive-summary-list">
+      </div>
+
+    <div style="background: var(--primary-light); padding: 12px; border-radius: 8px; margin-top: 15px;">
+      <div style="font-size: 0.8rem; color: #666; text-align: center;">預估本月實際淨利</div>
+      <div id="archive-net-profit" style="font-size: 1.6rem; font-weight: bold; color: var(--primary); text-align: center;">$0</div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button class="copy-btn" style="flex:1; background:#95a5a6;" onclick="closeArchiveModal()">取消</button>
+      <button class="copy-btn" style="flex:2; background:#af6a58;" onclick="finalConfirmArchive()">確認封存至雲端</button>
     </div>
   </div>
 </div>

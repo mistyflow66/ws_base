@@ -584,29 +584,39 @@ function updateStatistics(mData) {
     document.getElementById('stat-o-rate').innerText = (100 - bRate) + '%';
 }
 
+// 修改原本的 calculateFinance
 function calculateFinance(mData) {
-    // 1. 取得原始收入與手續費 (這段不變)
+    if (!mData) {
+        const monthTitle = document.getElementById('cal-month-title').innerText;
+        const monthStr = monthTitle.replace('年 ', '-').replace('月', '').trim();
+        mData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
+    }
+
     const income = mData.reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
     const bTotal = mData.filter(r => r[1] === 'Booking').reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
     const fee = Math.round(bTotal * 0.12);
     
-    // 2. 取得輸入的成本 (維持讀取底部欄位)
     const laundry = parseFloat(document.getElementById('laundry-cost')?.value) || 0;
     const utility = parseFloat(document.getElementById('utility-cost')?.value) || 0;
 
-    // 3. 【新增：同步到封存區】
-    const finalLaundry = document.getElementById('final-laundry');
-    const finalUtility = document.getElementById('final-utility');
-    if (finalLaundry) finalLaundry.value = laundry;
-    if (finalUtility) finalUtility.value = utility;
-
-    // 4. 更新底部的顯示 (這段不變)
     if(document.getElementById('fin-income')) document.getElementById('fin-income').innerText = '$' + income.toLocaleString();
     if(document.getElementById('fin-fee')) document.getElementById('fin-fee').innerText = '-$' + fee.toLocaleString();
     if(document.getElementById('fin-net')) document.getElementById('fin-net').innerText = '$' + (income - fee - laundry - utility).toLocaleString();
     
-    // 5. 【新增：同時觸發封存區的淨利計算】
-    if (typeof updateNetPreview === "function") updateNetPreview();
+    // 全域變數方便彈窗讀取
+    window.currentMonthFin = { income, fee, laundry, utility, net: (income - fee - laundry - utility) };
+}
+
+// 修改水電帶入函數
+function applyUtility() {
+    const resValue = document.getElementById('u-res').innerText;
+    // 直接帶入財務卡片的輸入框
+    const utilityInput = document.getElementById('utility-cost');
+    if (utilityInput) {
+        utilityInput.value = resValue;
+        calculateFinance(); // 立即重新計算
+    }
+    closeUtilityCalc();
 }
 
 function copyText(id, e) {
@@ -693,7 +703,6 @@ function prepareMonthEnd() {
     const net = income - fee - laundry - utility;
     document.getElementById('me-net-preview').innerText = '$' + net.toLocaleString();
     
-    // 為了讓 submitMonthEnd 能讀到，我們需要更新這幾個標記位
     window.currentMonthEndData = { income, fee }; 
 }
 
@@ -723,7 +732,6 @@ function calculateUtility() {
     if (isNaN(s) || isNaN(e) || total <= 0) return;
 
     const totalDays = (e - s) / (1000*60*60*24) + 1;
-    // 抓取當前畫面的月份
     const mStart = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1);
     const mEnd = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + 1, 0);
     
@@ -738,7 +746,6 @@ function calculateUtility() {
 }
 document.querySelectorAll('#u-start, #u-end, #u-total').forEach(el => el.addEventListener('input', calculateUtility));
 
-// 3. 修正 applyUtility 連動 (承接上一個問題的邏輯)
 function applyUtility() {
     const resValue = document.getElementById('u-res').innerText;
     
@@ -761,22 +768,54 @@ function applyUtility() {
     closeUtilityCalc();
 }
 
-// 5. 提交月結至 GAS
-async function submitMonthEnd() {
-    const key = document.getElementById('admin-key').value;
-    const month = document.getElementById('me-month').innerText;
-    const income = parseFloat(document.getElementById('me-income').innerText.replace(/[^0-9.-]+/g,""));
-    const fee = parseFloat(document.getElementById('me-fee').innerText.replace(/[^0-9.-]+/g,""));
-    const laundry = parseFloat(document.getElementById('final-laundry').value) || 0;
-    const utility = parseFloat(document.getElementById('final-utility').value) || 0;
+function openArchiveModal() {
+    const monthTitle = document.getElementById('cal-month-title').innerText;
+    const fin = window.currentMonthFin || { income:0, fee:0, laundry:0, utility:0, net:0 };
     
-    if(!confirm(`確認封存 ${month} 的數據嗎？數據將上傳至「月結紀錄」工作表。`)) return;
+    // 抓取經營數據卡片數值
+    const guests = document.getElementById('stat-total-guests').innerText;
+    const rooms = document.getElementById('stat-total-rooms').innerText;
+    const bRate = document.getElementById('stat-b-rate').innerText;
+    const oRate = document.getElementById('stat-o-rate').innerText;
+
+    const listContainer = document.getElementById('archive-summary-list');
+    listContainer.innerHTML = `
+        <div class="archive-list-item"><span class="archive-label">結算月份</span><span class="archive-value">${monthTitle}</span></div>
+        <div class="archive-list-item"><span class="archive-label">總來客數</span><span class="archive-value">${guests} 人</span></div>
+        <div class="archive-list-item"><span class="archive-label">總開房數</span><span class="archive-value">${rooms} 房</span></div>
+        <div class="archive-list-item"><span class="archive-label">通路佔比</span><span class="archive-value">Booking ${bRate} / 私訊 ${oRate}</span></div>
+        <hr style="border:0; border-top:1px dashed #eee; margin:10px 0;">
+        <div class="archive-list-item"><span class="archive-label">房費總收入</span><span class="archive-value">$${fin.income.toLocaleString()}</span></div>
+        <div class="archive-list-item"><span class="archive-label">Booking 手續費</span><span class="archive-value" style="color:#e74c3c;">-$${fin.fee.toLocaleString()}</span></div>
+        <div class="archive-list-item"><span class="archive-label">洗衣/水電雜支</span><span class="archive-value">-$${(fin.laundry + fin.utility).toLocaleString()}</span></div>
+    `;
+
+    document.getElementById('archive-net-profit').innerText = '$' + fin.net.toLocaleString();
+    document.getElementById('archive-modal').classList.add('active');
+}
+
+function closeArchiveModal() {
+    document.getElementById('archive-modal').classList.remove('active');
+}
+
+// 5. 提交月結至 GAS
+async function finalConfirmArchive() {
+    const key = document.getElementById('admin-key').value;
+    const monthTitle = document.getElementById('cal-month-title').innerText;
+    const fin = window.currentMonthFin;
+    
+    if(!confirm(`確認封存 ${monthTitle} 的數據嗎？`)) return;
     
     toggleLoading(true);
     const payload = {
-        action: "monthEnd", key: key, month: month,
-        income: income, fee: fee, laundry: laundry, utility: utility,
-        net: (income - fee - laundry - utility),
+        action: "monthEnd",
+        key: key,
+        month: monthTitle,
+        income: fin.income,
+        fee: fin.fee,
+        laundry: fin.laundry,
+        utility: fin.utility,
+        net: fin.net,
         guests: document.getElementById('stat-total-guests').innerText,
         rooms: document.getElementById('stat-total-rooms').innerText,
         bRate: document.getElementById('stat-b-rate').innerText,
@@ -785,8 +824,10 @@ async function submitMonthEnd() {
 
     try {
         const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-        const result = await res.json();
-        if(result.result === "success") alert("月結封存成功！");
-    } catch(e) { alert("上傳失敗，請檢查網路"); }
+        alert("數據已成功封存至雲端「月結紀錄」！");
+        closeArchiveModal();
+    } catch (e) {
+        alert("上傳失敗，請檢查網路連線");
+    }
     toggleLoading(false);
 }

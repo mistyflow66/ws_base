@@ -140,6 +140,16 @@ input:focus, select:focus {
 .btn-cancel { background: #95a5a6; }
 .btn-delete { background: #e74c3c; }
 
+.btn-pack-add { 
+    background-color: #af6a58 !important; /* 深棕色 (主色) */
+    color: white; 
+}
+
+.btn-pack-del { 
+    background-color: #e2c0b8 !important; /* 淺棕色 */
+    color: #af6a58; 
+}
+
 /* --- 打包預覽區 --- */
 .preview-area {
   white-space: pre-wrap;
@@ -157,13 +167,20 @@ input:focus, select:focus {
 /* --- 分類標籤 --- */
 .category-nav {
     position: sticky;
-    top: 58px; /* 增加高度，完全避開上方 3 個分頁按鈕 */
+    top: 72px; /* 增加高度，完全避開上方分頁按鈕 */
     z-index: 100;
-    background-color: #ffffff; /* 統一改為純白底 */
-    padding: 12px 0;
-    margin-bottom: 25px; /* 增加與第一個模板框的距離 */
+    background-color: #ffffff !important;
+    padding: 10px 15px; /* 增加左右內距 */
+    margin-bottom: 20px;
     border-bottom: 1px solid #eee;
-    }
+    
+    /* 核心：開啟左右滑動 */
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 10px;
+    white-space: nowrap;
+}
 
 hr {
     margin: 20px 0;
@@ -454,3 +471,102 @@ hr {
     cursor: pointer;
     font-weight: 600;
 } /* <--- 確保這裡也有正確閉合 */
+
+/* --- 經營數據：改為條列式收合介面 --- */
+.stats-list-container {
+    padding: 10px 0;
+}
+
+/* --- 封存彈窗專用樣式 --- */
+.archive-summary-list {
+    margin: 15px 0;
+}
+
+.archive-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.archive-list-item:last-child {
+    border-bottom: none;
+}
+
+.archive-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.archive-value {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* 淨利強調區塊 */
+.archive-total-box {
+    background: #fdf6f5; /* 極淺的主色調背景 */
+    padding: 18px;
+    border-radius: 12px;
+    margin-top: 15px;
+    text-align: center;
+    border: 1px solid #e2c0b8;
+}
+
+.archive-total-label {
+    font-size: 0.85rem;
+    color: var(--primary);
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.archive-total-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* 封存確認按鈕特殊色 (區別於一般保存) */
+.btn-archive-confirm {
+    background: #3a4553 !important; /* 使用深色顯現莊重感 */
+    color: white;
+    margin-top: 15px;
+}
+
+/* --- 水電試算 Modal 內部的調整 --- */
+.utility-calc-box {
+    padding: 10px 0;
+}
+
+.utility-result-preview {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    border: 1px solid #eee;
+}
+
+.utility-result-preview span {
+    color: var(--primary);
+    font-weight: bold;
+}
+
+/* 修正原本 input-row 在 Modal 內可能擠壓的問題 */
+.modal-content .input-row {
+    flex-wrap: wrap;
+}
+
+.modal-content .input-row > * {
+    flex: 1 1 100%; /* 手機端自動換行 */
+}
+
+@media (min-width: 400px) {
+    .modal-content .input-row > * {
+        flex: 1; /* 寬度足夠時恢復併排 */
+    }
+}
