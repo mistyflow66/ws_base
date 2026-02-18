@@ -300,22 +300,23 @@ function renderOrderList() {
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
 
-    // 存入全域變數
+    // 過濾、格式化並「排序」
     currentViewOrders = globalOrderData
         .filter(r => r[3] && r[3].includes(monthStr))
         .map(r => ({
             id: r[0], source: r[1], name: r[2], date: r[3],
             guests: r[5], rooms: r[6], total: r[7], deposit: r[8],
             bal: r[9], nights: r[10], note: r[11]
-        }));
+        }))
+        .sort((a, b) => new Date(a.date) - new Date(b.date)); // 日期由早到晚排序
 
-    renderCalendar(year, month); // 改為直接讀取全域變數
+    renderCalendar(year, month);
 
     const listDiv = document.getElementById('order-list');
     listDiv.innerHTML = currentViewOrders.map((o, index) => `
         <div class="order-list-item" onclick="handleOrderClick(${index})">
             <div class="order-info">
-                <div style="font-weight:bold;">${o.date.split('-')[2]}日 | ${o.name}</div>
+                <div style="font-weight:bold;">${formatDate(o.date)} | ${o.name}</div>
                 <div style="font-size:0.85rem; color:#6a7181;">${o.rooms}房 / ${o.nights}晚</div>
             </div>
             <div style="text-align:right;">
@@ -379,60 +380,49 @@ function handleOrderClick(index) {
 function showOrderDetail(order) {
     if (!order) return;
     const infoList = document.getElementById('detail-info-list');
-    
-    // 1. 格式化日期
     const displayDate = formatDate(order.date);
-    
-    // 2. 準備來源按鈕資訊
     const s = order.source || "私LINE";
-    let btnConfig = {
-        text: "開啟 App",
-        icon: "fa-external-link",
-        color: "#af6a58",
-        url: "#"
-    };
+    
+    // 定義按鈕設定
+    let btnConfig = { text: "開啟 App", icon: "fa-solid fa-external-link", color: "#af6a58", url: "#" };
 
     if (s.includes("Booking")) {
-        btnConfig = { text: "Pulse", icon: "fa-square-b", color: "#003580", url: "pulse://" };
+        btnConfig = { text: "Pulse", icon: "fa-brands fa-square-b", color: "#003580", url: "pulse://" };
     } else if (s.includes("官方LINE")) {
-        btnConfig = { text: "LINE OA", icon: "fa-comment-dots", color: "#00b900", url: "lineoa://" };
+        btnConfig = { text: "LINE OA", icon: "fa-solid fa-comment-dots", color: "#00b900", url: "lineoa://" };
     } else if (s.includes("LINE")) {
-        btnConfig = { text: "LINE", icon: "fa-line", color: "#00c300", url: "line://" };
+        btnConfig = { text: "LINE", icon: "fa-brands fa-line", color: "#00c300", url: "line://" };
     } else if (s.includes("FB") || s.includes("Messenger")) {
-        btnConfig = { text: "Messenger", icon: "fa-facebook-messenger", color: "#0084ff", url: "fb-messenger://" };
+        btnConfig = { text: "Messenger", icon: "fa-brands fa-facebook-messenger", color: "#0084ff", url: "fb-messenger://" };
     }
 
-    // 3. 渲染詳細資訊內容
+    // 渲染詳細資訊
+    const depositAmount = parseFloat(order.deposit) || 0;
     infoList.innerHTML = `
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-user"></i> 訂房人</span><span class="info-value">${order.name}</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-calendar"></i> 入住日期</span><span class="info-value">${displayDate} (${order.nights}晚)</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-tag"></i> 來源</span><span class="source-tag tag-${getSourceClass(s)}">${s}</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-bed"></i> 房型/人數</span><span class="info-value">${order.rooms}房 / ${order.guests}人</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-money-bill"></i> 總金額</span><span class="info-value">$${order.total}</span></div>
-        <div class="info-item" style="color:#af6a58; font-weight:bold;"><span class="info-label"><i class="fa-solid fa-hand-holding-dollar"></i> 已付訂金</span><span class="info-value">$${order.deposit || 0}</span></div>
+        <div class="info-item" style="color:#af6a58; font-weight:bold;">
+            <span class="info-label"><i class="fa-solid fa-hand-holding-dollar"></i> 已付訂金</span>
+            <span class="info-value">$${depositAmount}</span>
+        </div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-pen"></i> 備註</span><span class="info-value">${order.note || '無'}</span></div>
     `;
 
-    // 4. 更新底部的動態按鈕
+    // 更新底部按鈕
     const actionBtn = document.getElementById('btn-pulse');
     if (actionBtn) {
-        actionBtn.innerHTML = `<i class="fa-brands ${btnConfig.icon}"></i> ${btnConfig.text}`;
+        // 這裡將 class 套用進去
+        actionBtn.innerHTML = `<i class="${btnConfig.icon}"></i> ${btnConfig.text}`;
         actionBtn.style.background = btnConfig.color;
         actionBtn.onclick = () => {
-            if (btnConfig.url !== "#") {
-                window.location.href = btnConfig.url;
-                // 電腦版通常沒反應，這很正常，因為電腦沒安裝這些 App Scheme
-                setTimeout(() => {
-                    if (confirm("無法開啟 App，是否改由網頁版開啟？")) {
-                        if (s.includes("Booking")) window.open("https://admin.booking.com");
-                        // 這裡可以根據需要增加其他網頁版連結
-                    }
-                }, 1000);
-            }
+            if (btnConfig.url !== "#") window.location.href = btnConfig.url;
         };
     }
 
-    // 預填編輯欄位 (保持原樣)
+    // 預填編輯欄位
     document.getElementById('e-oid').value = order.id || '';
     document.getElementById('e-name').value = order.name || '';
     document.getElementById('e-date').value = order.date ? order.date.split('T')[0] : '';
@@ -447,7 +437,6 @@ function showOrderDetail(order) {
     toggleEditMode(false); 
     document.getElementById('edit-modal').classList.add('active');
 }
-
 function closeEditModal() {
     document.getElementById('edit-modal').classList.remove('active');
 }
@@ -576,6 +565,6 @@ function switchOrderView(type) {
 function formatDate(dateStr) {
     if (!dateStr) return "";
     const date = new Date(dateStr);
-    // 確保不會因為時區轉換差一天
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    // 使用 getUTCMonth 避免時區導致日期減一天的問題
+    return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
 }
