@@ -90,15 +90,17 @@ const TPL_DATA = [
     title: '住宿資料填寫', 
     content: () => `麻煩您✏️住宿資料\n（一人代表填寫即可，謝謝！）\n姓名：\n出生年月：\n身分證號：\n住址：\n電話：`
   },
-  {
+ {
     cat: "退房",
     title: "退房好評邀請",
-    content: "已收到您退房鑰匙.，祝您假日愉快！\n有空歡迎幫我們留言+5星好評，您的肯定是我們前進的動力！\n煦願民宿感謝您❤️ https://maps.app.goo.gl/vcoPQQuMRaME1rpY6"
+    // 改成函數格式 () => `...`
+    content: () => `已收到您退房鑰匙.，祝您假日愉快！\n有空歡迎幫我們留言+5星好評，您的肯定是我們前進的動力！\n煦願民宿感謝您❤️ https://maps.app.goo.gl/vcoPQQuMRaME1rpY6`
   },
   {
     cat: "退房",
     title: "退房手續說明",
-    content: "退房時，麻煩您把鑰匙掛在一樓電視旁的鑰匙架上、拍照回傳給我們\n二樓冷/暖氣關機，大門關上\n這樣就做好退房手續唷！"
+    // 改成函數格式 () => `...`
+    content: () => `退房時，麻煩您把鑰匙掛在一樓電視旁的鑰匙架上、拍照回傳給我們\n二樓冷/暖氣關機，大門關上\n這樣就做好退房手續唷！`
   }
 ]; 
 
@@ -391,18 +393,18 @@ function showOrderDetail(order) {
     const displayDate = formatDate(order.date);
     const s = order.source || "私LINE";
     
-    // 統一圖示為 fa-comment-dots，僅顏色與文字隨來源變動
-    let btnConfig = { text: "開啟 App", icon: "fa-solid fa-comment-dots", color: "#af6a58", url: "#" };
+    let btnConfig = { text: "開啟 App", icon: "fa-solid fa-comment-dots", color: "#af6a58", appUrl: "#", webUrl: "#" };
 
-    if (s.includes("Booking")) {
-        btnConfig = { text: "Pulse", icon: "fa-solid fa-comment-dots", color: "#003580", url: "pulse://" };
-    } else if (s.includes("官方LINE")) {
-        btnConfig = { text: "LINE OA", icon: "fa-solid fa-comment-dots", color: "#00b900", url: "lineoa://" };
-    } else if (s.includes("LINE")) {
-        btnConfig = { text: "LINE", icon: "fa-solid fa-comment-dots", color: "#00c300", url: "line://" };
-    } else if (s.includes("FB") || s.includes("Messenger")) {
-        btnConfig = { text: "Messenger", icon: "fa-solid fa-comment-dots", color: "#0084ff", url: "fb-messenger://" };
-    }
+if (s.includes("Booking")) {
+    btnConfig = { text: "Pulse", icon: "fa-solid fa-house-laptop", color: "#003580", appUrl: "pulse://", webUrl: "https://admin.booking.com" };
+} else if (s.includes("官方LINE")) {
+    btnConfig = { text: "LINE OA", icon: "fa-solid fa-comment-medical", color: "#00b900", appUrl: "lineoa://", webUrl: "https://manager.line.biz" };
+} else if (s.includes("LINE")) {
+    btnConfig = { text: "LINE", icon: "fa-brands fa-line", color: "#00c300", appUrl: "line://", webUrl: "https://line.me" };
+} else if (s.includes("FB") || s.includes("Messenger")) {
+    btnConfig = { text: "Messenger", icon: "fa-brands fa-facebook-messenger", color: "#0084ff", appUrl: "fb-messenger://", webUrl: "https://www.facebook.com/messages" };
+}
+
 
     // 渲染詳細資訊內容
     const depositAmount = parseFloat(order.deposit) || 0;
@@ -420,19 +422,27 @@ function showOrderDetail(order) {
     `;
 
     // 更新底部按鈕
-    const actionBtn = document.getElementById('btn-pulse');
-    if (actionBtn) {
-        actionBtn.innerHTML = `<i class="${btnConfig.icon}"></i> ${btnConfig.text}`;
-        actionBtn.style.background = btnConfig.color;
-        actionBtn.onclick = () => {
-            if (btnConfig.url !== "#") window.location.href = btnConfig.url;
-            // 電腦版保險：若沒反應則改開網頁版
-            setTimeout(() => {
-                if (s.includes("Booking")) window.open("https://admin.booking.com");
-                else if (s.includes("LINE")) window.open("https://manager.line.biz");
-            }, 500);
-        };
-    }
+    /* --- 整合後的按鈕點擊邏輯 --- */
+const actionBtn = document.getElementById('btn-pulse');
+if (actionBtn) {
+    actionBtn.innerHTML = `<i class="${btnConfig.icon}"></i> ${btnConfig.text}`;
+    actionBtn.style.background = btnConfig.color;
+
+    actionBtn.onclick = () => {
+        // 1. 優先嘗試開啟手機 App (例如 pulse://)
+        if (btnConfig.appUrl && btnConfig.appUrl !== "#") {
+            window.location.href = btnConfig.appUrl;
+        }
+
+        // 2. 0.5秒後執行：如果是電腦版或沒裝 App，則開啟網頁版
+        setTimeout(() => {
+            if (btnConfig.webUrl && btnConfig.webUrl !== "#") {
+                // 使用 window.open 開啟新分頁，這在電腦上體驗最好
+                window.open(btnConfig.webUrl, "_blank");
+            }
+        }, 500);
+    };
+}
 
     // 預填編輯欄位
     document.getElementById('e-oid').value = order.id || '';
