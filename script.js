@@ -119,7 +119,10 @@ window.onload = () => {
 };
 
 function toggleLoading(show) {
-    document.getElementById('loading-mask').style.display = show ? 'flex' : 'none';
+    const mask = document.getElementById('loading-mask');
+    if (mask) {
+        mask.style.display = show ? 'flex' : 'none';
+    }
 }
 
 function switchPage(id, e) {
