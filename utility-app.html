@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>民宿水電帳務排程器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #af6a58; --bg: #fdfaf9; --green: #4caf50; }
+        * { box-sizing: border-box; font-family: 'PingFang TC', sans-serif; }
+        body { background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 400px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+        
+        /* 月份導航 */
+        .month-nav { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #eee; }
+        .month-nav button { border: none; background: #ddd; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+
+        /* 分頁標籤 */
+        .tabs { display: flex; border-bottom: 1px solid #eee; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: none; cursor: pointer; font-weight: bold; color: #888; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); background: #fffaf9; }
+
+        .content { padding: 15px; }
+
+        /* 偵測排程提示區 */
+        .plan-alert { background: #e8f5e9; border: 1px solid var(--green); padding: 15px; border-radius: 10px; margin-bottom: 20px; display: none; }
+        .plan-alert b { color: #2e7d32; font-size: 1.5rem; }
+
+        /* 輸入區卡片 */
+        .calc-card { background: #fdf5f2; padding: 15px; border-radius: 12px; border: 1px solid #eadad5; margin-bottom: 15px; }
+        label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: #666; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 1rem; }
+        
+        .btn-sync { background: var(--primary); color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        .btn-green { background: var(--green); }
+
+        /* 設定按鈕 (更換 Token) */
+        .settings-link { font-size: 0.7rem; color: #ccc; text-align: center; margin-top: 10px; cursor: pointer; text-decoration: underline; }
+        
+        /* 讀取中遮罩 */
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+    </style>
+</head>
+<body>
+
+<div id="loading" class="loading-overlay"><i class="fas fa-spinner fa-spin fa-2x"></i><p>資料同步中...</p></div>
+
+<div class="app-container">
+    <div class="month-nav">
+        <button onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+        <span id="view-month-display">2026 年 02 月</span>
+        <button onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('電費', this)">電費</button>
+        <button class="tab-btn" onclick="switchTab('水費', this)">水費</button>
+        <button class="tab-btn" onclick="switchTab('網路', this)">網路</button>
+    </div>
+
+    <div class="content">
+        <div id="plan-info" class="plan-alert">
+            <div style="font-size:0.8rem; color:#444;">📋 偵測到本月排程計畫：</div>
+            <div style="margin:8px 0;"><b id="plan-amount">$0</b></div>
+            <div id="plan-period" style="font-size:0.75rem; color:#666; margin-bottom:10px;">來源：--</div>
+            <button class="btn-sync btn-green" onclick="sendToParent()">帶入本月金額</button>
+            <div style="font-size:0.7rem; color:#999; margin-top:10px; text-align:center;">--- 或在下方重新建立新帳單 ---</div>
+        </div>
+
+        <div class="calc-card">
+            <label>新帳單起訖日 (跨月自動拆分)</label>
+            <div style="display:flex; gap:8px;">
+                <input type="date" id="s-date">
+                <input type="date" id="e-date">
+            </div>
+            <label>帳單總金額</label>
+            <input type="number" id="total-amt" placeholder="輸入帳單面額">
+            <button class="btn-sync" onclick="generateSchedules()">紀錄並生成多月排程</button>
+        </div>
+
+        <div class="settings-link" onclick="resetToken()">更換 GitHub Token</div>
+    </div>
+</div>
+
+<script>
+    /** 基礎配置 **/
+    const GIST_ID = 'be819c4c8ca0a2582fa3f5c4045d5ab9.js'; 
+    const PREFIX = "B_Utility_"; // 避免與其他專案 localStorage 衝突
+    
+    let db = { "電費": {}, "水費": {}, "網路": {} };
+    let currentTab = '電費';
+    let viewDate = new Date(2026, 1, 1); // 預設視圖月份
+
+    // 初始化讀取
+    async function init() {
+        let token = localStorage.getItem(PREFIX + "token");
+        if (!token) {
+            token = prompt("請貼入您的 GitHub Token (只需輸入一次)：");
+            if (token) localStorage.setItem(PREFIX + "token", token);
+            else return;
+        }
+        await loadDB(token);
+    }
+
+    // 從 Gist 讀取資料
+    async function loadDB(token) {
+        toggleLoading(true);
+        try {
+            const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                headers: { 'Authorization': `token ${token}` }
+            });
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            db = JSON.parse(data.files['utility_db.json'].content || '{"電費":{},"水費":{},"網路":{}}');
+            updateUI();
+        } catch (e) {
+            alert("Token 無效或 ID 錯誤，請重設。");
+            localStorage.removeItem(PREFIX + "token");
+        }
+        toggleLoading(false);
+    }
+
+    // 更新 UI 狀態
+    function updateUI() {
+        const key = `${viewDate.getFullYear()}_${viewDate.getMonth() + 1}`;
+        const plan = db[currentTab][key];
+        const infoBox = document.getElementById('plan-info');
+        
+        if (plan) {
+            infoBox.style.display = 'block';
+            document.getElementById('plan-amount').innerText = `$${plan.amount.toLocaleString()}`;
+            document.getElementById('plan-period').innerText = `來源帳單：${plan.originPeriod}`;
+        } else {
+            infoBox.style.display = 'none';
+        }
+        document.getElementById('view-month-display').innerText = `${viewDate.getFullYear()} 年 ${String(viewDate.getMonth()+1).padStart(2,'0')} 月`;
+    }
+
+    // 按比例生成多月排程
+    async function generateSchedules() {
+        const s = new Date(document.getElementById('s-date').value);
+        const e = new Date(document.getElementById('e-date').value);
+        const total = parseFloat(document.getElementById('total-amt').value);
+
+        if (!s || !e || !total || s >= e) return alert("日期或金額有誤");
+
+        const totalDays = Math.ceil((e - s) / 86400000) + 1;
+        const dailyPrice = total / totalDays;
+
+        let cursor = new Date(s.getFullYear(), s.getMonth(), 1);
+        while (cursor <= e) {
+            const y = cursor.getFullYear();
+            const m = cursor.getMonth();
+            const mStart = new Date(y, m, 1);
+            const mEnd = new Date(y, m + 1, 0);
+            
+            const overlapS = new Date(Math.max(s, mStart));
+            const overlapE = new Date(Math.min(e, mEnd));
+            const days = (overlapS <= overlapE) ? Math.ceil((overlapE - overlapS) / 86400000) + 1 : 0;
+
+            if (days > 0) {
+                const key = `${y}_${m + 1}`;
+                db[currentTab][key] = {
+                    amount: Math.round(days * dailyPrice),
+                    originPeriod: `${s.getMonth()+1}/${s.getDate()}~${e.getMonth()+1}/${e.getDate()}`
+                };
+            }
+            cursor.setMonth(cursor.getMonth() + 1);
+        }
+
+        await syncToGist();
+        updateUI();
+        alert("多月排程已儲存！");
+    }
+
+    // 同步到 Gist
+    async function syncToGist() {
+        toggleLoading(true);
+        const token = localStorage.getItem(PREFIX + "token");
+        await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `token ${token}` },
+            body: JSON.stringify({ files: { "utility_db.json": { content: JSON.stringify(db) } } })
+        });
+        toggleLoading(false);
+    }
+
+    // 傳送至父網站
+    function sendToParent() {
+        const key = `${viewDate.getFullYear()}_${viewDate.getMonth() + 1}`;
+        const amount = db[currentTab][key].amount;
+        window.parent.postMessage({ 
+            type: 'utility_update', 
+            value: amount, 
+            category: currentTab 
+        }, '*');
+    }
+
+    // 月份切換
+    function changeMonth(dir) {
+        viewDate.setMonth(viewDate.getMonth() + dir);
+        updateUI();
+    }
+
+    // 分頁切換
+    function switchTab(t, btn) {
+        currentTab = t;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateUI();
+    }
+
+    function toggleLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
+    
+    function resetToken() {
+        localStorage.removeItem(PREFIX + "token");
+        location.reload();
+    }
+
+    init();
+</script>
+</body>
+</html>
