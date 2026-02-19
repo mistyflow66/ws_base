@@ -357,43 +357,86 @@ function runManualCalc() {
 }
 
 // --- 訂單雲端 CRUD 作業 ---
+// --- 核心連線工具 (新增加的，請確保放在最上方) ---
+async function callGAS(payload) {
+    const res = await fetch(GAS_URL, {
+        method: "POST",
+        mode: "cors", 
+        headers: {
+            // 使用 text/plain 是為了繞過 GAS 的 OPTIONS 預檢請求限制
+            "Content-Type": "text/plain;charset=utf-8" 
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const text = await res.text();
+    try {
+        // 嘗試解析 JSON，若失敗則回傳原始文字（例如 GAS 的錯誤訊息）
+        return JSON.parse(text);
+    } catch (e) {
+        return text; 
+    }
+}
+
+// --- 訂單雲端 CRUD 作業 ---
 async function fetchOrders() {
-    const key = document.getElementById('admin-key').value;
+    const key = document.getElementById('admin-key').value.trim(); // 增加 trim() 防止空白字元
+    if (!key) return alert("請輸入金鑰");
+
     toggleLoading(true);
     try {
-        const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "read", key: key }) });
-        const data = await res.json();
-        if(Array.isArray(data)) {
+        const data = await callGAS({ action: "read", key: key });
+
+        if (Array.isArray(data)) {
             globalOrderData = data;
             localStorage.setItem('bnb_admin_key', key); 
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('order-content').style.display = 'block';
             renderOrderList();
-        } else { alert("金鑰有誤"); }
-    } catch(e) { alert("連線失敗"); }
+        } else { 
+            // 如果後端回傳的是 Error 字串，直接顯示出來
+            alert("驗證失敗：" + data); 
+        }
+    } catch(e) { 
+        alert("網路連線失敗，請檢查 GAS 網址是否正確"); 
+    }
     toggleLoading(false);
 }
 
 async function addOrder() {
-    const key = document.getElementById('admin-key').value;
+    const key = document.getElementById('admin-key').value.trim();
     if(!key) return alert("請輸入金鑰");
+
     toggleLoading(true);
-    const total = document.getElementById('o-total').value;
-    const dep = document.getElementById('o-dep').value;
-    const data = {
-        action: "add", key: key,
+    const total = Number(document.getElementById('o-total').value) || 0;
+    const dep = Number(document.getElementById('o-dep').value) || 0;
+
+    const payload = {
+        action: "add", 
+        key: key,
         name: document.getElementById('o-name').value, 
         date: document.getElementById('o-date').value,
         source: document.getElementById('o-source').value, 
         guests: document.getElementById('o-guests').value,
         rooms: document.getElementById('o-rooms').value, 
-        total: total, dep: dep, bal: total - dep,
+        total: total, 
+        dep: dep, 
+        bal: total - dep,
         nights: document.getElementById('o-nights').value,
         note: document.getElementById('o-note').value 
     };
-    await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
-    alert("儲存成功"); 
-    fetchOrders();
+
+    try {
+        const res = await callGAS(payload);
+        if (typeof res === "string" && res.includes("Error")) {
+            alert(res);
+        } else {
+            alert("儲存成功"); 
+            await fetchOrders(); // 重新讀取清單
+        }
+    } catch(e) {
+        alert("儲存失敗，請稍後再試");
+    }
     toggleLoading(false);
 }
 
