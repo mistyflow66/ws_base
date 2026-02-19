@@ -334,8 +334,7 @@ hr {
 }
 .fin-total { margin-top: 10px; font-weight: bold; color: var(--primary); border-top: 1px solid #eee; padding-top: 10px; }
 
-/* --- 彈窗系統 (Modal) --- */
-/* 將原本的 .modal 改為包含 ID 的選取器，確保 iframe 彈窗也能被正確隱藏/顯示 */
+/* --- 彈窗系統 (Modal) 全面修正版 --- */
 .modal, #u-modal, #edit-modal, #archive-modal { 
   display: none; 
   position: fixed; 
@@ -348,15 +347,15 @@ hr {
   justify-content: center;
 }
 
-/* 當有 .active 類別時才顯示 */
+/* 確保加上 active 時能顯示 */
 .modal.active, #u-modal.active, #edit-modal.active, #archive-modal.active { 
-  display: flex; 
+  display: flex !important; 
 }
 
 .modal-content { 
     background: white; 
     padding: 25px; 
-    width: 95%; /* 稍微加寬一點點 */
+    width: 90%; 
     max-width: 450px; 
     border-radius: 20px; 
     position: relative;
@@ -365,19 +364,18 @@ hr {
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
-/* 針對 iframe 彈窗內容的特殊微調 */
+/* 水電小工具專用寬度 */
 #u-modal .modal-content {
-    width: 95%;
-    max-width: 600px; /* 水電小工具給寬一點比較好操作 */
-    height: 80vh;
-    padding: 10px; /* 縮小內距，讓 iframe 滿版 */
+    max-width: 600px;
+    height: 85vh;
+    padding: 15px;
 }
 
 #u-modal iframe {
     width: 100%;
     height: 100%;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
 }
 
 .close-btn { 

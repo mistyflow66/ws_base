@@ -10,6 +10,11 @@ const PRICE_MAP = {
   '301': { weekday: { 1: 3500, 2: 4500, 3: 5000, 4: 5500 }, weekend: { 1: 3800, 2: 4800, 3: 5300, 4: 5800 }, cny: { 1: 6000, 2: 7000, 3: 8000, 4: 9000 } }      
 };
 
+// --- 全域狀態控制 ---
+let currentViewOrders = [];   // 儲存當月過濾後的訂單
+let currentListPage = 1;      // 清單當前頁碼
+const itemsPerPage = 5;       // 每頁顯示幾筆
+
 const TPL_DATA = [
   { 
     cat: '詢問', 
@@ -27,7 +32,7 @@ const TPL_DATA = [
             dateObj.setDate(dateObj.getDate() + (parseInt(nights) || 1));
             checkoutText = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
         }
-        return `請您確認預訂資訊：\n1. ${d}入住${nights} 晚（${checkoutText}退房)，私訊優惠價 ${total} 元\n若以上訊息無誤，再麻煩您先匯訂金 ${dep} 元到以下帳號，煦願民宿先幫您預留日期，謝謝您的預訂\n\n中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`;
+        return `請您確認預訂資訊：\n1. ${d}入住${nights} 一晚（${checkoutText}退房)，私訊優惠價 ${total} 元\n若以上訊息無誤，再麻煩您先匯訂金 ${dep} 元到以下帳號，煦願民宿先幫您預留日期，謝謝您的預訂\n\n中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`;
     }
   },
   { 
@@ -392,24 +397,18 @@ async function addOrder() {
     toggleLoading(false);
 }
 
-// --- 全域變數定義 ---
-let currentListPage = 1;      // 清單分頁：當前頁碼
-const itemsPerPage = 5;       // 清單分頁：每頁筆數
-let currentViewOrders = [];   // 當月過濾後的總訂單
-
-// --- 核心渲染函數 (修正版) ---
+// 2. 核心渲染函數 (修正清單消失與維持月曆樣式)
 function renderOrderList() {
-    if (!globalOrderData || globalOrderData.length === 0) return; // 防呆：沒資料就不跑
+    if (!globalOrderData) return;
 
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
     
-    // 更新標題
     const titleEl = document.getElementById('cal-month-title');
     if (titleEl) titleEl.innerText = `${year}年 ${month + 1}月`;
 
-    // 1. 過濾並排序
+    // 過濾並排序
     currentViewOrders = globalOrderData
         .filter(r => r[3] && r[3].includes(monthStr))
         .map(r => ({
@@ -419,19 +418,15 @@ function renderOrderList() {
         }))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // 2. 執行月曆渲染
+    // 渲染月曆 (維持原本樣式，不加多單標籤)
     renderCalendar(year, month);
 
-    // 3. 渲染清單 (分頁邏輯)
+    // 渲染清單
     const listDiv = document.getElementById('order-list');
     if (listDiv) {
-        const totalItems = currentViewOrders.length;
-        const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-        
-        // 確保頁碼不超出範圍
+        const totalPages = Math.ceil(currentViewOrders.length / itemsPerPage) || 1;
         if (currentListPage > totalPages) currentListPage = totalPages;
-        if (currentListPage < 1) currentListPage = 1;
-
+        
         const start = (currentListPage - 1) * itemsPerPage;
         const pageItems = currentViewOrders.slice(start, start + itemsPerPage);
 
@@ -450,25 +445,24 @@ function renderOrderList() {
                 </div>`;
         }).join('');
 
-        // 插入分頁導覽
-        if (totalItems > itemsPerPage) {
+        // 分頁按鈕
+        if (currentViewOrders.length > itemsPerPage) {
             listHtml += `
-                <div class="list-pager" style="display:flex; justify-content:center; align-items:center; gap:20px; margin:15px 0;">
+                <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin-top:15px;">
                     <button onclick="changeListPage(-1)" class="pager-btn" ${currentListPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>
                     <span style="font-weight:bold; color:#666;">${currentListPage} / ${totalPages}</span>
                     <button onclick="changeListPage(1)" class="pager-btn" ${currentListPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>
                 </div>`;
         }
-        
         listDiv.innerHTML = listHtml || '<div style="text-align:center; padding:20px; color:#999;">本月尚無訂單</div>';
     }
 
-    // 更新統計與財務計算
-    updateStatistics(currentViewOrders); 
-    calculateFinance(); // 注意：這裡不傳參數，讓它去跑內部的 globalOrderData 邏輯
+    updateStatistics(currentViewOrders);
+    // 這裡呼叫 calculateFinance 時，請確保它內部會抓取 globalOrderData
+    calculateFinance(); 
 }
 
-// 列表分頁切換函數
+// 分頁切換函數
 function changeListPage(dir) {
     currentListPage += dir;
     renderOrderList();
@@ -742,28 +736,24 @@ function updateNetPreview() {
     console.log("財務數據已同步更新:", window.currentMonthFin);
 }
 
-/**
- * [新版] 水電管理對接邏輯
- */
 function openUtilityModal() {
-    const modal = document.getElementById('u-modal');
-    const iframe = document.getElementById('utility-iframe');
-
-    // 取得父網站目前顯示的年、月
     const y = currentViewDate.getFullYear();
-    const m = currentViewDate.getMonth() + 1; // JS 月份從 0 開始，所以要 +1
-
-    // 透過 URL 帶參數給子網站，例如：utility-app.html?y=2026&m=3
-    iframe.src = `./utility-app.html?y=${y}&m=${m}`; 
-
-    modal.classList.add('active');
+    const m = currentViewDate.getMonth() + 1;
+    
+    // 1. 從父頁面的記憶區抓取你輸入的金鑰 (確認名稱是否為 bnb_admin_key)
+    const token = localStorage.getItem('bnb_admin_key') || ""; 
+    
+    const iframe = document.getElementById('utility-iframe');
+    if (iframe) {
+        // 2. 關鍵：在網址後面加上 &t= 把金鑰傳進去
+        iframe.src = `./utility-app.html?y=${y}&m=${m}&t=${token}`;
+    }
+    
+    document.getElementById('u-modal').classList.add('active');
 }
 
 function closeUtilityModal() {
-    const modal = document.getElementById('u-modal');
-    modal.classList.remove('active');
-    // 如果您的 CSS 是用 .style.display，就改用下面這行：
-    // modal.style.display = 'none';
+    document.getElementById('u-modal').classList.remove('active');
 }
 
 // 監聽子網站 (iframe) 傳回來的攤提金額
