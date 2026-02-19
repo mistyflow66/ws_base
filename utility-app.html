@@ -89,7 +89,17 @@
     
     let db = { "電費": {}, "水費": {}, "網路": {} };
     let currentTab = '電費';
-    let viewDate = new Date(2026, 1, 1); // 預設視圖月份
+    // 解析網址參數 (?y=2026&m=3)
+const urlParams = new URLSearchParams(window.location.search);
+const urlY = parseInt(urlParams.get('y'));
+const urlM = parseInt(urlParams.get('m'));
+
+// 如果有參數就用參數，沒有就用今天
+let viewDate = (urlY && urlM) 
+    ? new Date(urlY, urlM - 1, 1) 
+    : new Date();
+
+// 初始化時會自動執行 updateUI() 顯示正確月份
 
     // 初始化讀取
     async function init() {

@@ -174,7 +174,7 @@ input:focus, select:focus {
 /* --- 分類標籤 --- */
 .category-nav {
     position: sticky;
-    top: 85px; /* 增加高度，完全避開上方分頁按鈕 */
+    top: 88px; /* 增加高度，完全避開上方分頁按鈕 */
     z-index: 100;
     background-color: #ffffff !important;
     padding: 10px 15px; /* 增加左右內距 */
@@ -357,15 +357,17 @@ hr {
     align-items: center;
     z-index: 2000;
 }
+
 .modal-content { 
-  background: white; 
-  padding: 25px; 
-  width: 90%; 
-  max-width: 400px; 
-  border-radius: 20px; 
-  position: relative;
-  max-height: 90vh;
-  overflow-y: auto;
+    background: white; 
+    padding: 25px; 
+    width: 90%; 
+    max-width: 400px; 
+    border-radius: 20px; 
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 .close-btn { position: absolute; right: 20px; top: 15px; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
 
@@ -613,17 +615,4 @@ hr {
     color: var(--primary); 
     border-top: 1px solid #eee; 
     padding-top: 10px; 
-}
-
-/* --- 彈窗系統 (維持原樣，僅微調邊距) --- */
-.modal-content { 
-    background: white; 
-    padding: 25px; 
-    width: 90%; 
-    max-width: 400px; 
-    border-radius: 20px; 
-    position: relative;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
