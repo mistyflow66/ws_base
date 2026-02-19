@@ -335,7 +335,8 @@ hr {
 .fin-total { margin-top: 10px; font-weight: bold; color: var(--primary); border-top: 1px solid #eee; padding-top: 10px; }
 
 /* --- 彈窗系統 (Modal) --- */
-.modal { 
+/* 將原本的 .modal 改為包含 ID 的選取器，確保 iframe 彈窗也能被正確隱藏/顯示 */
+.modal, #u-modal, #edit-modal, #archive-modal { 
   display: none; 
   position: fixed; 
   top: 0; left: 0; 
@@ -343,34 +344,51 @@ hr {
   background: rgba(44, 62, 80, 0.7); 
   z-index: 9999; 
   backdrop-filter: blur(4px);
-  align-items: center; justify-content: center;
+  align-items: center; 
+  justify-content: center;
 }
-.modal.active { display: flex; }
 
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
+/* 當有 .active 類別時才顯示 */
+.modal.active, #u-modal.active, #edit-modal.active, #archive-modal.active { 
+  display: flex; 
 }
 
 .modal-content { 
     background: white; 
     padding: 25px; 
-    width: 90%; 
-    max-width: 400px; 
+    width: 95%; /* 稍微加寬一點點 */
+    max-width: 450px; 
     border-radius: 20px; 
     position: relative;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
-.close-btn { position: absolute; right: 20px; top: 15px; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
 
+/* 針對 iframe 彈窗內容的特殊微調 */
+#u-modal .modal-content {
+    width: 95%;
+    max-width: 600px; /* 水電小工具給寬一點比較好操作 */
+    height: 80vh;
+    padding: 10px; /* 縮小內距，讓 iframe 滿版 */
+}
+
+#u-modal iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 10px;
+}
+
+.close-btn { 
+    position: absolute; 
+    right: 20px; 
+    top: 15px; 
+    font-size: 1.5rem; 
+    color: #6a7181; 
+    cursor: pointer; 
+    z-index: 10;
+}
 .info-list { margin: 15px 0; }
 .info-item { 
   display: flex; 

@@ -397,14 +397,19 @@ let currentListPage = 1;      // 清單分頁：當前頁碼
 const itemsPerPage = 5;       // 清單分頁：每頁筆數
 let currentViewOrders = [];   // 當月過濾後的總訂單
 
-// --- 1. 核心渲染函數 (含分頁邏輯) ---
+// --- 核心渲染函數 (修正版) ---
 function renderOrderList() {
+    if (!globalOrderData || globalOrderData.length === 0) return; // 防呆：沒資料就不跑
+
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-    document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
+    
+    // 更新標題
+    const titleEl = document.getElementById('cal-month-title');
+    if (titleEl) titleEl.innerText = `${year}年 ${month + 1}月`;
 
-    // 過濾並排序當月所有訂單
+    // 1. 過濾並排序
     currentViewOrders = globalOrderData
         .filter(r => r[3] && r[3].includes(monthStr))
         .map(r => ({
@@ -414,20 +419,23 @@ function renderOrderList() {
         }))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // A. 渲染月曆
+    // 2. 執行月曆渲染
     renderCalendar(year, month);
 
-    // B. 渲染列表 (含分頁控制)
+    // 3. 渲染清單 (分頁邏輯)
     const listDiv = document.getElementById('order-list');
     if (listDiv) {
-        const totalPages = Math.ceil(currentViewOrders.length / itemsPerPage) || 1;
+        const totalItems = currentViewOrders.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+        
+        // 確保頁碼不超出範圍
         if (currentListPage > totalPages) currentListPage = totalPages;
+        if (currentListPage < 1) currentListPage = 1;
 
         const start = (currentListPage - 1) * itemsPerPage;
         const pageItems = currentViewOrders.slice(start, start + itemsPerPage);
 
         let listHtml = pageItems.map((o) => {
-            // 在總清單中找到這筆訂單的正確索引，以便傳遞給 showOrderDetail
             const globalIdx = currentViewOrders.findIndex(item => item.id === o.id);
             return `
                 <div class="order-list-item" onclick="showOrderDetail(currentViewOrders, ${globalIdx})">
@@ -442,20 +450,22 @@ function renderOrderList() {
                 </div>`;
         }).join('');
 
-        // 插入分頁按鈕 UI
-        const pagerHtml = `
-            <div class="list-pager" style="display:flex; justify-content:center; align-items:center; gap:20px; margin-top:15px; padding-bottom:10px;">
-                <button onclick="changeListPage(-1)" class="pager-btn" ${currentListPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>
-                <span style="font-weight:bold; color:#666;">${currentListPage} / ${totalPages}</span>
-                <button onclick="changeListPage(1)" class="pager-btn" ${currentListPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-        `;
-        listDiv.innerHTML = listHtml + (currentViewOrders.length > itemsPerPage ? pagerHtml : '');
+        // 插入分頁導覽
+        if (totalItems > itemsPerPage) {
+            listHtml += `
+                <div class="list-pager" style="display:flex; justify-content:center; align-items:center; gap:20px; margin:15px 0;">
+                    <button onclick="changeListPage(-1)" class="pager-btn" ${currentListPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>
+                    <span style="font-weight:bold; color:#666;">${currentListPage} / ${totalPages}</span>
+                    <button onclick="changeListPage(1)" class="pager-btn" ${currentListPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>
+                </div>`;
+        }
+        
+        listDiv.innerHTML = listHtml || '<div style="text-align:center; padding:20px; color:#999;">本月尚無訂單</div>';
     }
 
-    // 數據統計更新
+    // 更新統計與財務計算
     updateStatistics(currentViewOrders); 
-    calculateFinance();
+    calculateFinance(); // 注意：這裡不傳參數，讓它去跑內部的 globalOrderData 邏輯
 }
 
 // 列表分頁切換函數
