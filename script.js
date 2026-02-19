@@ -468,13 +468,11 @@ function changeListPage(dir) {
     renderOrderList();
 }
 
-// --- 2. 月曆渲染 (支援多單顯示) ---
 function renderCalendar(year, month) {
     const grid = document.getElementById('calendar-grid');
     grid.innerHTML = '';
     const bookedStatus = {}; 
 
-    // 將訂單按日期分配 (支援同一天多筆訂單)
     currentViewOrders.forEach((o, index) => {
         const checkInDate = new Date(o.date);
         const nights = parseInt(o.nights) || 1;
@@ -502,18 +500,16 @@ function renderCalendar(year, month) {
         const isToday = (day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear());
         if (isToday) className += ' today';
         
-        // 只要當天有訂單就標色
         if (dayOrders.length > 0) {
             const hasCheckIn = dayOrders.some(d => d.isFirstDay);
             className += hasCheckIn ? ' has-order' : ' has-order stay-over';
         }
         
-        // 點擊事件：傳入當天所有的訂單索引陣列
         const indices = JSON.stringify(dayOrders.map(d => d.orderIndex));
         const clickAction = dayOrders.length > 0 ? `onclick='handleCalendarClick(${indices})'` : '';
         
-        
-        grid.innerHTML += `<div class="${className}" ${clickAction}>${day}${multiIndicator}</div>`;
+        // --- 修正處：移除了 multiIndicator，保持日期乾淨 ---
+        grid.innerHTML += `<div class="${className}" ${clickAction}>${day}</div>`;
     }
 }
 
@@ -757,25 +753,38 @@ function closeUtilityModal() {
 }
 
 // 監聽子網站 (iframe) 傳回來的攤提金額
-window.addEventListener('message', function(event) {
-    if (event.data.type === 'utility_update') {
-        const newVal = parseInt(event.data.value);
-        const category = event.data.category; // 水費、電費或網路
-        const utilityInput = document.getElementById('utility-cost');
-        const previousValue = parseInt(utilityInput.value) || 0;
-
-        const isAppend = confirm(`偵測到 ${category}：${newVal}\n目前金額為 ${previousValue}\n\n[確定]：累加結果 ($${previousValue + newVal})\n[取消]：覆蓋結果 ($${newVal})`);
-        
-        if (isAppend) {
-            utilityInput.value = previousValue + newVal;
-        } else {
-            utilityInput.value = newVal;
+// 監聽來自 iframe 的訊息
+window.addEventListener('message', function(e) {
+    if (e.data.type === 'utility_update') {
+        // 更新財務欄位
+        const inputMap = { '電費': 'fin-utility-elec', '水費': 'fin-utility-water', '網路': 'fin-utility-net' };
+        const targetId = inputMap[e.data.category];
+        if (targetId) {
+            document.getElementById(targetId).value = e.data.value;
+            calculateFinance(); // 重新計算總額
         }
-
-        updateNetPreview(); // 觸發您的財務更新連動
-        closeUtilityModal(); // 帶入後自動關閉彈窗
+    }
+    
+    // 接收關閉指令
+    if (e.data.type === 'close_utility_modal') {
+        closeUtilityModal();
     }
 });
+
+// 統一關閉彈窗函數
+function closeUtilityModal() {
+    const modal = document.getElementById('u-modal');
+    modal.classList.remove('active');
+    setTimeout(() => { modal.style.display = 'none'; }, 200); // 配合動畫延遲
+}
+
+// 點擊彈窗黑色背景處自動關閉
+window.onclick = function(event) {
+    const uModal = document.getElementById('u-modal');
+    const editModal = document.getElementById('edit-modal');
+    if (event.target == uModal) closeUtilityModal();
+    if (event.target == editModal) editModal.classList.remove('active');
+}
 
 /**
  * 開啟封存確認彈窗

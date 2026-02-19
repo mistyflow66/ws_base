@@ -630,3 +630,28 @@ body #archive-modal.active {
     border-top: 1px solid #eee; 
     padding-top: 10px; 
 }
+
+/* 修正底層容器，防止出現莫名空白下巴 */
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom); /* 適配 iPhone 底部橫條 */
+}
+
+/* 修正彈窗背景，確保它不會推擠到原頁面高度 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* 防止彈窗內部捲動影響外部 */
+}
