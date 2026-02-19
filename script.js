@@ -512,8 +512,6 @@ function renderCalendar(year, month) {
         const indices = JSON.stringify(dayOrders.map(d => d.orderIndex));
         const clickAction = dayOrders.length > 0 ? `onclick='handleCalendarClick(${indices})'` : '';
         
-        // 多單標示：如果一天超過一筆，顯示小圓點或數字
-        const multiIndicator = dayOrders.length > 1 ? `<span class="multi-tag">${dayOrders.length}</span>` : '';
         
         grid.innerHTML += `<div class="${className}" ${clickAction}>${day}${multiIndicator}</div>`;
     }
@@ -740,17 +738,19 @@ function openUtilityModal() {
     const y = currentViewDate.getFullYear();
     const m = currentViewDate.getMonth() + 1;
     
-    // 1. 從父頁面的記憶區抓取你輸入的金鑰 (確認名稱是否為 bnb_admin_key)
-    const token = localStorage.getItem('bnb_admin_key') || ""; 
+    // 從 localStorage 抓取金鑰 (確認你的登入名稱)
+    const savedToken = localStorage.getItem('bnb_admin_key') || ""; 
     
     const iframe = document.getElementById('utility-iframe');
     if (iframe) {
-        // 2. 關鍵：在網址後面加上 &t= 把金鑰傳進去
-        iframe.src = `./utility-app.html?y=${y}&m=${m}&t=${token}`;
+        // 透過網址傳遞 Token (?t=...)
+        iframe.src = `./utility-app.html?y=${y}&m=${m}&t=${savedToken}`;
     }
     
-    document.getElementById('u-modal').classList.add('active');
+    const modal = document.getElementById('u-modal');
+    if (modal) modal.classList.add('active');
 }
+
 
 function closeUtilityModal() {
     document.getElementById('u-modal').classList.remove('active');

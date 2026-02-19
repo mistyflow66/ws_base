@@ -334,58 +334,56 @@ hr {
 }
 .fin-total { margin-top: 10px; font-weight: bold; color: var(--primary); border-top: 1px solid #eee; padding-top: 10px; }
 
-/* --- 彈窗系統 (Modal) 全面修正版 --- */
+/* --- 修正：彈窗系統 (統一管理) --- */
 .modal, #u-modal, #edit-modal, #archive-modal { 
-  display: none; 
-  position: fixed; 
-  top: 0; left: 0; 
-  width: 100%; height: 100%; 
-  background: rgba(44, 62, 80, 0.7); 
-  z-index: 9999; 
-  backdrop-filter: blur(4px);
-  align-items: center; 
-  justify-content: center;
+    display: none; /* 移除 !important，交給 .active 控制 */
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(44, 62, 80, 0.7); 
+    z-index: 9999; 
+    backdrop-filter: blur(4px);
+    align-items: center; 
+    justify-content: center;
 }
 
-/* 確保加上 active 時能顯示 */
-.modal.active, #u-modal.active, #edit-modal.active, #archive-modal.active { 
-  display: flex !important; 
+/* 顯示狀態：使用更強大的選取器確保顯示 */
+body .modal.active, 
+body #u-modal.active, 
+body #edit-modal.active, 
+body #archive-modal.active { 
+    display: flex !important; 
 }
 
-.modal-content { 
-    background: white; 
-    padding: 25px; 
-    width: 90%; 
-    max-width: 450px; 
-    border-radius: 20px; 
-    position: relative;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+/* --- 修正：分類導覽滑動優化 --- */
+.category-nav {
+    position: sticky;
+    top: 70px; /* 根據導覽列高度微調 */
+    z-index: 100;
+    background-color: #ffffff;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* iOS 滑動順暢感 */
+    gap: 10px;
+    white-space: nowrap;
 }
 
-/* 水電小工具專用寬度 */
-#u-modal .modal-content {
-    max-width: 600px;
-    height: 85vh;
-    padding: 15px;
+/* 隱藏捲軸但保留功能 */
+.category-nav::-webkit-scrollbar { display: none; }
+
+/* --- 修正：按鈕權重優化 (移除過多 important) --- */
+.copy-btn.btn-pack-add { 
+    background-color: var(--primary); 
+    color: white; 
 }
 
-#u-modal iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    border-radius: 12px;
-}
-
-.close-btn { 
-    position: absolute; 
-    right: 20px; 
-    top: 15px; 
-    font-size: 1.5rem; 
-    color: #6a7181; 
-    cursor: pointer; 
-    z-index: 10;
+.copy-btn.btn-pack-del { 
+    background-color: #fcece8; /* 比之前略亮，增加對比 */
+    color: var(--primary); 
+    border: 1px solid var(--primary);
 }
 .info-list { margin: 15px 0; }
 .info-item { 
