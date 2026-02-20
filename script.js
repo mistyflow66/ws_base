@@ -4,6 +4,19 @@
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbySPYLiPf6pUhZqbHMSK2z2eYtrzVWrPUweojAoCG8_15IrxQH0dhTOiXp1gf58dpiEQg/exec"; 
 
+// 1. 放在檔案頂部
+const GAS_URL = "你的網址/exec";
+
+function generateKey() {  
+    const a = 300 * 300;     
+    const b = 5000 + 2000;    
+    const c = 400 + 50;       
+    const d = 10 + 1;        
+    const result = a + b + c + d;  
+    return String(result + 15000);  
+}
+
+
 const PRICE_MAP = {      
   '201': { weekday: { 1: 1900 }, weekend: { 1: 2200 }, cny: { 1: 2900 } },      
   '202': { weekday: { 1: 2400, 2: 2600 }, weekend: { 1: 2600, 2: 2800 }, cny: { 1: 5600, 2: 6000 } },      
@@ -373,25 +386,34 @@ async function callGAS(payload) {
     }
 }
 
-// --- 3. 訂單讀取 (修正連線邏輯) ---
+// 2. 修改原本的讀取函數
 async function fetchOrders() {
-    const key = document.getElementById('admin-key').value.trim();
-    if (!key) return;
-
     toggleLoading(true);
+    const key = generateKey(); // 自動產生，不用再抓輸入框的值了
+    
     try {
-        const data = await callGAS({ action: "read", key: key });
-        if (Array.isArray(data)) {
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ 
+                action: "read", 
+                key: key // 使用生成的金鑰
+            })
+        });
+
+        const data = await res.json();
+        
+        if(Array.isArray(data)) {
             globalOrderData = data;
-            localStorage.setItem('bnb_admin_key', key); 
+            // 成功後直接進系統
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('order-content').style.display = 'block';
-            renderOrderList(); // 確保這個函數存在，負責渲染列表
+            renderOrderList();
         } else {
-            alert("驗證失敗：" + data);
+            alert("金鑰校驗失敗，請聯繫管理員。");
         }
     } catch(e) {
-        alert("網路連線失敗，請檢查 GAS 網址或快取");
+        console.error("連線錯誤:", e);
+        alert("連線失敗，請檢查 GAS 部署權限");
     }
     toggleLoading(false);
 }
