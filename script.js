@@ -357,52 +357,46 @@ function runManualCalc() {
 }
 
 // --- 訂單雲端 CRUD 作業 ---
-// --- 核心連線工具 (新增加的，請確保放在最上方) ---
+// --- 2. 核心連線工具 (確保不觸發 OPTIONS 預檢) ---
 async function callGAS(payload) {
-    const res = await fetch(GAS_URL, {
-        method: "POST",
-        mode: "cors", 
-        headers: {
-            // 使用 text/plain 是為了繞過 GAS 的 OPTIONS 預檢請求限制
-            "Content-Type": "text/plain;charset=utf-8" 
-        },
-        body: JSON.stringify(payload)
-    });
-
-    const text = await res.text();
     try {
-        // 嘗試解析 JSON，若失敗則回傳原始文字（例如 GAS 的錯誤訊息）
-        return JSON.parse(text);
-    } catch (e) {
-        return text; 
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            mode: "cors", 
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        try { return JSON.parse(text); } catch (e) { return text; }
+    } catch (err) {
+        throw new Error("網路請求遭攔截或網址錯誤");
     }
 }
 
-// --- 訂單雲端 CRUD 作業 ---
+// --- 3. 訂單讀取 (修正連線邏輯) ---
 async function fetchOrders() {
-    const key = document.getElementById('admin-key').value.trim(); // 增加 trim() 防止空白字元
-    if (!key) return alert("請輸入金鑰");
+    const key = document.getElementById('admin-key').value.trim();
+    if (!key) return;
 
     toggleLoading(true);
     try {
         const data = await callGAS({ action: "read", key: key });
-
         if (Array.isArray(data)) {
             globalOrderData = data;
             localStorage.setItem('bnb_admin_key', key); 
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('order-content').style.display = 'block';
-            renderOrderList();
-        } else { 
-            // 如果後端回傳的是 Error 字串，直接顯示出來
-            alert("驗證失敗：" + data); 
+            renderOrderList(); // 確保這個函數存在，負責渲染列表
+        } else {
+            alert("驗證失敗：" + data);
         }
-    } catch(e) { 
-        alert("網路連線失敗，請檢查 GAS 網址是否正確"); 
+    } catch(e) {
+        alert("網路連線失敗，請檢查 GAS 網址或快取");
     }
     toggleLoading(false);
 }
 
+// --- 4. 訊息打包與新增訂單 (確保欄位正確) ---
 async function addOrder() {
     const key = document.getElementById('admin-key').value.trim();
     if(!key) return alert("請輸入金鑰");
@@ -428,14 +422,10 @@ async function addOrder() {
 
     try {
         const res = await callGAS(payload);
-        if (typeof res === "string" && res.includes("Error")) {
-            alert(res);
-        } else {
-            alert("儲存成功"); 
-            await fetchOrders(); // 重新讀取清單
-        }
+        alert("儲存成功"); 
+        await fetchOrders(); 
     } catch(e) {
-        alert("儲存失敗，請稍後再試");
+        alert("儲存失敗");
     }
     toggleLoading(false);
 }
