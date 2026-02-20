@@ -4,9 +4,6 @@
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbySPYLiPf6pUhZqbHMSK2z2eYtrzVWrPUweojAoCG8_15IrxQH0dhTOiXp1gf58dpiEQg/exec"; 
 
-// 1. 放在檔案頂部
-const GAS_URL = "你的網址/exec";
-
 function generateKey() {  
     const a = 300 * 300;     
     const b = 5000 + 2000;    
