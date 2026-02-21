@@ -2,29 +2,36 @@
  * 煦願民宿智慧工作站 (B&B Smart Workstation) - 完整核心邏輯
  */
 
+/**
+ * 煦願民宿 - 核心配置與金鑰邏輯
+ */
+
+// 1. 確保 URL 正確
 const GAS_URL = "https://script.google.com/macros/s/AKfycbySPYLiPf6pUhZqbHMSK2z2eYtrzVWrPUweojAoCG8_15IrxQH0dhTOiXp1gf58dpiEQg/exec"; 
 
+// 2. 自動生成金鑰 (112461)
 function generateKey() {  
-    const a = 300 * 300;     
-    const b = 5000 + 2000;    
-    const c = 400 + 50;       
-    const d = 10 + 1;        
-    const result = a + b + c + d;  
-    return String(result + 15000);  
+    const a = 300 * 300;  
+    const b = 5000 + 2000;     
+    const c = 400 + 50;     
+    const d = 10 + 1;  
+    const result = a + b + c + d;   
+    return String(result + 15000); 
 }
 
-
+// 3. 房價配置表
 const PRICE_MAP = {      
   '201': { weekday: { 1: 1900 }, weekend: { 1: 2200 }, cny: { 1: 2900 } },      
   '202': { weekday: { 1: 2400, 2: 2600 }, weekend: { 1: 2600, 2: 2800 }, cny: { 1: 5600, 2: 6000 } },      
   '301': { weekday: { 1: 3500, 2: 4500, 3: 5000, 4: 5500 }, weekend: { 1: 3800, 2: 4800, 3: 5300, 4: 5800 }, cny: { 1: 6000, 2: 7000, 3: 8000, 4: 9000 } }      
 };
 
-// --- 全域狀態控制 ---
-let currentViewOrders = [];   // 儲存當月過濾後的訂單
+// 4. 全域狀態控制
+let currentViewOrders = [];   // 儲存當前月份過濾後的訂單
 let currentListPage = 1;      // 清單當前頁碼
 const itemsPerPage = 5;       // 每頁顯示幾筆
 
+// 5. 回覆模板資料 (TPL_DATA)
 const TPL_DATA = [
   { 
     cat: '詢問', 
@@ -125,7 +132,6 @@ const TPL_DATA = [
     content: () => `退房時，麻煩您把鑰匙掛在一樓電視旁的鑰匙架上、拍照回傳給我們\n二樓冷/暖氣關機，大門關上\n這樣就做好退房手續唷！`
   }
 ]; 
-
 let packageList = [];
 let globalOrderData = [];
 let currentViewDate = new Date();
@@ -134,20 +140,22 @@ let currentView = 'cal';
 // --- 初始化與基礎功能 ---
 window.onload = () => {
     updatePricePlaceholder();
-    // 確保 currentViewDate 是當前的正確時間
+    
+    // 1. 初始化日期：確保 currentViewDate 是當前的正確時間
     currentViewDate = new Date(); 
     
-    const savedKey = localStorage.getItem('bnb_admin_key');
-    if (savedKey) {
-        document.getElementById('admin-key').value = savedKey;
-        fetchOrders(); 
-    } else {
-        // 即便沒登入，也先渲染空的月曆顯示正確的當月份標題
-        renderOrderList();
-    }
+    // 2. 自動連線邏輯：直接執行 fetchOrders
+    // 因為現在使用 generateKey() 自動計算金鑰，不再依賴 localStorage
+    fetchOrders(); 
+
+    // 3. 更新 UI 初始顯示
     updateAll();
 };
 
+/**
+ * 控制同步遮罩顯示狀態
+ * @param {boolean} show - 是否顯示
+ */
 function toggleLoading(show) {
     const mask = document.getElementById('loading-mask');
     if (mask) {
@@ -155,12 +163,24 @@ function toggleLoading(show) {
     }
 }
 
+/**
+ * 分頁切換功能
+ * @param {string} id - 分頁元素 ID
+ * @param {Event} e - 點擊事件
+ */
 function switchPage(id, e) {
+    // 移除所有頁面與按鈕的 active 狀態
     document.querySelectorAll('.page, .tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    if(e) e.currentTarget.classList.add('active');
+    
+    // 激活目標頁面
+    const targetPage = document.getElementById(id);
+    if (targetPage) targetPage.classList.add('active');
+    
+    // 激活對應按鈕
+    if (e && e.currentTarget) {
+        e.currentTarget.classList.add('active');
+    }
 }
-
 // --- 房價與計算連動 ---
 function calculateBalance() {
     const total = parseFloat(document.getElementById('v-total').value) || 0;
@@ -367,7 +387,10 @@ function runManualCalc() {
 }
 
 // --- 訂單雲端 CRUD 作業 ---
-// --- 2. 核心連線工具 (確保不觸發 OPTIONS 預檢) ---
+
+/**
+ * 核心連線工具 - 確保不觸發 OPTIONS 預檢，並統一處理通訊
+ */
 async function callGAS(payload) {
     try {
         const res = await fetch(GAS_URL, {
@@ -379,48 +402,99 @@ async function callGAS(payload) {
         const text = await res.text();
         try { return JSON.parse(text); } catch (e) { return text; }
     } catch (err) {
+        console.error("網路連線錯誤:", err);
         throw new Error("網路請求遭攔截或網址錯誤");
     }
 }
 
-// 2. 修改原本的讀取函數
+/**
+ * 1. 讀取訂單 - 從試算表抓取全部資料
+ */
 async function fetchOrders() {
     toggleLoading(true);
-    const key = generateKey(); // 自動產生，不用再抓輸入框的值了
+    const key = generateKey(); 
     
     try {
-        const res = await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({ 
-                action: "read", 
-                key: key // 使用生成的金鑰
-            })
+        const data = await callGAS({ 
+            action: "read", 
+            key: key 
         });
 
-        const data = await res.json();
-        
-        if(Array.isArray(data)) {
+        if (Array.isArray(data)) {
             globalOrderData = data;
-            // 成功後直接進系統
-            document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('order-content').style.display = 'block';
+            // 成功獲取後，確保 UI 狀態切換
+            const lockScreen = document.getElementById('lock-screen');
+            const orderContent = document.getElementById('order-content');
+            if (lockScreen) lockScreen.style.display = 'none';
+            if (orderContent) orderContent.style.display = 'block';
+            
             renderOrderList();
         } else {
-            alert("金鑰校驗失敗，請聯繫管理員。");
+            alert("雲端驗證失敗，請檢查金鑰邏輯。");
         }
-    } catch(e) {
+    } catch (e) {
         console.error("連線錯誤:", e);
-        alert("連線失敗，請檢查 GAS 部署權限");
+        alert("連線失敗，請檢查 GAS 部署是否設為『任何人』且網址正確。");
     }
     toggleLoading(false);
 }
 
-// --- 4. 訊息打包與新增訂單 (確保欄位正確) ---
+
+/**
+ * 核心輔助工具：抓取正確的晚數
+ * @param {string} prefix - 'o' (新增) 或 'e' (修改)
+ */
+function getNightsValue(prefix) {
+    const select = document.getElementById(`${prefix}-nights`);
+    const customInput = document.getElementById(`${prefix}-nights-custom`);
+    if (select && select.value === 'custom') {
+        return customInput.value || 1;
+    }
+    return select ? select.value : 1;
+}
+
+/**
+ * 核心輔助工具：抓取房型複選資料
+ * @param {string} prefix - 'o' (新增) 或 'e' (修改)
+ */
+function getRoomData(prefix) {
+    const checkedBoxes = document.querySelectorAll(`input[name="${prefix}-room-type"]:checked`);
+    const rooms = Array.from(checkedBoxes).map(cb => cb.value);
+    return {
+        count: rooms.length,
+        detail: rooms.join(', ') // 產出如 "201, 202"
+    };
+}
+
+/**
+ * 1. 新增訂單邏輯
+ */
+/**
+ * 輔助工具：抓取房型複選資料 (適用於膠囊按鈕)
+ * @param {string} prefix - 'o' (新增) 或 'e' (修改)
+ */
+function getRoomData(prefix) {
+    const checkedBoxes = document.querySelectorAll(`input[name="${prefix}-room-type"]:checked`);
+    const rooms = Array.from(checkedBoxes).map(cb => cb.value);
+    return {
+        count: rooms.length,
+        detail: rooms.join(', ') // 產出如 "201, 202"
+    };
+}
+
+/**
+ * 1. 新增訂單邏輯
+ */
 async function addOrder() {
-    const key = document.getElementById('admin-key').value.trim();
-    if(!key) return alert("請輸入金鑰");
+    const key = generateKey(); 
+    // 取得房型數據 (膠囊按鈕本質還是 checkbox)
+    const checkedBoxes = document.querySelectorAll('input[name="o-room-type"]:checked');
+    const rooms = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (rooms.length === 0) return alert("請選擇房型");
 
     toggleLoading(true);
+    
     const total = Number(document.getElementById('o-total').value) || 0;
     const dep = Number(document.getElementById('o-dep').value) || 0;
 
@@ -431,27 +505,146 @@ async function addOrder() {
         date: document.getElementById('o-date').value,
         source: document.getElementById('o-source').value, 
         guests: document.getElementById('o-guests').value,
-        rooms: document.getElementById('o-rooms').value, 
+        rooms: rooms.length,           // 間數
+        roomDetail: rooms.join(', '),  // 房號
         total: total, 
         dep: dep, 
         bal: total - dep,
-        nights: document.getElementById('o-nights').value,
+        nights: Number(document.getElementById('o-nights').value) || 1, // 抓取純數字
         note: document.getElementById('o-note').value 
     };
 
+    if (!payload.name || !payload.date) {
+        toggleLoading(false);
+        return alert("請填寫姓名與日期");
+    }
+
     try {
-        const res = await callGAS(payload);
-        alert("儲存成功"); 
-        await fetchOrders(); 
+        const result = await callGAS(payload);
+        if (result === "Success" || result.result === "success") {
+            alert("儲存成功"); 
+            await fetchOrders(); 
+            // 清除內容
+            document.querySelectorAll('#order-add-content input').forEach(i => i.value = "");
+            document.querySelectorAll('input[name="o-room-type"]').forEach(c => c.checked = false);
+            toggleAccordion('order-add-content', 'order-acc-icon');
+        } else {
+            throw new Error(result);
+        }
     } catch(e) {
-        alert("儲存失敗");
+        alert("儲存失敗：" + e.message);
     }
     toggleLoading(false);
 }
 
-// 2. 核心渲染函數 (修正清單消失與維持月曆樣式)
+/**
+ * 2. 修改訂單邏輯
+ */
+async function updateOrder() {
+    const key = generateKey();
+    const oid = document.getElementById('e-oid').value;
+    const roomData = getRoomData('e');
+    const nights = Number(document.getElementById('e-nights').value) || 1; // 直接抓輸入框數字
+    
+    if (!oid) return alert("找不到訂單編號 (OID)");
+    if (roomData.count === 0) return alert("請至少選擇一個房型");
+    
+    toggleLoading(true);
+
+    const total = Number(document.getElementById('e-total').value) || 0;
+    const dep = Number(document.getElementById('e-dep').value) || 0;
+
+    const payload = {
+        action: "update",
+        key: key,
+        oid: oid,
+        name: document.getElementById('e-name').value,
+        date: document.getElementById('e-date').value,
+        nights: nights, 
+        source: document.getElementById('e-source').value,
+        guests: document.getElementById('e-guests').value,
+        rooms: roomData.count,      
+        roomDetail: roomData.detail, 
+        total: total,
+        dep: dep,
+        bal: total - dep,
+        note: document.getElementById('e-note').value
+    };
+
+    try {
+        const result = await callGAS(payload);
+        if (result === "Update Success" || result.result === "success") {
+            alert("修改成功");
+            await fetchOrders(); 
+            document.getElementById('edit-modal').classList.remove('active');
+        } else {
+            alert("修改失敗：" + result);
+        }
+    } catch (e) {
+        alert("連線異常，修改未完成");
+    }
+    toggleLoading(false);
+}
+
+/**
+ * 3. 清空輸入框
+ */
+function clearOrderInputs() {
+    // 陣列中直接加入 'o-nights'，移除了舊的 'o-nights-custom'
+    ['o-name', 'o-date', 'o-total', 'o-dep', 'o-guests', 'o-note', 'o-nights'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+    
+    // 取消所有房型的打勾狀態 (膠囊按鈕會自動變回未選取顏色)
+    document.querySelectorAll('input[name="o-room-type"]').forEach(cb => cb.checked = false);
+}
+
+/**
+ * 4. 刪除訂單 - 透過 OID 刪除該行
+ */
+async function deleteOrder() {
+    if (!confirm("確定要刪除這筆訂單嗎？刪除後無法復原。")) return;
+
+    const key = generateKey();
+    const oid = document.getElementById('e-oid').value;
+    
+    if (!oid) return alert("找不到訂單編號 (OID)");
+
+    toggleLoading(true);
+
+    try {
+        const result = await callGAS({
+            action: "delete",
+            key: key,
+            oid: oid
+        });
+
+        if (result === "Delete Success" || result.result === "success") {
+            alert("訂單已刪除");
+            await fetchOrders(); 
+            document.getElementById('edit-modal').classList.remove('active');
+        } else {
+            alert("刪除失敗：" + result);
+        }
+    } catch (e) {
+        alert("網路請求失敗，請稍後再試");
+    }
+    toggleLoading(false);
+}
+
+
 function renderOrderList() {
-    if (!globalOrderData) return;
+    if (!globalOrderData || globalOrderData.length === 0) {
+        console.warn("尚無訂單資料");
+        // 即便沒資料，也要更新標題並渲染空月曆
+        const year = currentViewDate.getFullYear();
+        const month = currentViewDate.getMonth();
+        const titleEl = document.getElementById('cal-month-title');
+        if (titleEl) titleEl.innerText = `${year}年 ${month + 1}月`;
+        renderCalendar(year, month);
+        return;
+    }
 
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
@@ -462,7 +655,7 @@ function renderOrderList() {
 
     // 過濾並排序
     currentViewOrders = globalOrderData
-        .filter(r => r[3] && r[3].includes(monthStr))
+        .filter(r => r[3] && String(r[3]).includes(monthStr))
         .map(r => ({
             id: r[0], source: r[1], name: r[2], date: r[3],
             guests: r[5], rooms: r[6], total: r[7], deposit: r[8],
@@ -470,7 +663,7 @@ function renderOrderList() {
         }))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // 渲染月曆 (維持原本樣式，不加多單標籤)
+    // 渲染月曆
     renderCalendar(year, month);
 
     // 渲染清單
@@ -510,10 +703,8 @@ function renderOrderList() {
     }
 
     updateStatistics(currentViewOrders);
-    // 這裡呼叫 calculateFinance 時，請確保它內部會抓取 globalOrderData
     calculateFinance(); 
 }
-
 // 分頁切換函數
 function changeListPage(dir) {
     currentListPage += dir;
@@ -522,12 +713,16 @@ function changeListPage(dir) {
 
 function renderCalendar(year, month) {
     const grid = document.getElementById('calendar-grid');
+    if (!grid) return;
     grid.innerHTML = '';
     const bookedStatus = {}; 
 
     currentViewOrders.forEach((o, index) => {
-        const checkInDate = new Date(o.date);
+        // 使用 yyyy-mm-dd 分割避免時區偏誤
+        const [y, m, d] = o.date.split('-').map(Number);
+        const checkInDate = new Date(y, m - 1, d);
         const nights = parseInt(o.nights) || 1;
+        
         for (let i = 0; i < nights; i++) {
             const current = new Date(checkInDate);
             current.setDate(checkInDate.getDate() + i);
@@ -546,11 +741,17 @@ function renderCalendar(year, month) {
     const lastDate = new Date(year, month + 1, 0).getDate();
     for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="cal-day"></div>`;
     
+    const today = new Date();
+    const todayY = today.getFullYear();
+    const todayM = today.getMonth();
+    const todayD = today.getDate();
+
     for (let day = 1; day <= lastDate; day++) {
         const dayOrders = bookedStatus[day] || [];
         let className = 'cal-day';
-        const isToday = (day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear());
-        if (isToday) className += ' today';
+        
+        // 精準判斷今天
+        if (day === todayD && month === todayM && year === todayY) className += ' today';
         
         if (dayOrders.length > 0) {
             const hasCheckIn = dayOrders.some(d => d.isFirstDay);
@@ -560,9 +761,19 @@ function renderCalendar(year, month) {
         const indices = JSON.stringify(dayOrders.map(d => d.orderIndex));
         const clickAction = dayOrders.length > 0 ? `onclick='handleCalendarClick(${indices})'` : '';
         
-        // --- 修正處：移除了 multiIndicator，保持日期乾淨 ---
         grid.innerHTML += `<div class="${className}" ${clickAction}>${day}</div>`;
     }
+}
+
+// 輔助：日期格式化 (修復時區減一天問題)
+function formatDate(dateStr) {
+    if (!dateStr) return "";
+    // 如果是 yyyy-mm-dd 格式，直接取最後兩段
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parseInt(parts[1])}/${parseInt(parts[2])}`;
+    
+    const date = new Date(dateStr);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
 // 處理月曆點擊：開啟該日期的第一筆訂單
@@ -603,13 +814,13 @@ function showOrderDetail(sourceArray, index, dayGroupIndices = null) {
         btnConfig = { text: "LINE", icon: "fa-solid fa-comment-dots", color: "#00c300", appUrl: "line://", webUrl: "https://line.me" };
     }
 
-    // 渲染詳細資訊
+    // 渲染詳細資訊 (僅新增房型明細顯示)
     infoList.innerHTML = pagerHtml + `
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-user"></i> 訂房人</span><span class="info-value">${order.name}</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-calendar"></i> 入住日期</span><span class="info-value">${formatDate(order.date)} (${order.nights}晚)</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-tag"></i> 來源</span><span class="source-tag tag-${getSourceClass(s)}">${s}</span></div>
-        <div class="info-item"><span class="info-label"><i class="fa-solid fa-bed"></i> 房型/人數</span><span class="info-value">${order.rooms}房 / ${order.guests}人</span></div>
-        <div class="info-item" style="color:#af6a58; font-weight:bold;"><span class="info-label">總金額</span><span class="info-value">$${order.total}</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-bed"></i> 房型/人數</span><span class="info-value">${order.roomDetail || '未標註'} (${order.rooms}間) / ${order.guests}人</span></div>
+        <div class="info-item" style="color:#af6a58; font-weight:bold;"><span class="info-label">總金額</span><span class="info-value">$${Number(order.total).toLocaleString()}</span></div>
         <div class="info-item"><span class="info-label">備註</span><span class="info-value">${order.note || '無'}</span></div>
     `;
 
@@ -618,7 +829,11 @@ function showOrderDetail(sourceArray, index, dayGroupIndices = null) {
     if (actionBtn) {
         actionBtn.innerHTML = `<i class="${btnConfig.icon}"></i> ${btnConfig.text}`;
         actionBtn.style.background = btnConfig.color;
-        actionBtn.onclick = () => { /* APP/WEB 跳轉邏輯 */ };
+        // 原本的跳轉邏輯
+        actionBtn.onclick = () => {
+             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+             window.open(isMobile ? btnConfig.appUrl : btnConfig.webUrl, '_blank');
+        };
     }
 
     // 預填編輯欄位
@@ -628,33 +843,47 @@ function showOrderDetail(sourceArray, index, dayGroupIndices = null) {
     document.getElementById('e-nights').value = order.nights || '1';
     document.getElementById('e-source').value = s;
     document.getElementById('e-guests').value = order.guests || '';
-    document.getElementById('e-rooms').value = order.rooms || '3';
+    // 間數由 JS 根據勾選自動算，但仍填入隱藏或唯讀格
+    document.getElementById('e-rooms').value = order.rooms || '1'; 
     document.getElementById('e-total').value = order.total || '';
     document.getElementById('e-dep').value = order.deposit || 0;
     document.getElementById('e-note').value = order.note || '';
 
+    // --- 新增：還原編輯模式的 Checkbox 勾選狀態 ---
+    const roomStr = order.roomDetail || "";
+    document.querySelectorAll('input[name="e-room-type"]').forEach(cb => {
+        cb.checked = roomStr.includes(cb.value);
+    });
+
     toggleEditMode(false); 
-    document.getElementById('edit-modal').classList.add('active');
+    document.getElementById('edit-modal').style.display = 'block';
+    setTimeout(() => document.getElementById('edit-modal').classList.add('active'), 10);
 }
 
-// --- 4. 財務與統計 (維持原樣，確保連動) ---
+// --- 財務計算優化 ---
 function calculateFinance() {
-    const monthTitle = document.getElementById('cal-month-title').innerText;
-    const monthStr = monthTitle.replace('年 ', '-').replace('月', '').trim();
-    const mData = globalOrderData.filter(r => r[3] && r[3].includes(monthStr));
+    const year = currentViewDate.getFullYear();
+    const month = currentViewDate.getMonth();
+    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+    
+    // 從原始 globalOrderData 過濾，確保數據最準
+    const mData = globalOrderData.filter(r => r[3] && String(r[3]).includes(monthStr));
 
     const income = mData.reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
-    const bTotal = mData.filter(r => r[1] === 'Booking').reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
-    const fee = Math.round(bTotal * 0.12);
+    const bTotal = mData.filter(r => String(r[1]).includes('Booking')).reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
+    const fee = Math.round(bTotal * 0.12); // Booking 手續費 12%
     
     const laundry = parseFloat(document.getElementById('laundry-cost')?.value) || 0;
     const utility = parseFloat(document.getElementById('utility-cost')?.value) || 0;
 
+    const net = income - fee - laundry - utility;
+
     if(document.getElementById('fin-income')) document.getElementById('fin-income').innerText = '$' + income.toLocaleString();
     if(document.getElementById('fin-fee')) document.getElementById('fin-fee').innerText = '-$' + fee.toLocaleString();
-    if(document.getElementById('fin-net')) document.getElementById('fin-net').innerText = '$' + (income - fee - laundry - utility).toLocaleString();
+    if(document.getElementById('fin-net')) document.getElementById('fin-net').innerText = '$' + net.toLocaleString();
     
-    window.currentMonthFin = { income, fee, laundry, utility, net: (income - fee - laundry - utility) };
+    // 儲存至全域供月結封存使用
+    window.currentMonthFin = { income, fee, laundry, utility, net };
 }
 
 function copyText(id, e) {
@@ -782,62 +1011,82 @@ function updateNetPreview() {
     console.log("財務數據已同步更新:", window.currentMonthFin);
 }
 
+/**
+ * 開啟水電試算彈窗
+ */
 function openUtilityModal() {
     const y = currentViewDate.getFullYear();
     const m = currentViewDate.getMonth() + 1;
     
-    // 從 localStorage 抓取金鑰 (確認你的登入名稱)
-    const savedToken = localStorage.getItem('bnb_admin_key') || ""; 
-    
     const iframe = document.getElementById('utility-iframe');
+    const modal = document.getElementById('u-modal');
+
     if (iframe) {
-        // 透過網址傳遞 Token (?t=...)
-        iframe.src = `./utility-app.html?y=${y}&m=${m}&t=${savedToken}`;
+        // 現在只需要傳遞年份與月份，子網頁會自己用 generateKey() 通訊
+        // 不再需要傳遞 &t=${savedToken}
+        iframe.src = `./utility-app.html?y=${y}&m=${m}`;
     }
     
-    const modal = document.getElementById('u-modal');
-    if (modal) modal.classList.add('active');
+    if (modal) {
+        modal.style.display = 'block'; // 先顯示元素
+        setTimeout(() => { modal.classList.add('active'); }, 10); // 再觸發動畫
+    }
 }
 
-
-function closeUtilityModal() {
-    document.getElementById('u-modal').classList.remove('active');
-}
-
-// 監聽子網站 (iframe) 傳回來的攤提金額
-// 監聽來自 iframe 的訊息
+/**
+ * 監聽來自水電子網頁 (iframe) 的訊息
+ */
 window.addEventListener('message', function(e) {
+    // 1. 更新財務攤提金額
     if (e.data.type === 'utility_update') {
-        // 更新財務欄位
-        const inputMap = { '電費': 'fin-utility-elec', '水費': 'fin-utility-water', '網路': 'fin-utility-net' };
-        const targetId = inputMap[e.data.category];
-        if (targetId) {
-            document.getElementById(targetId).value = e.data.value;
-            calculateFinance(); // 重新計算總額
+        // 這裡對應你 HTML 裡的「水電攤提」輸入框 ID
+        // 如果你 HTML 裡只有一個 id="utility-cost"，就直接填入
+        const targetInput = document.getElementById('utility-cost');
+        if (targetInput) {
+            targetInput.value = e.data.value;
+            // 更新完金額後，觸發主介面的淨利計算
+            if (typeof updateNetPreview === "function") {
+                updateNetPreview();
+            }
         }
     }
     
-    // 接收關閉指令
+    // 2. 接收關閉彈窗指令
     if (e.data.type === 'close_utility_modal') {
         closeUtilityModal();
     }
 });
 
-// 統一關閉彈窗函數
+/**
+ * 關閉水電試算彈窗
+ */
 function closeUtilityModal() {
     const modal = document.getElementById('u-modal');
-    modal.classList.remove('active');
-    setTimeout(() => { modal.style.display = 'none'; }, 200); // 配合動畫延遲
+    if (modal) {
+        modal.classList.remove('active');
+        // 等待 CSS 過渡動畫結束後再隱藏
+        setTimeout(() => { modal.style.display = 'none'; }, 200);
+    }
 }
 
-// 點擊彈窗黑色背景處自動關閉
+/**
+ * 全域點擊事件：點擊彈窗外部黑色區域自動關閉
+ */
 window.onclick = function(event) {
     const uModal = document.getElementById('u-modal');
     const editModal = document.getElementById('edit-modal');
-    if (event.target == uModal) closeUtilityModal();
-    if (event.target == editModal) editModal.classList.remove('active');
-}
+    const archiveModal = document.getElementById('archive-modal');
 
+    if (event.target == uModal) closeUtilityModal();
+    if (event.target == editModal) {
+        editModal.style.display = 'none';
+        editModal.classList.remove('active');
+    }
+    if (event.target == archiveModal) {
+        archiveModal.style.display = 'none';
+        archiveModal.classList.remove('active');
+    }
+}
 /**
  * 開啟封存確認彈窗
  * 抓取當前頁面最新的經營數據與財務數值

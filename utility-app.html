@@ -10,7 +10,7 @@
         * { box-sizing: border-box; font-family: 'PingFang TC', sans-serif; }
         body { background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 400px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
-        
+
         /* 月份導航 */
         .month-nav { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #eee; }
         .month-nav button { border: none; background: #ddd; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
@@ -30,25 +30,22 @@
         .calc-card { background: #fdf5f2; padding: 15px; border-radius: 12px; border: 1px solid #eadad5; margin-bottom: 15px; }
         label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: #666; }
         input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 1rem; }
-        
+
         .btn-sync { background: var(--primary); color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem; }
         .btn-green { background: var(--green); }
 
-        /* 設定按鈕 (更換 Token) */
-        .settings-link { font-size: 0.7rem; color: #ccc; text-align: center; margin-top: 10px; cursor: pointer; text-decoration: underline; }
-        
         /* 讀取中遮罩 */
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
     </style>
 </head>
 <body>
 
-<div id="loading" class="loading-overlay"><i class="fas fa-spinner fa-spin fa-2x"></i><p>資料同步中...</p></div>
+<div id="loading" class="loading-overlay"><i class="fas fa-spinner fa-spin fa-2x"></i><p>雲端資料同步中...</p></div>
 
 <div class="app-container">
     <div class="month-nav">
         <button onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-        <span id="view-month-display">2026 年 02 月</span>
+        <span id="view-month-display">載入中...</span>
         <button onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
     </div>
 
@@ -77,60 +74,58 @@
             <input type="number" id="total-amt" placeholder="輸入帳單面額">
             <button class="btn-sync" onclick="generateSchedules()">紀錄並生成多月排程</button>
         </div>
-
-        <div class="settings-link" onclick="resetToken()">更換 GitHub Token</div>
     </div>
 </div>
 
 <script>
     /** 基礎配置 **/
-    const GIST_ID = 'be819c4c8ca0a2582fa3f5c4045d5ab9'; 
-    const PREFIX = "B_Utility_"; // 避免與其他專案 localStorage 衝突
-    
-    let db = { "電費": {}, "水費": {}, "網路": {} };
-    let currentTab = '電費';
-    // 解析網址參數 (?y=2026&m=3)
-const urlParams = new URLSearchParams(window.location.search);
-const urlY = parseInt(urlParams.get('y'));
-const urlM = parseInt(urlParams.get('m'));
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbySPYLiPf6pUhZqbHMSK2z2eYtrzVWrPUweojAoCG8_15IrxQH0dhTOiXp1gf58dpiEQg/exec"; // <--- 請更換為您最新的 GAS URL
 
-// 如果有參數就用參數，沒有就用今天
-let viewDate = (urlY && urlM) 
-    ? new Date(urlY, urlM - 1, 1) 
-    : new Date();
-
-// 初始化時會自動執行 updateUI() 顯示正確月份
-
-    // 初始化讀取
-    async function init() {
-        let token = localStorage.getItem(PREFIX + "token");
-        if (!token) {
-            token = prompt("請貼入您的 GitHub Token (只需輸入一次)：");
-            if (token) localStorage.setItem(PREFIX + "token", token);
-            else return;
-        }
-        await loadDB(token);
+    // 金鑰自動生成
+    function generateKey() {
+        const a = 90000, b = 7000, c = 450, d = 11;
+        return String(a + b + c + d + 15000); // 112461
     }
 
-    // 從 Gist 讀取資料
-    async function loadDB(token) {
+    let db = { "電費": {}, "水費": {}, "網路": {} };
+    let currentTab = '電費';
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlY = parseInt(urlParams.get('y'));
+    const urlM = parseInt(urlParams.get('m'));
+
+    let viewDate = (urlY && urlM) ? new Date(urlY, urlM - 1, 1) : new Date();
+
+    // 初始化讀取 (改為對接 GAS)
+    async function init() {
+        await loadDB();
+    }
+
+    // 從 GAS 讀取資料 (取代 loadDB Gist 版)
+    async function loadDB() {
         toggleLoading(true);
         try {
-            const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                headers: { 'Authorization': `token ${token}` }
+            const res = await fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ 
+                    action: "get_utility", 
+                    key: generateKey() 
+                })
             });
-            if (!res.ok) throw new Error();
             const data = await res.json();
-            db = JSON.parse(data.files['utility_db.json'].content || '{"電費":{},"水費":{},"網路":{}}');
+            
+            // 如果是字串則解析，如果是物件則直接賦值
+            db = (typeof data === 'string') ? JSON.parse(data) : data;
+            
             updateUI();
         } catch (e) {
-            alert("Token 無效或 ID 錯誤，請重設。");
-            localStorage.removeItem(PREFIX + "token");
+            console.error("GAS 讀取失敗:", e);
+            alert("雲端讀取失敗，請確認 GAS 部署是否正確。");
         }
         toggleLoading(false);
     }
 
-    // 更新 UI 狀態
+    // 更新 UI 狀態 (邏輯維持不變)
     function updateUI() {
         const key = `${viewDate.getFullYear()}_${viewDate.getMonth() + 1}`;
         const plan = db[currentTab][key];
@@ -146,7 +141,7 @@ let viewDate = (urlY && urlM)
         document.getElementById('view-month-display').innerText = `${viewDate.getFullYear()} 年 ${String(viewDate.getMonth()+1).padStart(2,'0')} 月`;
     }
 
-    // 按比例生成多月排程
+    // 按比例生成多月排程 (邏輯維持不變，僅最後改呼叫 syncToGAS)
     async function generateSchedules() {
         const s = new Date(document.getElementById('s-date').value);
         const e = new Date(document.getElementById('e-date').value);
@@ -178,24 +173,33 @@ let viewDate = (urlY && urlM)
             cursor.setMonth(cursor.getMonth() + 1);
         }
 
-        await syncToGist();
+        await syncToGAS();
         updateUI();
-        alert("多月排程已儲存！");
+        alert("多月排程已儲存至雲端！");
     }
 
-    // 同步到 Gist
-    async function syncToGist() {
+    // 同步到 GAS (取代 syncToGist)
+    async function syncToGAS() {
         toggleLoading(true);
-        const token = localStorage.getItem(PREFIX + "token");
-        await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-            method: 'PATCH',
-            headers: { 'Authorization': `token ${token}` },
-            body: JSON.stringify({ files: { "utility_db.json": { content: JSON.stringify(db) } } })
-        });
+        try {
+            const res = await fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: "save_utility", 
+                    key: generateKey(),
+                    dbContent: JSON.stringify(db)
+                })
+            });
+            const result = await res.text();
+            if(!result.includes("Success")) throw new Error();
+        } catch (e) {
+            console.error("同步失敗:", e);
+            alert("雲端儲存失敗");
+        }
         toggleLoading(false);
     }
 
-    // 傳送至父網站
+    // 傳送至父網站 (邏輯維持不變)
     function sendToParent() {
         const key = `${viewDate.getFullYear()}_${viewDate.getMonth() + 1}`;
         const amount = db[currentTab][key].amount;
@@ -206,13 +210,12 @@ let viewDate = (urlY && urlM)
         }, '*');
     }
 
-    // 月份切換
+    // 月份與分頁切換 (邏輯維持不變)
     function changeMonth(dir) {
         viewDate.setMonth(viewDate.getMonth() + dir);
         updateUI();
     }
 
-    // 分頁切換
     function switchTab(t, btn) {
         currentTab = t;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -221,12 +224,8 @@ let viewDate = (urlY && urlM)
     }
 
     function toggleLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
-    
-    function resetToken() {
-        localStorage.removeItem(PREFIX + "token");
-        location.reload();
-    }
 
+    // 啟動
     init();
 </script>
 </body>

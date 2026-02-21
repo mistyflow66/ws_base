@@ -88,8 +88,9 @@
     <div id="order-page" class="page">
       <div id="lock-screen" class="card">
         <h3><i class="fa-solid fa-lock"></i> 雲端資料庫連線</h3>
-        <input type="password" id="admin-key" placeholder="輸入管理金鑰">
-        <button class="copy-btn" style="background:#af6a58;" onclick="fetchOrders()">讀取訂單資料</button>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">點擊下方按鈕以自動金鑰校驗並讀取資料</p>
+        <input type="password" id="admin-key" placeholder="管理金鑰 (已自動化可不填)" style="display:none;">
+        <button class="copy-btn" style="background:#af6a58;" onclick="fetchOrders()">連線並讀取資料</button>
       </div>
 
       <div id="order-content" style="display:none;">
@@ -97,19 +98,31 @@
           <span><i class="fa-solid fa-plus"></i> 快速登錄新訂單</span>
           <span id="order-acc-icon">▼</span>
         </div>
-        <div class="accordion-content" id="order-add-content" style="display:none;">
-          <input type="text" id="o-name" placeholder="訂房人姓名">
-          <div class="input-row"><input type="date" id="o-date"><select id="o-source"><option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option></select></div>
-          <div class="input-row"><input type="number" id="o-guests" placeholder="人數"><select id="o-nights"><option value="1">1 晚</option><option value="2">2 晚</option><option value="3">3 晚</option></select></div>
-          <div class="input-row"><select id="o-rooms"><option value="1">1 房</option><option value="2">2 房</option><option value="3" selected>3 房</option></select><input type="number" id="o-total" placeholder="總價"></div>
-          <input type="text" id="o-note" placeholder="備註" style="margin-top:8px;">
-          <button class="copy-btn btn-save" style="background:#af6a58; margin-top:10px;" onclick="addOrder()">儲存並同步</button>
-        </div>
+<div class="accordion-content" id="order-add-content" style="display:none;">
+    <div class="room-pill-row">
+        <label><input type="checkbox" name="o-room-type" value="201"><span>201</span></label>
+        <label><input type="checkbox" name="o-room-type" value="202"><span>202</span></label>
+        <label><input type="checkbox" name="o-room-type" value="301"><span>301</span></label>
+    </div>
+
+    <div class="form-grid">
+        <input type="date" id="o-date">
+        <input type="text" id="o-name" placeholder="姓名">
+
+        <input type="number" id="o-nights" placeholder="晚數">
+        <input type="number" id="o-total" placeholder="總房價">
+
+        <input type="number" id="o-dep" placeholder="訂金">
+        <input type="text" id="o-note" placeholder="備註">
+    </div>
+
+    <button class="btn-save" onclick="addOrder()">儲存並同步至雲端</button>
+</div>
 
         <div class="card mt-15">
           <div class="month-nav unified-nav">
             <button class="nav-arrow" onclick="changeMonth(-1)"><i class="fa-solid fa-angle-left"></i></button>
-            <h3 id="cal-month-title">讀取中...</h3>
+            <h3 id="cal-month-title">2024年 0月</h3>
             <button class="nav-arrow" onclick="changeMonth(1)"><i class="fa-solid fa-angle-right"></i></button>
           </div>
           <div class="view-switcher">
@@ -146,7 +159,12 @@
           <div class="fin-row fin-total" style="color:#af6a58;"><span>實際淨利</span><b id="archive-net-profit-preview">$0</b></div>
           <button class="copy-btn" onclick="openArchiveModal()" style="background: #3a4553; margin-top: 15px;">生成本月封存數據</button>
         </div>
-      </div> </div> </div> </div> <div id="u-modal" class="modal">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="u-modal" class="modal">
   <div class="modal-content" style="height: 85vh;">
     <span class="close-btn" onclick="closeUtilityModal()">&times;</span>
     <iframe id="utility-iframe" src="" style="width:100%; height:100%; border:none;"></iframe>
@@ -157,6 +175,7 @@
   <div class="modal-content">
     <span class="close-btn" onclick="closeEditModal()">&times;</span>
     <h3 id="modal-title">訂單詳細資訊</h3>
+    
     <div id="info-display-view">
       <div class="info-list" id="detail-info-list"></div>
       <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -164,21 +183,39 @@
         <button class="copy-btn" id="btn-pulse" style="flex:1; background:#003580;">Booking Pulse</button>
       </div>
     </div>
-    <div id="info-edit-view" style="display:none;">
-      <input type="hidden" id="e-oid">
-      <input type="text" id="e-name" placeholder="姓名">
-      <div class="input-row"><input type="date" id="e-date"><select id="e-nights"><option value="1">1 晚</option><option value="2">2 晚</option></select></div>
-      <div class="input-row"><select id="e-source"><option>私LINE</option><option>Booking</option></select><input type="number" id="e-guests" placeholder="人數"></div>
-      <div class="input-row"><select id="e-rooms"><option value="1">1 房</option><option value="2">2 房</option><option value="3">3 房</option></select><input type="number" id="e-total" placeholder="總價"></div>
-      <input type="number" id="e-dep" placeholder="訂金" style="margin-top:8px; width:100%;">
-      <input type="text" id="e-note" placeholder="備註" style="margin-top:8px; width:100%;">
-      <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button class="copy-btn" style="flex:2; background:#af6a58;" onclick="submitUpdate()">儲存更新</button>
-        <button class="copy-btn" style="flex:1; background:#95a5a6;" onclick="toggleEditMode(false)">取消</button>
-      </div>
-      <button class="copy-btn" style="background:#e74c3c; margin-top:10px; width:100%;" onclick="submitDelete()">刪除訂單</button>
-    </div>
+
+   <div class="accordion-content" id="order-add-content" style="display:none;">
+  <input type="text" id="o-name" placeholder="訂房人姓名" class="full-width">
+  
+  <div class="input-row">
+    <input type="date" id="o-date">
+    <select id="o-source">
+      <option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option>
+    </select>
   </div>
+
+  <div class="input-row">
+    <input type="number" id="o-guests" placeholder="人數">
+    <input type="number" id="o-nights" placeholder="晚數 (手動填寫)">
+  </div>
+
+  <div class="input-row">
+    <div class="room-pills">
+      <label><input type="checkbox" name="o-room-type" value="201"><span>201</span></label>
+      <label><input type="checkbox" name="o-room-type" value="202"><span>202</span></label>
+      <label><input type="checkbox" name="o-room-type" value="301"><span>301</span></label>
+    </div>
+    <input type="number" id="o-total" placeholder="總房價">
+  </div>
+
+  <div class="input-row">
+    <input type="number" id="o-dep" placeholder="訂金">
+    <input type="text" id="o-note" placeholder="備註">
+  </div>
+  
+  <button class="copy-btn btn-save full-width" style="background:#af6a58; margin-top:5px;" onclick="addOrder()">
+    儲存並同步到雲端
+  </button>
 </div>
 
 <div id="archive-modal" class="modal">
@@ -186,9 +223,9 @@
     <span class="close-btn" onclick="closeArchiveModal()">&times;</span>
     <h3><i class="fa-solid fa-file-shield"></i> 本月經營數據封存確認</h3>
     <div class="info-list" id="archive-summary-list"></div>
-    <div style="background: var(--primary-light); padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center;">
+    <div style="background: #fdf6f4; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center;">
       <div style="font-size: 0.8rem; color: #666;">預估本月實際淨利</div>
-      <div id="archive-net-profit" style="font-size: 1.6rem; font-weight: bold; color: var(--primary);">$0</div>
+      <div id="archive-net-profit" style="font-size: 1.6rem; font-weight: bold; color: #af6a58;">$0</div>
     </div>
     <div style="display: flex; gap: 10px; margin-top: 20px;">
       <button class="copy-btn" style="flex:1; background:#95a5a6;" onclick="closeArchiveModal()">取消</button>
