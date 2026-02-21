@@ -2,14 +2,17 @@
  * 煦願民宿智慧工作站 (B&B Smart Workstation) - 完整核心邏輯
  */
 
-/**
- * 煦願民宿 - 核心配置與金鑰邏輯
- */
-
-// 1. 確保 URL 正確
 const GAS_URL = "https://script.google.com/macros/s/AKfycbySPYLiPf6pUhZqbHMSK2z2eYtrzVWrPUweojAoCG8_15IrxQH0dhTOiXp1gf58dpiEQg/exec"; 
 
-// 2. 自動生成金鑰 (112461)
+function getSourceClass(source) {
+    if (!source) return 'default';
+    const s = String(source).toLowerCase();
+    if (s.includes('booking')) return 'booking';
+    if (s.includes('line')) return 'line';
+    if (s.includes('fb') || s.includes('facebook')) return 'fb';
+    return 'other';
+}
+
 function generateKey() {  
     const a = 300 * 300;  
     const b = 5000 + 2000;     
@@ -1223,3 +1226,4 @@ function toggleStatsSection() {
         statsArea.style.display = 'none';
     }
 }
+
