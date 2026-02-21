@@ -1227,3 +1227,58 @@ function toggleStatsSection() {
     }
 }
 
+/**
+ * 核心輔助工具：更新統計數據 (營收、間數、人數、佔比)
+ */
+function updateStatistics(data) {
+    const elements = {
+        income: document.getElementById('stat-total-income'),
+        rooms: document.getElementById('stat-total-rooms'),
+        guests: document.getElementById('stat-total-guests'),
+        bRate: document.getElementById('stat-b-rate'),
+        oRate: document.getElementById('stat-o-rate')
+    };
+
+    let totalIncome = 0;
+    let totalRooms = 0;
+    let totalGuests = 0;
+    let bookingCount = 0;
+    let totalCount = data.length;
+
+    data.forEach(order => {
+        // 假設 order 物件結構包含 total, rooms, guests, source
+        // 如果是原始陣列 r，請根據 index 調整如 r[7], r[6], r[5], r[1]
+        const inc = Number(order.total || order[7] || 0);
+        const rm = Number(order.rooms || order[6] || 0);
+        const gt = Number(order.guests || order[5] || 0);
+        const src = order.source || order[1] || "";
+
+        totalIncome += inc;
+        totalRooms += rm;
+        totalGuests += gt;
+        if (src.includes('Booking')) bookingCount++;
+    });
+
+    if (elements.income) elements.income.innerText = `$${totalIncome.toLocaleString()}`;
+    if (elements.rooms) elements.rooms.innerText = totalRooms;
+    if (elements.guests) elements.guests.innerText = totalGuests;
+    
+    if (totalCount > 0) {
+        const bPercent = Math.round((bookingCount / totalCount) * 100);
+        if (elements.bRate) elements.bRate.innerText = `${bPercent}%`;
+        if (elements.oRate) elements.oRate.innerText = `${100 - bPercent}%`;
+    }
+}
+
+/**
+ * 核心輔助工具：日期格式化 (YYYY/MM/DD)
+ */
+function formatDate(dateStr) {
+    if (!dateStr) return '---';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}/${m}/${day}`;
+}
