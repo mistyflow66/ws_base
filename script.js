@@ -790,20 +790,20 @@ function showOrderDetail(sourceArray, index, dayGroupIndices = null) {
 
     const infoList = document.getElementById('detail-info-list');
     
-    // 生成切換器 (只有在當天有多筆訂單時才顯示)
+    // 1. 生成切換器 (只有在當天有多筆訂單時才顯示)
     let pagerHtml = "";
     if (dayGroupIndices && dayGroupIndices.length > 1) {
         const currentPos = dayGroupIndices.indexOf(index) + 1;
         pagerHtml = `
-            <div class="detail-pager" style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:15px;">
-                <button onclick='showOrderDetail(currentViewOrders, ${dayGroupIndices[dayGroupIndices.indexOf(index)-1]}, ${JSON.stringify(dayGroupIndices)})' class="pager-btn" ${currentPos === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i> 上一筆</button>
-                <span style="font-weight:bold;">當日第 ${currentPos} / ${dayGroupIndices.length} 筆</span>
-                <button onclick='showOrderDetail(currentViewOrders, ${dayGroupIndices[dayGroupIndices.indexOf(index)+1]}, ${JSON.stringify(dayGroupIndices)})' class="pager-btn" ${currentPos === dayGroupIndices.length ? 'disabled' : ''}>下一筆 <i class="fa-solid fa-chevron-right"></i></button>
+            <div class="detail-pager" style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:12px;">
+                <button onclick='showOrderDetail(currentViewOrders, ${dayGroupIndices[dayGroupIndices.indexOf(index)-1]}, ${JSON.stringify(dayGroupIndices)})' class="pager-btn" ${currentPos === 1 ? 'disabled' : ''} style="border:none; background:none; color:#af6a58; cursor:pointer;"><i class="fa-solid fa-chevron-left"></i> 上一筆</button>
+                <span style="font-weight:bold; font-size:0.85rem;">當日第 ${currentPos} / ${dayGroupIndices.length} 筆</span>
+                <button onclick='showOrderDetail(currentViewOrders, ${dayGroupIndices[dayGroupIndices.indexOf(index)+1]}, ${JSON.stringify(dayGroupIndices)})' class="pager-btn" ${currentPos === dayGroupIndices.length ? 'disabled' : ''} style="border:none; background:none; color:#af6a58; cursor:pointer;">下一筆 <i class="fa-solid fa-chevron-right"></i></button>
             </div>
         `;
     }
 
-    // 聯絡按鈕配置邏輯 (維持原樣)
+    // 2. 聯絡按鈕配置邏輯
     const s = order.source || "私LINE";
     let btnConfig = { text: "開啟 App", icon: "fa-solid fa-comment-dots", color: "#af6a58", appUrl: "#", webUrl: "#" };
     if (s.includes("Booking")) {
@@ -814,7 +814,7 @@ function showOrderDetail(sourceArray, index, dayGroupIndices = null) {
         btnConfig = { text: "LINE", icon: "fa-solid fa-comment-dots", color: "#00c300", appUrl: "line://", webUrl: "https://line.me" };
     }
 
-    // 渲染詳細資訊 (僅新增房型明細顯示)
+    // 3. 渲染詳細資訊 (顯示模式)
     infoList.innerHTML = pagerHtml + `
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-user"></i> 訂房人</span><span class="info-value">${order.name}</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-calendar"></i> 入住日期</span><span class="info-value">${formatDate(order.date)} (${order.nights}晚)</span></div>
@@ -824,42 +824,50 @@ function showOrderDetail(sourceArray, index, dayGroupIndices = null) {
         <div class="info-item"><span class="info-label">備註</span><span class="info-value">${order.note || '無'}</span></div>
     `;
 
-    // 按鈕與編輯器預填 (維持原樣)
+    // 4. 更新聯絡按鈕
     const actionBtn = document.getElementById('btn-pulse');
     if (actionBtn) {
         actionBtn.innerHTML = `<i class="${btnConfig.icon}"></i> ${btnConfig.text}`;
         actionBtn.style.background = btnConfig.color;
-        // 原本的跳轉邏輯
         actionBtn.onclick = () => {
              const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
              window.open(isMobile ? btnConfig.appUrl : btnConfig.webUrl, '_blank');
         };
     }
 
-    // 預填編輯欄位
-    document.getElementById('e-oid').value = order.id || '';
-    document.getElementById('e-name').value = order.name || '';
-    document.getElementById('e-date').value = order.date ? order.date.split('T')[0] : '';
-    document.getElementById('e-nights').value = order.nights || '1';
-    document.getElementById('e-source').value = s;
-    document.getElementById('e-guests').value = order.guests || '';
-    // 間數由 JS 根據勾選自動算，但仍填入隱藏或唯讀格
-    document.getElementById('e-rooms').value = order.rooms || '1'; 
-    document.getElementById('e-total').value = order.total || '';
-    document.getElementById('e-dep').value = order.deposit || 0;
-    document.getElementById('e-note').value = order.note || '';
+    // 5. 預填編輯欄位 (對應您的 Grid HTML 結構)
+    // 這裡使用 e- 前綴代表 Edit 模式的 ID
+    setInputValue('e-oid', order.id);
+    setInputValue('e-name', order.name);
+    setInputValue('e-date', order.date ? order.date.split('T')[0] : '');
+    setInputValue('e-nights', order.nights || '1'); // 直接填入晚數輸入框
+    setInputValue('e-source', s);
+    setInputValue('e-guests', order.guests);
+    setInputValue('e-total', order.total);
+    setInputValue('e-dep', order.deposit || 0);
+    setInputValue('e-note', order.note);
 
-    // --- 新增：還原編輯模式的 Checkbox 勾選狀態 ---
+    // 6. 還原「房型膠囊」的勾選狀態
     const roomStr = order.roomDetail || "";
     document.querySelectorAll('input[name="e-room-type"]').forEach(cb => {
+        // 判斷該房號 (如 201) 是否在訂單的 roomDetail 字串中
         cb.checked = roomStr.includes(cb.value);
     });
 
+    // 進入顯示模式，隱藏編輯輸入框，顯示文字
     toggleEditMode(false); 
-    document.getElementById('edit-modal').style.display = 'block';
-    setTimeout(() => document.getElementById('edit-modal').classList.add('active'), 10);
+    
+    // 顯示 Modal
+    const modal = document.getElementById('edit-modal');
+    modal.style.display = 'block';
+    setTimeout(() => modal.classList.add('active'), 10);
 }
 
+// 輔助函數：安全設定數值
+function setInputValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value || '';
+}
 // --- 財務計算優化 ---
 function calculateFinance() {
     const year = currentViewDate.getFullYear();
