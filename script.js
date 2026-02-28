@@ -46,13 +46,28 @@ const TPL_DATA = [
     title: '預留確認 (含匯款帳號)', 
     content: (d, p, dep, bal, note, nights, total) => {
         let checkoutText = "退房日期";
-        if (d && d.includes('/')) {
-            let parts = d.split('/');
-            let dateObj = new Date(new Date().getFullYear(), parseInt(parts[0]) - 1, parseInt(parts[1]));
-            dateObj.setDate(dateObj.getDate() + (parseInt(nights) || 1));
-            checkoutText = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+        if (d) {
+            const text = String(d).trim();
+            let dateObj = null;
+
+            if (text.includes('/')) {
+                const parts = text.split('/').map(Number);
+                if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                    dateObj = new Date(new Date().getFullYear(), parts[0] - 1, parts[1]);
+                }
+            } else if (text.includes('-')) {
+                const parts = text.split('-').map(Number);
+                if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+                    dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                }
+            }
+
+            if (dateObj && !isNaN(dateObj.getTime())) {
+                dateObj.setDate(dateObj.getDate() + 1);
+                checkoutText = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+            }
         }
-        return `請您確認預訂資訊：\n1. ${d}入住${nights} 一晚（${checkoutText}退房)，私訊優惠價 ${total} 元\n若以上訊息無誤，再麻煩您先匯訂金 ${dep} 元到以下帳號，煦願民宿先幫您預留日期，謝謝您的預訂\n\n中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`;
+        return `請您確認預訂資訊：\n ${d}入住一晚（${checkoutText}退房)，私訊優惠價 ${total} 元\n若以上訊息無誤，再麻煩您先匯訂金 ${dep} 元到以下帳號，煦願民宿先幫您預留日期，謝謝您的預訂\n\n中華郵政（代號700）\n帳號：0111334-0036797\n戶名：林奐廷`;
     }
   },
   { 
@@ -547,31 +562,36 @@ async function updateOrder() {
     const key = generateKey();
     const oid = document.getElementById('e-oid').value;
     const roomData = getRoomData('e');
-    const nights = Number(document.getElementById('e-nights').value) || 1; // 直接抓輸入框數字
+    const name = document.getElementById('e-name').value;
+    const date = document.getElementById('e-date').value;
+    const source = document.getElementById('e-source').value;
+    const guests = document.getElementById('e-guests').value;
+    const nights = Number(document.getElementById('e-nights').value) || 1;
+    const total = Number(document.getElementById('e-total').value) || 0;
+    const dep = Number(document.getElementById('e-dep').value) || 0;
+    const note = document.getElementById('e-note').value;
     
     if (!oid) return alert("找不到訂單編號 (OID)");
     if (roomData.count === 0) return alert("請至少選擇一個房型");
+    if (!name || !date) return alert("請填寫姓名與日期");
     
     toggleLoading(true);
-
-    const total = Number(document.getElementById('e-total').value) || 0;
-    const dep = Number(document.getElementById('e-dep').value) || 0;
 
     const payload = {
         action: "update",
         key: key,
         oid: oid,
-        name: document.getElementById('e-name').value,
-        date: document.getElementById('e-date').value,
+        name: name,
+        date: date,
         nights: nights, 
-        source: document.getElementById('e-source').value,
-        guests: document.getElementById('e-guests').value,
+        source: source,
+        guests: guests,
         rooms: roomData.count,      
         roomDetail: roomData.detail, 
         total: total,
         dep: dep,
         bal: total - dep,
-        note: document.getElementById('e-note').value
+        note: note
     };
 
     try {

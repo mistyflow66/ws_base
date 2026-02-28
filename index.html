@@ -191,37 +191,33 @@
 
    <div class="accordion-content" id="edit-content" style="display:none;">
   <input type="hidden" id="e-oid">
-  <input type="text" id="e-name" placeholder="訂房人姓名" class="full-width">
-  
-  <div class="input-row">
+
+  <div class="room-pill-row">
+    <label><input type="checkbox" name="e-room-type" value="201"><span>201</span></label>
+    <label><input type="checkbox" name="e-room-type" value="202"><span>202</span></label>
+    <label><input type="checkbox" name="e-room-type" value="301"><span>301</span></label>
+  </div>
+
+  <div class="form-grid">
     <input type="date" id="e-date">
+    <input type="text" id="e-name" placeholder="姓名">
+
     <select id="e-source">
       <option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option>
     </select>
-  </div>
-
-  <div class="input-row">
     <input type="number" id="e-guests" placeholder="人數">
-    <input type="number" id="e-nights" placeholder="晚數 (手動填寫)">
-  </div>
 
-  <div class="input-row">
-    <div class="room-pills">
-      <label><input type="checkbox" name="e-room-type" value="201"><span>201</span></label>
-      <label><input type="checkbox" name="e-room-type" value="202"><span>202</span></label>
-      <label><input type="checkbox" name="e-room-type" value="301"><span>301</span></label>
-    </div>
+    <input type="number" id="e-nights" placeholder="晚數">
     <input type="number" id="e-total" placeholder="總房價">
-  </div>
 
-  <div class="input-row">
     <input type="number" id="e-dep" placeholder="訂金">
     <input type="text" id="e-note" placeholder="備註">
   </div>
-  
-  <button class="copy-btn btn-save full-width" style="background:#af6a58; margin-top:5px;" onclick="updateOrder()">
-    儲存並同步到雲端
-  </button>
+
+  <div class="input-row" style="margin-top:8px;">
+    <button class="copy-btn" style="flex:1; background:#af6a58; margin:0;" onclick="updateOrder()">儲存修改</button>
+    <button class="copy-btn btn-cancel" style="flex:1; margin:0;" onclick="deleteOrder()">刪除訂單</button>
+  </div>
 </div>
 
   </div>
