@@ -112,15 +112,24 @@
                     key: generateKey() 
                 })
             });
-            const data = await res.json();
-            
-            // 如果是字串則解析，如果是物件則直接賦值
-            db = (typeof data === 'string') ? JSON.parse(data) : data;
+            const raw = await res.text();
+            if (raw.startsWith("Error:")) {
+                throw new Error(raw);
+            }
+
+            let data;
+            try {
+                data = JSON.parse(raw);
+            } catch (parseErr) {
+                throw new Error(`後端回傳非 JSON：${raw}`);
+            }
+
+            db = (data && typeof data === 'object') ? data : { "電費": {}, "水費": {}, "網路": {} };
             
             updateUI();
         } catch (e) {
             console.error("GAS 讀取失敗:", e);
-            alert("雲端讀取失敗，請確認 GAS 部署是否正確。");
+            alert(`雲端讀取失敗：${e.message}\n請確認 GAS 已重新部署且包含 get_utility/save_utility。`);
         }
         toggleLoading(false);
     }

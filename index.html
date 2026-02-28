@@ -109,6 +109,11 @@
         <input type="date" id="o-date">
         <input type="text" id="o-name" placeholder="姓名">
 
+        <select id="o-source">
+          <option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option>
+        </select>
+        <input type="number" id="o-guests" placeholder="人數">
+
         <input type="number" id="o-nights" placeholder="晚數">
         <input type="number" id="o-total" placeholder="總房價">
 
@@ -184,38 +189,42 @@
       </div>
     </div>
 
-   <div class="accordion-content" id="order-add-content" style="display:none;">
-  <input type="text" id="o-name" placeholder="訂房人姓名" class="full-width">
+   <div class="accordion-content" id="edit-content" style="display:none;">
+  <input type="hidden" id="e-oid">
+  <input type="text" id="e-name" placeholder="訂房人姓名" class="full-width">
   
   <div class="input-row">
-    <input type="date" id="o-date">
-    <select id="o-source">
+    <input type="date" id="e-date">
+    <select id="e-source">
       <option>私LINE</option><option>Booking</option><option>官方LINE</option><option>FB</option>
     </select>
   </div>
 
   <div class="input-row">
-    <input type="number" id="o-guests" placeholder="人數">
-    <input type="number" id="o-nights" placeholder="晚數 (手動填寫)">
+    <input type="number" id="e-guests" placeholder="人數">
+    <input type="number" id="e-nights" placeholder="晚數 (手動填寫)">
   </div>
 
   <div class="input-row">
     <div class="room-pills">
-      <label><input type="checkbox" name="o-room-type" value="201"><span>201</span></label>
-      <label><input type="checkbox" name="o-room-type" value="202"><span>202</span></label>
-      <label><input type="checkbox" name="o-room-type" value="301"><span>301</span></label>
+      <label><input type="checkbox" name="e-room-type" value="201"><span>201</span></label>
+      <label><input type="checkbox" name="e-room-type" value="202"><span>202</span></label>
+      <label><input type="checkbox" name="e-room-type" value="301"><span>301</span></label>
     </div>
-    <input type="number" id="o-total" placeholder="總房價">
+    <input type="number" id="e-total" placeholder="總房價">
   </div>
 
   <div class="input-row">
-    <input type="number" id="o-dep" placeholder="訂金">
-    <input type="text" id="o-note" placeholder="備註">
+    <input type="number" id="e-dep" placeholder="訂金">
+    <input type="text" id="e-note" placeholder="備註">
   </div>
   
-  <button class="copy-btn btn-save full-width" style="background:#af6a58; margin-top:5px;" onclick="addOrder()">
+  <button class="copy-btn btn-save full-width" style="background:#af6a58; margin-top:5px;" onclick="updateOrder()">
     儲存並同步到雲端
   </button>
+</div>
+
+  </div>
 </div>
 
 <div id="archive-modal" class="modal">

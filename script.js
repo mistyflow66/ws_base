@@ -651,20 +651,19 @@ function renderOrderList() {
 
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
-    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-    
     const titleEl = document.getElementById('cal-month-title');
     if (titleEl) titleEl.innerText = `${year}年 ${month + 1}月`;
 
     // 過濾並排序
     currentViewOrders = globalOrderData
-        .filter(r => r[3] && String(r[3]).includes(monthStr))
         .map(r => ({
-            id: r[0], source: r[1], name: r[2], date: r[3],
+            id: r[0], source: r[1], name: r[2], date: r[3], roomDetail: r[4],
             guests: r[5], rooms: r[6], total: r[7], deposit: r[8],
-            bal: r[9], nights: r[10], note: r[11]
+            bal: r[9], nights: r[10], note: r[11],
+            dateObj: parseOrderDate(r[3])
         }))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+        .filter(o => o.dateObj && o.dateObj.getFullYear() === year && o.dateObj.getMonth() === month)
+        .sort((a, b) => a.dateObj - b.dateObj);
 
     // 渲染月曆
     renderCalendar(year, month);
@@ -714,6 +713,28 @@ function changeListPage(dir) {
     renderOrderList();
 }
 
+function parseOrderDate(rawDate) {
+    if (!rawDate) return null;
+
+    if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
+        return new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate());
+    }
+
+    const text = String(rawDate).trim();
+    const m = text.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    if (m) {
+        const y = Number(m[1]);
+        const mo = Number(m[2]);
+        const d = Number(m[3]);
+        const parsed = new Date(y, mo - 1, d);
+        if (!isNaN(parsed.getTime())) return parsed;
+    }
+
+    const fallback = new Date(text);
+    if (isNaN(fallback.getTime())) return null;
+    return new Date(fallback.getFullYear(), fallback.getMonth(), fallback.getDate());
+}
+
 function renderCalendar(year, month) {
     const grid = document.getElementById('calendar-grid');
     if (!grid) return;
@@ -721,10 +742,10 @@ function renderCalendar(year, month) {
     const bookedStatus = {}; 
 
     currentViewOrders.forEach((o, index) => {
-        // 使用 yyyy-mm-dd 分割避免時區偏誤
-        const [y, m, d] = o.date.split('-').map(Number);
-        const checkInDate = new Date(y, m - 1, d);
-        const nights = parseInt(o.nights) || 1;
+        const checkInDate = o.dateObj || parseOrderDate(o.date);
+        if (!checkInDate) return;
+
+        const nights = Math.max(1, parseInt(o.nights, 10) || 1);
         
         for (let i = 0; i < nights; i++) {
             const current = new Date(checkInDate);
@@ -818,11 +839,14 @@ function showOrderDetail(sourceArray, index, dayGroupIndices = null) {
     }
 
     // 3. 渲染詳細資訊 (顯示模式)
+    const roomText = order.roomDetail && String(order.roomDetail).trim() ? String(order.roomDetail) : '未標註';
+
     infoList.innerHTML = pagerHtml + `
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-user"></i> 訂房人</span><span class="info-value">${order.name}</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-calendar"></i> 入住日期</span><span class="info-value">${formatDate(order.date)} (${order.nights}晚)</span></div>
         <div class="info-item"><span class="info-label"><i class="fa-solid fa-tag"></i> 來源</span><span class="source-tag tag-${getSourceClass(s)}">${s}</span></div>
-        <div class="info-item"><span class="info-label"><i class="fa-solid fa-bed"></i> 房型/人數</span><span class="info-value">${order.roomDetail || '未標註'} (${order.rooms}間) / ${order.guests}人</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-bed"></i> 房型</span><span class="info-value">${roomText}</span></div>
+        <div class="info-item"><span class="info-label"><i class="fa-solid fa-users"></i> 間數/人數</span><span class="info-value">${order.rooms}間 / ${order.guests}人</span></div>
         <div class="info-item" style="color:#af6a58; font-weight:bold;"><span class="info-label">總金額</span><span class="info-value">$${Number(order.total).toLocaleString()}</span></div>
         <div class="info-item"><span class="info-label">備註</span><span class="info-value">${order.note || '無'}</span></div>
     `;
@@ -870,6 +894,23 @@ function showOrderDetail(sourceArray, index, dayGroupIndices = null) {
 function setInputValue(id, value) {
     const el = document.getElementById(id);
     if (el) el.value = value || '';
+}
+
+function toggleEditMode(isEdit) {
+    const infoView = document.getElementById('info-display-view');
+    const editView = document.getElementById('edit-content');
+    const title = document.getElementById('modal-title');
+
+    if (infoView) infoView.style.display = isEdit ? 'none' : 'block';
+    if (editView) editView.style.display = isEdit ? 'block' : 'none';
+    if (title) title.innerText = isEdit ? '編輯訂單資料' : '訂單詳細資訊';
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-modal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    setTimeout(() => { modal.style.display = 'none'; }, 200);
 }
 // --- 財務計算優化 ---
 function calculateFinance() {
