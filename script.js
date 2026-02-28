@@ -148,12 +148,89 @@ const TPL_DATA = [
     title: "退房手續說明",
     // 改成函數格式 () => `...`
     content: () => `退房時，麻煩您把鑰匙掛在一樓電視旁的鑰匙架上、拍照回傳給我們\n二樓冷/暖氣關機，大門關上\n這樣就做好退房手續唷！`
-  }
+  },
+  {
+  cat: "退房",
+  title: "物品寄送詢問",
+  // 改成函數格式 () => `...`
+  content: () => `您好！今天整理房間時發現了這個（如圖），請問是您遺漏的物品嗎？如果是的話，再麻煩告知我們是否需要幫您寄回。謝謝您☺️`
+},
+{
+  cat: "退房",
+  title: "賣貨便寄送",
+  // 改成函數格式 () => `...`
+  content: () => `為方便您取貨付款，我們會使用賣貨便寄出（可追蹤物流進度）\n包含超商運費 38 元 + 基本包材處理費 20 元 = 共 58 元\n\n您直接填寫取貨資訊下單即可，我們會盡快幫您寄出，謝謝您\n\nhttps://myship.7-11.com.tw/general/detail/GM2402020817356`
+}
 ]; 
 let packageList = [];
 let globalOrderData = [];
 let currentViewDate = new Date();
 let currentView = 'cal';
+
+const ORDER_COL = {
+    id: 0,
+    source: 1,
+    name: 2,
+    date: 3,
+    roomDetail: 4,
+    guests: 5,
+    rooms: 6,
+    total: 7,
+    deposit: 8,
+    bal: 9,
+    nights: 10,
+    note: 11
+};
+
+function normalizeDateString(rawDate) {
+    if (!rawDate) return '';
+
+    if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
+        const y = rawDate.getFullYear();
+        const m = String(rawDate.getMonth() + 1).padStart(2, '0');
+        const d = String(rawDate.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    const text = String(rawDate).trim();
+    const m1 = text.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+    if (m1) {
+        return `${m1[1]}-${String(m1[2]).padStart(2, '0')}-${String(m1[3]).padStart(2, '0')}`;
+    }
+
+    const fallback = new Date(text);
+    if (!isNaN(fallback.getTime())) {
+        const y = fallback.getFullYear();
+        const m = String(fallback.getMonth() + 1).padStart(2, '0');
+        const d = String(fallback.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+    return text;
+}
+
+function normalizeOrderRow(row) {
+    const date = normalizeDateString(row[ORDER_COL.date]);
+    return {
+        id: row[ORDER_COL.id],
+        source: row[ORDER_COL.source],
+        name: row[ORDER_COL.name],
+        date,
+        roomDetail: row[ORDER_COL.roomDetail],
+        guests: row[ORDER_COL.guests],
+        rooms: row[ORDER_COL.rooms],
+        total: row[ORDER_COL.total],
+        deposit: row[ORDER_COL.deposit],
+        bal: row[ORDER_COL.bal],
+        nights: row[ORDER_COL.nights],
+        note: row[ORDER_COL.note],
+        dateObj: parseOrderDate(date)
+    };
+}
+
+function refreshUI() {
+    currentListPage = 1;
+    renderOrderList();
+}
 
 // --- 初始化與基礎功能 ---
 window.onload = () => {
@@ -164,10 +241,14 @@ window.onload = () => {
     
     // 2. 自動連線邏輯：直接執行 fetchOrders
     // 因為現在使用 generateKey() 自動計算金鑰，不再依賴 localStorage
-    fetchOrders(); 
+    fetchData(); 
 
     // 3. 更新 UI 初始顯示
     updateAll();
+
+    // 4. 初始化財務計算與輸入監聽
+    initializeFinancialBindings();
+    updateFinancialSummary();
 };
 
 /**
@@ -428,7 +509,7 @@ async function callGAS(payload) {
 /**
  * 1. 讀取訂單 - 從試算表抓取全部資料
  */
-async function fetchOrders() {
+async function fetchData() {
     toggleLoading(true);
     const key = generateKey(); 
     
@@ -446,7 +527,8 @@ async function fetchOrders() {
             if (lockScreen) lockScreen.style.display = 'none';
             if (orderContent) orderContent.style.display = 'block';
             
-            renderOrderList();
+            refreshUI();
+            updateFinancialSummary();
         } else {
             alert("雲端驗證失敗，請檢查金鑰邏輯。");
         }
@@ -457,19 +539,10 @@ async function fetchOrders() {
     toggleLoading(false);
 }
 
-
-/**
- * 核心輔助工具：抓取正確的晚數
- * @param {string} prefix - 'o' (新增) 或 'e' (修改)
- */
-function getNightsValue(prefix) {
-    const select = document.getElementById(`${prefix}-nights`);
-    const customInput = document.getElementById(`${prefix}-nights-custom`);
-    if (select && select.value === 'custom') {
-        return customInput.value || 1;
-    }
-    return select ? select.value : 1;
+async function fetchOrders() {
+    return fetchData();
 }
+
 
 /**
  * 核心輔助工具：抓取房型複選資料
@@ -480,23 +553,7 @@ function getRoomData(prefix) {
     const rooms = Array.from(checkedBoxes).map(cb => cb.value);
     return {
         count: rooms.length,
-        detail: rooms.join(', ') // 產出如 "201, 202"
-    };
-}
-
-/**
- * 1. 新增訂單邏輯
- */
-/**
- * 輔助工具：抓取房型複選資料 (適用於膠囊按鈕)
- * @param {string} prefix - 'o' (新增) 或 'e' (修改)
- */
-function getRoomData(prefix) {
-    const checkedBoxes = document.querySelectorAll(`input[name="${prefix}-room-type"]:checked`);
-    const rooms = Array.from(checkedBoxes).map(cb => cb.value);
-    return {
-        count: rooms.length,
-        detail: rooms.join(', ') // 產出如 "201, 202"
+        detail: rooms.join(', ')
     };
 }
 
@@ -504,52 +561,46 @@ function getRoomData(prefix) {
  * 1. 新增訂單邏輯
  */
 async function addOrder() {
-    const key = generateKey(); 
-    // 取得房型數據 (膠囊按鈕本質還是 checkbox)
-    const checkedBoxes = document.querySelectorAll('input[name="o-room-type"]:checked');
-    const rooms = Array.from(checkedBoxes).map(cb => cb.value);
-    
-    if (rooms.length === 0) return alert("請選擇房型");
+    const key = generateKey();
+    const roomData = getRoomData('o');
+    if (roomData.count === 0) return alert("請選擇房型");
+
+    const name = document.getElementById('o-name').value.trim();
+    const date = normalizeDateString(document.getElementById('o-date').value);
+    if (!name || !date) return alert("請填寫姓名與日期");
 
     toggleLoading(true);
-    
     const total = Number(document.getElementById('o-total').value) || 0;
     const dep = Number(document.getElementById('o-dep').value) || 0;
 
     const payload = {
-        action: "add", 
-        key: key,
-        name: document.getElementById('o-name').value, 
-        date: document.getElementById('o-date').value,
-        source: document.getElementById('o-source').value, 
-        guests: document.getElementById('o-guests').value,
-        rooms: rooms.length,           // 間數
-        roomDetail: rooms.join(', '),  // 房號
-        total: total, 
-        dep: dep, 
+        action: "add",
+        key,
+        source: document.getElementById('o-source').value,
+        name,
+        date,
+        roomDetail: roomData.detail,
+        guests: Number(document.getElementById('o-guests').value) || 0,
+        rooms: roomData.count,
+        total,
+        dep,
         bal: total - dep,
-        nights: Number(document.getElementById('o-nights').value) || 1, // 抓取純數字
-        note: document.getElementById('o-note').value 
+        nights: Number(document.getElementById('o-nights').value) || 1,
+        note: document.getElementById('o-note').value
     };
-
-    if (!payload.name || !payload.date) {
-        toggleLoading(false);
-        return alert("請填寫姓名與日期");
-    }
 
     try {
         const result = await callGAS(payload);
         if (result === "Success" || result.result === "success") {
-            alert("儲存成功"); 
-            await fetchOrders(); 
-            // 清除內容
-            document.querySelectorAll('#order-add-content input').forEach(i => i.value = "");
-            document.querySelectorAll('input[name="o-room-type"]').forEach(c => c.checked = false);
+            await fetchData();
+            refreshUI();
+            clearOrderInputs();
             toggleAccordion('order-add-content', 'order-acc-icon');
+            alert("儲存成功");
         } else {
-            throw new Error(result);
+            throw new Error(typeof result === 'string' ? result : JSON.stringify(result));
         }
-    } catch(e) {
+    } catch (e) {
         alert("儲存失敗：" + e.message);
     }
     toggleLoading(false);
@@ -562,8 +613,8 @@ async function updateOrder() {
     const key = generateKey();
     const oid = document.getElementById('e-oid').value;
     const roomData = getRoomData('e');
-    const name = document.getElementById('e-name').value;
-    const date = document.getElementById('e-date').value;
+    const name = document.getElementById('e-name').value.trim();
+    const date = normalizeDateString(document.getElementById('e-date').value);
     const source = document.getElementById('e-source').value;
     const guests = document.getElementById('e-guests').value;
     const nights = Number(document.getElementById('e-nights').value) || 1;
@@ -579,26 +630,27 @@ async function updateOrder() {
 
     const payload = {
         action: "update",
-        key: key,
-        oid: oid,
-        name: name,
-        date: date,
-        nights: nights, 
-        source: source,
-        guests: guests,
-        rooms: roomData.count,      
-        roomDetail: roomData.detail, 
-        total: total,
-        dep: dep,
+        key,
+        oid,
+        name,
+        date,
+        nights,
+        source,
+        guests,
+        rooms: roomData.count,
+        roomDetail: roomData.detail,
+        total,
+        dep,
         bal: total - dep,
-        note: note
+        note
     };
 
     try {
         const result = await callGAS(payload);
         if (result === "Update Success" || result.result === "success") {
+            await fetchData();
+            refreshUI();
             alert("修改成功");
-            await fetchOrders(); 
             document.getElementById('edit-modal').classList.remove('active');
         } else {
             alert("修改失敗：" + result);
@@ -644,8 +696,9 @@ async function deleteOrder() {
         });
 
         if (result === "Delete Success" || result.result === "success") {
+            await fetchData();
+            refreshUI();
             alert("訂單已刪除");
-            await fetchOrders(); 
             document.getElementById('edit-modal').classList.remove('active');
         } else {
             alert("刪除失敗：" + result);
@@ -676,12 +729,7 @@ function renderOrderList() {
 
     // 過濾並排序
     currentViewOrders = globalOrderData
-        .map(r => ({
-            id: r[0], source: r[1], name: r[2], date: r[3], roomDetail: r[4],
-            guests: r[5], rooms: r[6], total: r[7], deposit: r[8],
-            bal: r[9], nights: r[10], note: r[11],
-            dateObj: parseOrderDate(r[3])
-        }))
+        .map(normalizeOrderRow)
         .filter(o => o.dateObj && o.dateObj.getFullYear() === year && o.dateObj.getMonth() === month)
         .sort((a, b) => a.dateObj - b.dateObj);
 
@@ -932,30 +980,73 @@ function closeEditModal() {
     modal.classList.remove('active');
     setTimeout(() => { modal.style.display = 'none'; }, 200);
 }
-// --- 財務計算優化 ---
-function calculateFinance() {
+
+function getSafeNumberFromInput(id) {
+    const raw = document.getElementById(id)?.value;
+    if (raw === '' || raw === null || raw === undefined) return 0;
+    const num = Number(raw);
+    return Number.isFinite(num) ? num : 0;
+}
+
+function getSafeNumber(value) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : 0;
+}
+
+function updateFinancialSummary() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
     const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-    
-    // 從原始 globalOrderData 過濾，確保數據最準
-    const mData = globalOrderData.filter(r => r[3] && String(r[3]).includes(monthStr));
 
-    const income = mData.reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
-    const bTotal = mData.filter(r => String(r[1]).includes('Booking')).reduce((s, r) => s + (parseFloat(r[7]) || 0), 0);
-    const fee = Math.round(bTotal * 0.12); // Booking 手續費 12%
-    
-    const laundry = parseFloat(document.getElementById('laundry-cost')?.value) || 0;
-    const utility = parseFloat(document.getElementById('utility-cost')?.value) || 0;
+    const mData = globalOrderData
+        .map(normalizeOrderRow)
+        .filter(o => o.date && o.date.startsWith(monthStr));
 
-    const net = income - fee - laundry - utility;
+    const income = mData.reduce((sum, o) => sum + getSafeNumber(o.total), 0);
+    const bTotal = mData
+        .filter(o => String(o.source).includes('Booking'))
+        .reduce((sum, o) => sum + getSafeNumber(o.total), 0);
+    const fee = Math.round(bTotal * 0.12);
 
-    if(document.getElementById('fin-income')) document.getElementById('fin-income').innerText = '$' + income.toLocaleString();
-    if(document.getElementById('fin-fee')) document.getElementById('fin-fee').innerText = '-$' + fee.toLocaleString();
-    if(document.getElementById('fin-net')) document.getElementById('fin-net').innerText = '$' + net.toLocaleString();
-    
-    // 儲存至全域供月結封存使用
-    window.currentMonthFin = { income, fee, laundry, utility, net };
+    const laundry = getSafeNumberFromInput('laundry-cost');
+    const utility = getSafeNumberFromInput('utility-cost');
+    const totalExpense = laundry + utility;
+    const net = income - fee - totalExpense;
+
+    const finIncomeEl = document.getElementById('fin-income');
+    const finFeeEl = document.getElementById('fin-fee');
+    const finNetEl = document.getElementById('fin-net');
+    const archiveNetPreviewEl = document.getElementById('archive-net-profit-preview');
+    const meNetPreviewEl = document.getElementById('me-net-preview');
+    const finalLaundryEl = document.getElementById('final-laundry');
+    const finalUtilityEl = document.getElementById('final-utility');
+
+    if (finIncomeEl) finIncomeEl.innerText = '$' + income.toLocaleString();
+    if (finFeeEl) finFeeEl.innerText = '-$' + fee.toLocaleString();
+    if (finNetEl) finNetEl.innerText = '$' + net.toLocaleString();
+    if (archiveNetPreviewEl) archiveNetPreviewEl.innerText = '$' + net.toLocaleString();
+    if (meNetPreviewEl) meNetPreviewEl.innerText = '$' + net.toLocaleString();
+    if (finalLaundryEl) finalLaundryEl.value = laundry;
+    if (finalUtilityEl) finalUtilityEl.value = utility;
+
+    window.currentMonthFin = { income, fee, laundry, utility, totalExpense, net };
+    window.currentMonthEndData = { income, fee, laundry, utility, net };
+
+    return window.currentMonthFin;
+}
+
+function initializeFinancialBindings() {
+    ['laundry-cost', 'utility-cost'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.boundFinancialInput === '1') return;
+        el.addEventListener('input', updateFinancialSummary);
+        el.dataset.boundFinancialInput = '1';
+    });
+}
+
+// --- 財務計算優化 ---
+function calculateFinance() {
+    return updateFinancialSummary();
 }
 
 function copyText(id, e) {
@@ -1017,13 +1108,6 @@ function switchOrderView(type) {
     document.getElementById('order-list').style.display = type === 'list' ? 'block' : 'none';
 }
 
-function formatDate(dateStr) {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    // 使用 getUTCMonth 避免時區導致日期減一天的問題
-    return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
-}
-
 // 1. 切換月結區塊顯示
 function toggleMonthEnd() {
     const area = document.getElementById('month-end-calc');
@@ -1036,51 +1120,12 @@ function toggleMonthEnd() {
 
 // 2. 準備結算數據
 function prepareMonthEnd() {
-    const income = parseFloat(document.getElementById('fin-income').innerText.replace(/[^0-9.-]+/g,"")) || 0;
-    const bTotal = currentViewOrders.filter(o => o.source === 'Booking').reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
-    const fee = Math.round(bTotal * 0.12);
-
-    // 這裡我們建立一個虛擬的顯示對象給 mini 區使用
-    const laundry = parseFloat(document.getElementById('laundry-cost').value) || 0;
-    const utility = parseFloat(document.getElementById('utility-cost').value) || 0;
-    
-    // 把資料塞進隱藏或顯示的欄位
-    document.getElementById('final-laundry').value = laundry;
-    document.getElementById('final-utility').value = utility;
-    
-    const net = income - fee - laundry - utility;
-    document.getElementById('me-net-preview').innerText = '$' + net.toLocaleString();
-    
-    window.currentMonthEndData = { income, fee }; 
+    updateFinancialSummary();
 }
 
 // 3. 淨利即時預覽
 function updateNetPreview() {
-    // 1. 取得基本房費與手續費 (從全域變數拿，若無則設為 0)
-    const income = window.currentMonthFin?.income || 0;
-    const fee = window.currentMonthFin?.fee || 0;
-
-    // 2. 取得即時輸入的洗衣費與水電費
-    // 使用 parseInt 確保它是數字，避免字串相加錯誤
-    const laundry = parseInt(document.getElementById('laundry-cost').value) || 0;
-    const utility = parseInt(document.getElementById('utility-cost').value) || 0;
-
-    // 3. 計算實際淨利
-    const net = income - fee - laundry - utility;
-
-    // 4. 更新畫面顯示 (財務月結試算區的總額)
-    const netDisplay = document.getElementById('archive-net-profit-preview');
-    if (netDisplay) {
-        netDisplay.innerText = '$' + net.toLocaleString();
-    }
-
-    // 5. 【關鍵】同步回全域變數，這樣「封存彈窗」開啟時數據才會正確
-    if (!window.currentMonthFin) window.currentMonthFin = {};
-    window.currentMonthFin.laundry = laundry;
-    window.currentMonthFin.utility = utility;
-    window.currentMonthFin.net = net;
-    
-    console.log("財務數據已同步更新:", window.currentMonthFin);
+    updateFinancialSummary();
 }
 
 /**
@@ -1331,15 +1376,3 @@ function updateStatistics(data) {
     }
 }
 
-/**
- * 核心輔助工具：日期格式化 (YYYY/MM/DD)
- */
-function formatDate(dateStr) {
-    if (!dateStr) return '---';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}/${m}/${day}`;
-}
