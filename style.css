@@ -10,6 +10,8 @@
   --border-color: #f1f3f5;    /* 邊框顏色 */
   --shadow: 0 4px 12px rgba(58, 69, 83, 0.08);
   --radius: 12px;
+    --nav-tabs-height: 74px;
+    --category-sticky-top: calc(var(--nav-tabs-height) + 8px);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }      
@@ -33,6 +35,7 @@ body {
 .nav-tabs { 
   display: flex; 
   padding: 12px; 
+    min-height: var(--nav-tabs-height);
   background: var(--bg-card); 
   border-bottom: 1px solid var(--border-color); 
   position: sticky; 
@@ -174,14 +177,12 @@ input:focus, select:focus {
 /* --- 分類標籤 --- */
 .category-nav {
     position: sticky;
-    top: 95px; /* 增加高度，完全避開上方分頁按鈕 */
-    z-index: 100;
-    background-color: #ffffff !important;
-    padding: 10px 15px; /* 增加左右內距 */
-    margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
-    
-    /* 核心：開啟左右滑動 */
+    top: var(--category-sticky-top);
+    z-index: 900;
+    background: #ffffff;
+    padding: 12px 15px;
+    margin: 0 0 20px 0;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -464,24 +465,13 @@ body #archive-modal.active {
     line-height: 1;
 }
 
-/* --- 修正：分類導覽滑動優化 --- */
-.category-nav {
-    position: sticky;
-    top: 70px; /* 根據導覽列高度微調 */
-    z-index: 100;
-    background-color: #ffffff;
-    padding: 12px 15px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch; /* iOS 滑動順暢感 */
-    gap: 10px;
-    white-space: nowrap;
+/* --- 父層可視區域：避免 sticky 被裁切 --- */
+.container,
+.content,
+.page,
+#tpl-page {
+    overflow: visible;
 }
-
-/* 隱藏捲軸但保留功能 */
-.category-nav::-webkit-scrollbar { display: none; }
 
 /* --- 修正：按鈕權重優化 (移除過多 important) --- */
 .copy-btn.btn-pack-add { 
@@ -763,5 +753,4 @@ html, body {
     height: 100%;
     width: 100%;
     overflow: hidden; /* 防止彈窗內部捲動影響外部 */
-
 }
